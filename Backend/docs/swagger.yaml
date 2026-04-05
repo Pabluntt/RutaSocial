@@ -1,0 +1,1541 @@
+basePath: /
+definitions:
+  domain.AuthResponse:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  domain.Aviso:
+    properties:
+      _id:
+        type: string
+      author_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      send_email:
+        type: boolean
+    type: object
+  domain.CalendarEventRequest:
+    properties:
+      author_id:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      description:
+        example: Reunión mensual para coordinar actividades
+        type: string
+      time_end:
+        example: "12:00"
+        type: string
+      time_start:
+        example: "10:00"
+        type: string
+      title:
+        example: Reunión de voluntarios
+        type: string
+    required:
+    - author_id
+    - description
+    - time_end
+    - time_start
+    - title
+    type: object
+  domain.ErrorResponse:
+    properties:
+      error:
+        example: Mensaje de error genérico
+        type: string
+    type: object
+  domain.EventoCalendario:
+    properties:
+      _id:
+        type: string
+      author_id:
+        type: string
+      date_start:
+        type: string
+      description:
+        type: string
+      time_end:
+        type: string
+      time_start:
+        type: string
+      title:
+        type: string
+    type: object
+  domain.HelpPointRequest:
+    properties:
+      coords:
+        example:
+        - -33.4489
+        - -70.6693
+        items:
+          type: number
+        type: array
+      people_helped:
+        $ref: '#/definitions/domain.PersonaAyudada'
+    required:
+    - coords
+    - people_helped
+    type: object
+  domain.Institution:
+    properties:
+      _id:
+        type: string
+      color:
+        type: string
+      name:
+        type: string
+    type: object
+  domain.InstitutionRequest:
+    properties:
+      color:
+        example: '#FF5733'
+        type: string
+      name:
+        example: Hogar de cristo
+        type: string
+    required:
+    - color
+    - name
+    type: object
+  domain.LoginRequest:
+    properties:
+      email:
+        example: usuario@ejemplo.com
+        type: string
+      password:
+        example: password123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  domain.PersonaAyudada:
+    properties:
+      _id:
+        type: string
+      age:
+        type: integer
+      date:
+        type: string
+      gender:
+        type: string
+      name:
+        type: string
+    type: object
+  domain.PuntoAyuda:
+    properties:
+      _id:
+        type: string
+      author_id:
+        type: string
+      coords:
+        items:
+          type: number
+        type: array
+      date_register:
+        type: string
+      people_helped:
+        $ref: '#/definitions/domain.PersonaAyudada'
+      route_id:
+        type: string
+    type: object
+  domain.RegisterRequest:
+    properties:
+      email:
+        example: juan@ejemplo.com
+        type: string
+      institutionID:
+        example: 507f1f77bcf86cd799439011
+        type: string
+      name:
+        example: Juan Pérez
+        type: string
+      password:
+        example: password123
+        type: string
+      phone:
+        example: "+56912345678"
+        type: string
+      role:
+        example: voluntario
+        type: string
+    required:
+    - email
+    - institutionID
+    - name
+    - password
+    - phone
+    - role
+    type: object
+  domain.Riesgo:
+    properties:
+      _id:
+        type: string
+      Status:
+        type: string
+      author_id:
+        type: string
+      coords:
+        items:
+          type: number
+        type: array
+      date_register:
+        type: string
+      description:
+        type: string
+    type: object
+  domain.RiskRequest:
+    properties:
+      coords:
+        example:
+        - -33.4489
+        - -70.6693
+        items:
+          type: number
+        type: array
+      description:
+        example: Descripción del riesgo
+        type: string
+      status:
+        example: activo
+        type: string
+    required:
+    - coords
+    - description
+    - status
+    type: object
+  domain.Route:
+    properties:
+      _id:
+        type: string
+      date_created:
+        type: string
+      date_finished:
+        type: string
+      description:
+        type: string
+      invite_code:
+        type: string
+      route_leader:
+        type: string
+      status:
+        type: string
+      team:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+    type: object
+  domain.RouteRequest:
+    properties:
+      description:
+        example: Ruta para ayudar a las personas afectadas por el frio en Coquimbo
+        type: string
+      title:
+        example: Ruta al centro de Coquimbo
+        type: string
+    required:
+    - description
+    - title
+    type: object
+  domain.SuccessResponse:
+    properties:
+      message:
+        example: Mensaje de éxito genérico
+        type: string
+    type: object
+  domain.Usuario:
+    properties:
+      _id:
+        type: string
+      completed_routes:
+        type: integer
+      date_register:
+        type: string
+      email:
+        type: string
+      institutionID:
+        type: string
+      list_routes:
+        items:
+          $ref: '#/definitions/domain.Route'
+        type: array
+      name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Documentación de las APIs del proyecto HDC.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: APIs de HDC
+  version: "1.0"
+paths:
+  /calendar-event:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista de todos los eventos de calendario registrados
+        en el sistema. Requiere autenticación.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de eventos obtenida exitosamente
+          schema:
+            items:
+              $ref: '#/definitions/domain.EventoCalendario'
+            type: array
+        "400":
+          description: Error al obtener eventos
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener todos los eventos de calendario
+      tags:
+      - Eventos de Calendario
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo evento de calendario en el sistema. Requiere autenticación.
+      parameters:
+      - description: Datos del nuevo evento
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/domain.CalendarEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Evento creado exitosamente
+          schema:
+            $ref: '#/definitions/domain.EventoCalendario'
+        "400":
+          description: Error al crear el evento
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Crear nuevo evento de calendario
+      tags:
+      - Eventos de Calendario
+  /calendar-event/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un evento de calendario del sistema. Los usuarios pueden
+        eliminar solo sus propios eventos, los administradores pueden eliminar cualquier
+        evento. Requiere autenticación.
+      parameters:
+      - description: ID del evento
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Evento eliminado correctamente
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Error al eliminar el evento
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Eliminar evento de calendario
+      tags:
+      - Eventos de Calendario
+    put:
+      consumes:
+      - application/json
+      description: Actualiza los datos de un evento de calendario existente. Los usuarios
+        pueden actualizar solo sus propios eventos, los administradores pueden actualizar
+        cualquier evento. Requiere autenticación.
+      parameters:
+      - description: ID del evento
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos actualizados del evento
+        in: body
+        name: event
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Evento actualizado correctamente
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Error al actualizar el evento
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar evento de calendario
+      tags:
+      - Eventos de Calendario
+  /export-data/people-helped:
+    get:
+      consumes:
+      - application/json
+      description: Genera y descarga un archivo Excel con los datos de todas las personas
+        ayudadas registradas en el sistema. Requiere autenticación y rol de administrador.
+      produces:
+      - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+      responses:
+        "200":
+          description: Archivo Excel generado exitosamente
+          schema:
+            type: file
+        "400":
+          description: Acceso denegado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Rol no encontrado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Exportar datos de personas ayudadas
+      tags:
+      - Exportación
+  /helping-point:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista de todos los puntos de ayuda registrados en el
+        sistema. Requiere autenticación.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de puntos de ayuda obtenida exitosamente
+          schema:
+            items:
+              $ref: '#/definitions/domain.PuntoAyuda'
+            type: array
+        "400":
+          description: Error al obtener puntos de ayuda
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener todos los puntos de ayuda
+      tags:
+      - Puntos de Ayuda
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo punto de ayuda en el sistema. Requiere autenticación.
+      parameters:
+      - description: Datos del nuevo punto de ayuda
+        in: body
+        name: helpPoint
+        required: true
+        schema:
+          $ref: '#/definitions/domain.HelpPointRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Punto de ayuda creado exitosamente
+          schema:
+            $ref: '#/definitions/domain.PuntoAyuda'
+        "400":
+          description: Error al crear punto de ayuda
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Crear nuevo punto de ayuda
+      tags:
+      - Puntos de Ayuda
+  /helping-point/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un punto de ayuda del sistema. Los usuarios solo pueden
+        eliminar sus propios puntos de ayuda. Requiere autenticación.
+      parameters:
+      - description: ID del punto de ayuda
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Punto de ayuda eliminado correctamente
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Error al eliminar punto de ayuda
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Eliminar punto de ayuda
+      tags:
+      - Puntos de Ayuda
+    put:
+      consumes:
+      - application/json
+      description: Actualiza los datos de un punto de ayuda existente. Los usuarios
+        solo pueden actualizar sus propios puntos de ayuda. Requiere autenticación.
+      parameters:
+      - description: ID del punto de ayuda
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos actualizados del punto de ayuda
+        in: body
+        name: helpPoint
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Punto de ayuda actualizado exitosamente
+          schema:
+            $ref: '#/definitions/domain.PuntoAyuda'
+        "400":
+          description: Error al actualizar el punto de ayuda
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar punto de ayuda
+      tags:
+      - Puntos de Ayuda
+  /institution:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista de todas las instituciones registradas en el
+        sistema. Requiere autenticación y rol de administrador.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de instituciones obtenida exitosamente
+          schema:
+            items:
+              $ref: '#/definitions/domain.Institution'
+            type: array
+        "400":
+          description: Error al obtener las instituciones
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Rol no encontrado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener todas las instituciones
+      tags:
+      - Instituciones
+    post:
+      consumes:
+      - application/json
+      description: Crea una nueva institución en el sistema. Requiere autenticación
+        y rol de administrador.
+      parameters:
+      - description: Datos de la nueva institución
+        in: body
+        name: institution
+        required: true
+        schema:
+          $ref: '#/definitions/domain.InstitutionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Institución creada con éxito
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Error al crear la institución
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Rol no encontrado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Crear nueva institución
+      tags:
+      - Instituciones
+  /institution/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina una institución del sistema mediante su ID. Requiere autenticación
+        y rol de administrador.
+      parameters:
+      - description: ID de la institución
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Institución eliminada correctamente
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Error al eliminar la institución
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Rol no encontrado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Eliminar institución
+      tags:
+      - Instituciones
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una institución específica mediante su ID. Requiere autenticación
+        y rol de administrador.
+      parameters:
+      - description: ID de la institución
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Institución obtenida exitosamente
+          schema:
+            $ref: '#/definitions/domain.Institution'
+        "400":
+          description: Error al obtener la institución
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Rol no encontrado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener institución por ID
+      tags:
+      - Instituciones
+    put:
+      consumes:
+      - application/json
+      description: Actualiza los datos de una institución existente. Requiere autenticación
+        y rol de administrador.
+      parameters:
+      - description: ID de la institución
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos actualizados de la institución
+        in: body
+        name: institution
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Institución actualizada correctamente
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Error al actualizar la institución
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Rol no encontrado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar institución
+      tags:
+      - Instituciones
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Valida a un usuario con su email y contraseña.
+      parameters:
+      - description: Credenciales de Inicio de Sesión
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/domain.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token de autenticación
+          schema:
+            $ref: '#/definitions/domain.AuthResponse'
+        "400":
+          description: 'Error: Datos de entrada inválidos'
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: 'Error: Credenciales inválidas'
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Iniciar sesión de usuario
+      tags:
+      - Autenticación
+  /notification:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista de todas las notificaciones del usuario autenticado.
+        Requiere autenticación.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de notificaciones obtenida exitosamente
+          schema:
+            items:
+              $ref: '#/definitions/domain.Aviso'
+            type: array
+        "400":
+          description: Error al obtener notificaciones
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener todas las notificaciones
+      tags:
+      - Notificaciones
+    post:
+      consumes:
+      - application/json
+      description: Crea una nueva notificación en el sistema. Requiere autenticación.
+      parameters:
+      - description: Datos de la nueva notificación
+        in: body
+        name: notification
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Aviso'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Notificación creada exitosamente
+          schema:
+            $ref: '#/definitions/domain.Aviso'
+        "400":
+          description: Error al crear la notificación
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Crear nueva notificación
+      tags:
+      - Notificaciones
+  /notification/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina una notificación del sistema mediante su ID. Requiere autenticación
+        y rol de administrador.
+      parameters:
+      - description: ID de la notificación
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Notificación eliminada correctamente
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Acceso denegado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Rol no encontrado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Eliminar notificación
+      tags:
+      - Notificaciones
+    put:
+      consumes:
+      - application/json
+      description: Actualiza los datos de una notificación existente mediante su ID.
+        Requiere autenticación.
+      parameters:
+      - description: ID de la notificación
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos actualizados de la notificación
+        in: body
+        name: notification
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Notificación actualizada exitosamente
+          schema:
+            $ref: '#/definitions/domain.Aviso'
+        "400":
+          description: Error al actualizar la notificación
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar notificación
+      tags:
+      - Notificaciones
+  /notification/read:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista de todas las notificaciones leídas del usuario
+        autenticado. Requiere autenticación.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de notificaciones leídas obtenida exitosamente
+          schema:
+            items:
+              $ref: '#/definitions/domain.Aviso'
+            type: array
+        "400":
+          description: Error al obtener notificaciones leídas
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener notificaciones leídas
+      tags:
+      - Notificaciones
+  /notification/read/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Marca una notificación específica como leída mediante su ID. Requiere
+        autenticación.
+      parameters:
+      - description: ID de la notificación
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Notificación marcada como leída exitosamente
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Error al marcar notificación como leída
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Marcar notificación como leída
+      tags:
+      - Notificaciones
+  /notification/unread:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista de todas las notificaciones no leídas del usuario
+        autenticado. Requiere autenticación.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de notificaciones no leídas obtenida exitosamente
+          schema:
+            items:
+              $ref: '#/definitions/domain.Aviso'
+            type: array
+        "400":
+          description: Error al obtener notificaciones no leídas
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener notificaciones no leídas
+      tags:
+      - Notificaciones
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo usuario en el sistema con los datos proporcionados.
+      parameters:
+      - description: Datos del nuevo usuario para registrar
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token de autenticación
+          schema:
+            $ref: '#/definitions/domain.AuthResponse'
+        "400":
+          description: Ocurrió un error al registrar el usuario
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Registrar un nuevo usuario
+      tags:
+      - Autenticación
+  /risk:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista de todos los riesgos registrados en el sistema.
+        Requiere autenticación.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de riesgos obtenida exitosamente
+          schema:
+            items:
+              $ref: '#/definitions/domain.Riesgo'
+            type: array
+        "400":
+          description: Error al obtener riesgos
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener todos los riesgos
+      tags:
+      - Riesgos
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo riesgo en el sistema. Requiere autenticación.
+      parameters:
+      - description: Datos del nuevo riesgo
+        in: body
+        name: risk
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RiskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Riesgo creado exitosamente
+          schema:
+            $ref: '#/definitions/domain.Riesgo'
+        "400":
+          description: Error al crear el riesgo
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Crear nuevo riesgo
+      tags:
+      - Riesgos
+  /risk/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina un riesgo del sistema mediante su ID. Requiere autenticación.
+      parameters:
+      - description: ID del riesgo
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Riesgo eliminado correctamente
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Error al eliminar el riesgo
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Eliminar riesgo
+      tags:
+      - Riesgos
+    put:
+      consumes:
+      - application/json
+      description: Actualiza los datos de un riesgo existente mediante su ID. Requiere
+        autenticación.
+      parameters:
+      - description: ID del riesgo
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos actualizados del riesgo
+        in: body
+        name: risk
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Riesgo actualizado exitosamente
+          schema:
+            $ref: '#/definitions/domain.Riesgo'
+        "400":
+          description: Error al actualizar el riesgo
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar riesgo
+      tags:
+      - Riesgos
+  /route:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista de todas las rutas sociales disponibles en el
+        sistema. Requiere autenticación.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de rutas obtenida exitosamente
+          schema:
+            items:
+              $ref: '#/definitions/domain.Route'
+            type: array
+        "400":
+          description: Error al obtener rutas
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener todas las rutas
+      tags:
+      - Rutas
+    post:
+      consumes:
+      - application/json
+      description: Crea una nueva ruta social en el sistema. Requiere autenticación.
+      parameters:
+      - description: Datos de la nueva ruta
+        in: body
+        name: route
+        required: true
+        schema:
+          $ref: '#/definitions/domain.RouteRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Ruta creada exitosamente
+          schema:
+            $ref: '#/definitions/domain.Route'
+        "400":
+          description: Error al crear la ruta
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Crear nueva ruta
+      tags:
+      - Rutas
+  /route/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Elimina una ruta del sistema mediante su ID. Requiere autenticación.
+      parameters:
+      - description: ID de la ruta
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ruta eliminada correctamente
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Error al eliminar la ruta
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Eliminar ruta
+      tags:
+      - Rutas
+    get:
+      consumes:
+      - application/json
+      description: Obtiene los detalles de una ruta específica mediante su ID. Requiere
+        autenticación.
+      parameters:
+      - description: ID de la ruta
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ruta obtenida exitosamente
+          schema:
+            $ref: '#/definitions/domain.Route'
+        "400":
+          description: Ruta no encontrada
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener ruta por ID
+      tags:
+      - Rutas
+    put:
+      consumes:
+      - application/json
+      description: Actualiza los datos de una ruta existente mediante su ID. Requiere
+        autenticación.
+      parameters:
+      - description: ID de la ruta
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Datos actualizados de la ruta
+        in: body
+        name: route
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ruta actualizada exitosamente
+          schema:
+            $ref: '#/definitions/domain.Route'
+        "400":
+          description: Error al actualizar la ruta
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar ruta
+      tags:
+      - Rutas
+  /route/finish/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Marca una ruta como finalizada mediante su ID. Requiere autenticación.
+      parameters:
+      - description: ID de la ruta
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ruta finalizada correctamente
+          schema:
+            $ref: '#/definitions/domain.SuccessResponse'
+        "400":
+          description: Error al finalizar la ruta
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Finalizar ruta
+      tags:
+      - Rutas
+  /route/join/{code}:
+    post:
+      consumes:
+      - application/json
+      description: Permite a un usuario unirse a una ruta existente mediante un código
+        de invitación. Requiere autenticación.
+      parameters:
+      - description: Código de invitación de la ruta
+        in: path
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Usuario unido a la ruta exitosamente
+          schema:
+            $ref: '#/definitions/domain.Route'
+        "400":
+          description: Error al unirse a la ruta
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Unirse a ruta
+      tags:
+      - Rutas
+  /route/participation/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene información sobre la participación de un usuario en rutas
+        (cantidad de rutas y puntos de ayuda). Requiere autenticación.
+      parameters:
+      - description: ID del usuario
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Participación del usuario obtenida exitosamente
+          schema:
+            type: object
+        "400":
+          description: Error al obtener participaciones
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener participación del usuario
+      tags:
+      - Rutas
+  /user:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene una lista de todos los usuarios registrados en el sistema.
+        Requiere autenticación y rol de administrador.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de usuarios obtenida exitosamente
+          schema:
+            items:
+              $ref: '#/definitions/domain.Usuario'
+            type: array
+        "400":
+          description: Acceso denegado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Rol no encontrado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener todos los usuarios
+      tags:
+      - Usuarios
+  /user/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene la información de un usuario específico mediante su ID.
+        Requiere autenticación y rol de administrador.
+      parameters:
+      - description: ID del usuario
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Usuario obtenido exitosamente
+          schema:
+            $ref: '#/definitions/domain.Usuario'
+        "400":
+          description: Acceso denegado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Rol no encontrado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener usuario por ID
+      tags:
+      - Usuarios
+  /user/profile:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene la información del perfil del usuario autenticado. Requiere
+        autenticación.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Perfil de usuario obtenido exitosamente
+          schema:
+            $ref: '#/definitions/domain.Usuario'
+        "400":
+          description: Usuario no encontrado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: ID de usuario no encontrado en token
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener perfil del usuario
+      tags:
+      - Usuarios
+  /user/public-info/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Obtiene la información pública de un usuario específico mediante
+        su ID. Requiere autenticación.
+      parameters:
+      - description: ID del usuario
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Información pública del usuario obtenida exitosamente
+          schema:
+            type: object
+        "400":
+          description: Usuario no encontrado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtener información pública del usuario
+      tags:
+      - Usuarios
+  /user/update:
+    put:
+      consumes:
+      - application/json
+      description: Actualiza los datos del usuario autenticado. Requiere autenticación.
+      parameters:
+      - description: Datos a actualizar del usuario
+        in: body
+        name: user
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Usuario actualizado exitosamente
+          schema:
+            $ref: '#/definitions/domain.Usuario'
+        "400":
+          description: Usuario no encontrado
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "401":
+          description: ID de usuario no encontrado en token
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Actualizar información del usuario
+      tags:
+      - Usuarios
+securityDefinitions:
+  BearerAuth:
+    description: Se debe proporcionar un token JWT válido con el prefijo "Bearer"
+      en el header de autorización para acceder a las rutas protegidas.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
