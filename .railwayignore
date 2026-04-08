@@ -1,0 +1,9 @@
+FrontendMovil/
+FrontendWeb/
+.git
+.gitignore
+README.md
+docker-compose.yml
+run.ps1
+run.sh
+node_modules
