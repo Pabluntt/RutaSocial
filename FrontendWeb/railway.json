@@ -2,10 +2,7 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "dockerfile",
-    "dockerfile": "./Dockerfile",
-    "args": {
-      "VITE_URL_BACKEND": "$VITE_URL_BACKEND"
-    }
+    "dockerfile": "./Dockerfile"
   },
   "deploy": {
     "port": 80
