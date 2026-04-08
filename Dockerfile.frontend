@@ -1,4 +1,4 @@
-# FrontendWeb Dockerfile for Railway
+# FrontendWeb Dockerfile for Railway - Updated
 FROM node:23.8-alpine AS build
 WORKDIR /app
 COPY FrontendWeb/package*.json ./
