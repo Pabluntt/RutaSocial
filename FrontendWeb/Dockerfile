@@ -1,6 +1,8 @@
 # Frontend/Dockerfile
 FROM node:23.8-alpine AS build
 WORKDIR /app
+ARG VITE_URL_BACKEND=https://rutasocial-production.up.railway.app
+ENV VITE_URL_BACKEND=$VITE_URL_BACKEND
 COPY package*.json ./
 RUN npm ci
 COPY . .
