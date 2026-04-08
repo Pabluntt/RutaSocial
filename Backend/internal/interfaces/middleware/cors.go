@@ -4,23 +4,28 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"os"
+	"strings"
 )
 
-// CORSMiddleware configura las políticas CORS para permitir solicitudes desde un origen específico, en este caso desde el frontend.
-// Permite métodos HTTP específicos y headers.
+// CORSMiddleware configura las políticas CORS para permitir solicitudes desde orígenes específicos.
+// Soporta múltiples orígenes separados por espacios o usa "*" para permitir todos.
 func CORSMiddleware() gin.HandlerFunc {
-	// Construye el array de orígenes permitidos desde las variables de entorno
 	allowedOrigins := []string{}
 	
-	if frontendURL := os.Getenv("FRONTEND_URL"); frontendURL != "" {
-		allowedOrigins = append(allowedOrigins, frontendURL)
+	// Obtener orígenes desde variable de entorno
+	frontendsEnv := os.Getenv("FRONTEND_URL")
+	if frontendsEnv != "" {
+		// Permitir múltiples orígenes separados por espacios
+		origins := strings.Fields(frontendsEnv)
+		allowedOrigins = append(allowedOrigins, origins...)
 	}
 	
-	if frontendURLMobile := os.Getenv("FRONTEND_URL_MOBILE"); frontendURLMobile != "" {
-		allowedOrigins = append(allowedOrigins, frontendURLMobile)
+	frontendsM := os.Getenv("FRONTEND_URL_MOBILE")
+	if frontendsM != "" {
+		allowedOrigins = append(allowedOrigins, frontendsM)
 	}
 	
-	// Si no hay orígenes configurados, permitir todos (para desarrollo)
+	// Si no hay orígenes configurados, permitir todos (solo para desarrollo)
 	if len(allowedOrigins) == 0 {
 		allowedOrigins = []string{"*"}
 	}
