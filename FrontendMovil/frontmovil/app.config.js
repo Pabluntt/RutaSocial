@@ -8,7 +8,7 @@ export default {
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
-    newArchEnabled: true,
+    newArchEnabled: false,
     splash: {
       image: "./assets/splash-icon.png",
       resizeMode: "contain",
@@ -28,8 +28,8 @@ export default {
       favicon: "./assets/favicon.png"
     },
     extra: {
-       eas: {
-        projectId: "0933227c-dbc3-4072-a39b-63cd6dd40e46"
+      eas: {
+        projectId: "6d745b22-c66a-4a64-8fc1-896de0355faa"
       },
       EXPO_PUBLIC_URL_BACKEND: process.env.EXPO_PUBLIC_URL_BACKEND,
       GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
