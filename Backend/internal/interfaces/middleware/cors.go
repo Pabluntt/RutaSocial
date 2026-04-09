@@ -3,6 +3,7 @@ package middleware
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"log"
 	"os"
 	"strings"
 )
@@ -14,6 +15,7 @@ func CORSMiddleware() gin.HandlerFunc {
 	
 	// Obtener orígenes desde variable de entorno
 	frontendsEnv := os.Getenv("FRONTEND_URL")
+	log.Printf("CORS: FRONTEND_URL = '%s'\n", frontendsEnv)
 	if frontendsEnv != "" {
 		// Permitir múltiples orígenes separados por espacios
 		origins := strings.Fields(frontendsEnv)
@@ -21,14 +23,18 @@ func CORSMiddleware() gin.HandlerFunc {
 	}
 	
 	frontendsM := os.Getenv("FRONTEND_URL_MOBILE")
+	log.Printf("CORS: FRONTEND_URL_MOBILE = '%s'\n", frontendsM)
 	if frontendsM != "" {
 		allowedOrigins = append(allowedOrigins, frontendsM)
 	}
 	
 	// Si no hay orígenes configurados, permitir todos (solo para desarrollo)
 	if len(allowedOrigins) == 0 {
+		log.Println("CORS: No origins configured, allowing ALL origins (*)")
 		allowedOrigins = []string{"*"}
 	}
+	
+	log.Printf("CORS: Allowed origins = %v\n", allowedOrigins)
 
 	return cors.New(cors.Config{
 		AllowOrigins:     allowedOrigins,
