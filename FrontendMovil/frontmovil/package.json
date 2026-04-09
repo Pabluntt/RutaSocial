@@ -18,7 +18,7 @@
     "@rneui/base": "^0.0.0-edge.2",
     "@rneui/themed": "^0.0.0-edge.2",
     "axios": "^1.8.4",
-    "expo": "~53.0.27",
+    "expo": "~54.0.0",
     "expo-clipboard": "~7.1.5",
     "expo-file-system": "~18.1.11",
     "expo-location": "~18.1.6",
