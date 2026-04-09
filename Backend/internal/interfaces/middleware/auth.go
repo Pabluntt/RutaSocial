@@ -14,8 +14,15 @@ import (
 // AuthMiddleware valida el token JWT en el header Authorization.
 // Si el token es válido, se extraen los claims y se añaden al contexto de la solicitud.
 // Si el token no es válido o no se proporciona, se devuelve un error 401 Unauthorized.
+// Las peticiones OPTIONS (CORS preflight) se permiten sin autenticación.
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Permitir peticiones OPTIONS sin autenticación (CORS preflight)
+		if c.Request.Method == "OPTIONS" {
+			c.Next()
+			return
+		}
+
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Se requiere autorización"})
