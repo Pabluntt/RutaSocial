@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useSessionStore from "../../stores/useSessionStore";
+import { routes } from "../../utils/routes";
 import { Box, Button, Card, Divider, FormControl, FormLabel, TextField, Typography } from "@mui/material";
 import { isValidEmail } from "../../utils/verifyInput";
 import { sxInput } from "../../style/sxInput";
@@ -44,13 +45,13 @@ export default function Login() {
     
     useEffect(() => {
       if(accessToken) {
-        navigate(`${import.meta.env.VITE_BASE_URL}/`)
+        navigate(routes.home())
       }
     }, [accessToken])
 
     useEffect(() => {
       if(isSuccess) {
-        navigate(`${import.meta.env.VITE_BASE_URL}/`)
+        navigate(routes.home())
       }
     }, [isSuccess, navigate])
 

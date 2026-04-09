@@ -8,6 +8,7 @@ import useSessionStore from '../../stores/useSessionStore';
 import CloseDialogButton from '../Button/CloseDialogButton';
 import { useNavigate } from 'react-router-dom';
 import { Typography } from '@mui/material';
+import { routes } from '../../utils/routes';
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
@@ -35,7 +36,7 @@ export default function DialogLogout({ stateOpen } : DialogLogoutProps) {
 
     const onClickLogout = () => {
         clearSession()
-        navigator(`${import.meta.env.VITE_BASE_URL}/login`)
+        navigator(routes.login())
     }
     
     return (

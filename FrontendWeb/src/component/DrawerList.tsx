@@ -1,6 +1,7 @@
 import { Button, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import useSessionStore from "../stores/useSessionStore";
+import { routes } from "../utils/routes";
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import HistoryIcon from '@mui/icons-material/History';
 import EventIcon from '@mui/icons-material/Event';  
@@ -18,29 +19,29 @@ export default function DrawerList() {
     const [ openDialogNotice, setOpenDialogNotice ] = useState(false)
 
     const onClickProfile = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/perfil`)
+        navigate(routes.perfil())
     }
 
     const onClickUsuarios = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/admin/usuarios`)
+        navigate(routes.adminUsuarios())
     }
 
     const onClickCerrarSesion = () => {
         clearSession()
-        navigate(`${import.meta.env.VITE_BASE_URL}/login`)
+        navigate(routes.login())
     }
 
     const onClickHome = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/`)
+        navigate(routes.home())
     }
 
     const onClickHistory = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/historial`)
+        navigate(routes.historial())
     }
 
 
     const onClickSchedule = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/calendario`)
+        navigate(routes.calendario())
     }
 
     const onClickSendNotice = () => {

@@ -1,6 +1,7 @@
 import axios, { AxiosError, isAxiosError } from 'axios'
 import { NavigateFunction } from 'react-router-dom'
 import useSessionStore from '../../stores/useSessionStore'
+import { routes } from '../../utils/routes'
 
 
 
@@ -33,7 +34,7 @@ export const interceptorResponse = (navigate : NavigateFunction,  clearSesion : 
         }, (error) => {
             if(isAxiosError(error) && ((error as AxiosError).status == 401)) {
                 clearSesion()
-                navigate(`${import.meta.env.VITE_BASE_URL}/login`)
+                navigate(routes.login())
             }
 
             if (error.response && error.response.data) {

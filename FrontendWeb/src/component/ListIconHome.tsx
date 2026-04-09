@@ -9,6 +9,7 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import DialogSendNotice from './Dialog/DialogSendNotice';
 import { useAuth } from '../context/AuthContext';
 import { Role } from '../Enums/Role';
+import { routes } from '../utils/routes';
 
 
 export default function ListIconHome() {
@@ -22,19 +23,19 @@ export default function ListIconHome() {
     }
 
     const onClickProfile = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/perfil`)
+        navigate(routes.perfil())
     }
 
     const onClickHistory = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/historial`)
+        navigate(routes.historial())
     }
 
     const onClickUsers = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/admin/usuarios`)
+        navigate(routes.adminUsuarios())
     }
 
     const onClickSchedule = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/calendario`)
+        navigate(routes.calendario())
     }
 
     return(

@@ -1,6 +1,7 @@
 import { IconButton, Divider, Tooltip } from "@mui/material";
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import { useNavigate } from "react-router-dom";
+import { routes } from "../utils/routes";
 import HomeIcon from '@mui/icons-material/Home';
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
@@ -34,23 +35,23 @@ export default function Sidebar() {
     }
 
     const onClickProfile = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/perfil`)
+        navigate(routes.perfil())
     }
 
     const onClickHistory = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/historial`)
+        navigate(routes.historial())
     }
 
     const onClickUsers = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/admin/usuarios`)
+        navigate(routes.adminUsuarios())
     }
 
     const onClickSchedule = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/calendario`)
+        navigate(routes.calendario())
     }
 
     const onClickHome = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/`)
+        navigate(routes.home())
     }
     const onClickCerrarSesion = () => {
         setOpenLogout(true)
