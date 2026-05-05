@@ -1,5 +1,4 @@
 
-
 export interface CalendarEvent {
     id : string 
     title : string 
@@ -10,4 +9,5 @@ export interface CalendarEvent {
     colorInstitution : string
     timeStart : string 
     timeEnd : string
+    routeID?: string
 } 

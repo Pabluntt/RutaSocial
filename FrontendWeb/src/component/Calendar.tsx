@@ -11,7 +11,8 @@ import DialogCreateEventCalendar from './Dialog/DialogCreateEventCalendar'
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
-import { format } from 'date-fns'
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import { format, isToday } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useCalendarEvents, useDeleteCalendarEvent } from '../api/hooks/CalendarEventHooks'
 import { CalendarEvent } from '../api/models/Calendar'
@@ -20,11 +21,15 @@ import DialogUpdateEventCalendar from './Dialog/DialogUpdateEventCalendar'
 import { useProfile } from '../api/hooks/UserHooks'
 import { useAuth } from '../context/AuthContext'
 import { Role } from '../Enums/Role'
+import { useNavigate } from 'react-router-dom'
+import useSessionStore from '../stores/useSessionStore'
 
 export default function Calendar() {
 
     const userID = useProfile().data?.id
     const { role } = useAuth()
+    const navigate = useNavigate()
+    const { setRouteStatus, setRouteId } = useSessionStore()
     const [selectInfo, setSelectInfo] = useState<DateSelectArg | null>(null)
     const [open, setOpen] = useState(false)
     const [ eventCalendar, setEventCalendar ] = useEventCalendarUpdateDialog()
@@ -79,6 +84,31 @@ export default function Calendar() {
             }
         }
     }
+
+    const handleStartRoute = () => {
+        if(!eventClicked) return
+        
+        // Validar que la fecha del evento sea hoy
+        if(!isToday(eventClicked.dateStart)) {
+            alert('Solo puedes iniciar rutas agendadas para hoy')
+            return
+        }
+
+        // Validar que el evento tenga una ruta vinculada
+        if(!eventClicked.routeID) {
+            alert('Este evento no tiene una ruta vinculada')
+            return
+        }
+
+        // Establecer la ruta como activa
+        setRouteStatus(true)
+        setRouteId(eventClicked.routeID)
+        
+        // Cerrar el popover y navegar al mapa
+        handleCloseEventView()
+        navigate('/mapa')
+    }
+
     const theme = useTheme();
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'));
 
@@ -169,6 +199,15 @@ export default function Calendar() {
                                 :
                                 <>
                                 </>
+                            }
+                            {eventClicked?.routeID && isToday(eventClicked.dateStart) ? 
+                                <Tooltip title={'Iniciar Ruta'}>
+                                    <IconButton onClick={handleStartRoute} sx={{ color: 'success.main' }}>
+                                        <PlayArrowIcon htmlColor="green" fontSize="small" />
+                                    </IconButton>
+                                </Tooltip>
+                                :
+                                <></>
                             }
                         </div>
                         <Tooltip title={'Cerrar'}>

@@ -10,6 +10,7 @@ import (
 
 // EventoCalendario representa un evento en el calendario de la aplicación.
 // Incluye campos para el título, descripción, fecha de inicio, autor, hora de inicio y hora de finalización.
+// El campo RouteID (opcional) vincula el evento con una ruta para permitir iniciar la ruta desde el calendario.
 type EventoCalendario struct {
 	ID          bson.ObjectID `bson:"_id,omitempty" json:"_id,omitempty"`
 	Title       string        `bson:"title" json:"title"`
@@ -18,4 +19,5 @@ type EventoCalendario struct {
 	AuthorID    bson.ObjectID `bson:"author_id" json:"author_id"`
 	TimeStart   string        `bson:"time_start" json:"time_start"`
 	TimeEnd     string        `bson:"time_end" json:"time_end"`
+	RouteID     bson.ObjectID `bson:"route_id,omitempty" json:"route_id,omitempty"`
 }

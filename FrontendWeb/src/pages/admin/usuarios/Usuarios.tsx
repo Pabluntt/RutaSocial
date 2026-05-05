@@ -1,4 +1,4 @@
-import { Button, IconButton, InputBase, Paper, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Button, IconButton, InputBase, Paper, Tooltip, Typography, useMediaQuery, useTheme, Alert } from "@mui/material";
 import CustomDrawer from "../../../component/CustomDrawer";
 import TableUser from "../../../component/TableUser";
 import SearchIcon from '@mui/icons-material/Search';
@@ -13,16 +13,18 @@ import { useUsers } from "../../../api/hooks/UserHooks";
 import DialogCreateInstitution from "../../../component/Dialog/DialogCreateInstitution";
 import { useInstitutions } from "../../../api/hooks/InstitutionHooks";
 import { Institution } from "../../../api/models/Institution";
+import { useAuth } from "../../../context/AuthContext";
+import { Role } from "../../../Enums/Role";
 
 
 export default function Usuarios() {
 
-
+    const { role } = useAuth()
     const [ users, setUsers ] = useState<IUser[]>([])
     const [ institutions, setInstitutions ] = useState<Institution[]>([])
     const { accessToken } = useSessionStore()
-    const {isError, isSuccess, data} = useUsers()
-    const useQuery = useInstitutions()
+    const { isError, isSuccess, data, isPending } = useUsers()
+    const { isSuccess: isInstitutionSuccess, data: institutionData, isPending: isInstitutionPending } = useInstitutions()
 
     useEffect(() => {
         if(data) {
@@ -31,10 +33,10 @@ export default function Usuarios() {
     }, [data])
 
     useEffect(() => {
-        if(useQuery.data) {
-            setInstitutions(useQuery.data)
+        if(institutionData) {
+            setInstitutions(institutionData)
         }
-    }, [useQuery.data])
+    }, [institutionData])
 
 
     const [ prefix, setPrefix ] = useState<string>('')   
@@ -63,6 +65,30 @@ export default function Usuarios() {
     }
     const theme = useTheme();
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'));
+
+    // Verificar si el usuario es admin
+    if(role !== Role.admin) {
+        return (
+            <div className={"flex grow " + (computerDevice ? 'flex-row' : 'flex-col')}>
+                { computerDevice ? 
+                    <div className="flex z-10">
+                        <Sidebar />
+                    </div>    
+                    :
+                    <div className="flex flex-row bg-gray-100">
+                        <CustomDrawer DrawerList={DrawerList} />
+                        <p className="flex text-2xl text-center font-semibold p-3 items-center">Gestión Usuarios</p>
+                    </div>
+                }
+                <div className="flex w-full h-full items-center justify-center">
+                    <Alert severity="error">
+                        <Typography variant="h6">Acceso Denegado</Typography>
+                        <Typography>Solo los administradores pueden acceder a esta página.</Typography>
+                    </Alert>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className={"flex grow " + (computerDevice ? 'flex-row' : 'flex-col')}>
@@ -114,7 +140,25 @@ export default function Usuarios() {
                             </Button>    
                         </Tooltip>
                     </div>
-                    { isSuccess && useQuery.isSuccess ? <TableUser users={users} setUsers={setUsers} prefixSearch={prefix} institutions={institutions} setInstitutions={setInstitutions}/>: <p>Cargando...</p>}
+                    { isPending || isInstitutionPending ? 
+                        <div className="flex items-center justify-center h-96">
+                            <div className="text-center">
+                                <Typography variant="body1" sx={{ mb: 2 }}>
+                                    {isPending ? 'Cargando usuarios...' : 'Cargando instituciones...'}
+                                </Typography>
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                            </div>
+                        </div>
+                        : 
+                        isError ? 
+                        <div className="flex items-center justify-center h-96">
+                            <Typography color="error" variant="h6">
+                                Error al cargar usuarios. Intente recargar la página.
+                            </Typography>
+                        </div>
+                        :
+                        <TableUser users={users} setUsers={setUsers} prefixSearch={prefix} institutions={institutions} setInstitutions={setInstitutions}/>
+                    }
                 </div>
             </div>
             <DialogCreateUser open={open} setOpen={setOpen} />

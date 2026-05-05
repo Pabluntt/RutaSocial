@@ -4,7 +4,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Alert, CircularProgress, TextField, Typography } from '@mui/material';
+import { Alert, CircularProgress, TextField, Typography, Autocomplete } from '@mui/material';
 import InputDescription from '../Input/InputDescription';
 import CloseDialogButton from '../Button/CloseDialogButton';
 import useSessionStore from '../../stores/useSessionStore';
@@ -15,6 +15,7 @@ import { timeSlots } from '../../utils/calendar';
 import { CalendarEvent } from '../../api/models/Calendar';
 import { useCalendarEvents, useCreateCalendarEvent } from '../../api/hooks/CalendarEventHooks';
 import { useProfile } from '../../api/hooks/UserHooks';
+import { useRoutesByUser } from '../../api/hooks/RouteHooks';
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
@@ -39,13 +40,15 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
     const [ startTime, setStartTime] = useState<string>();
     const [ endTime, setEndTime] = useState<string>();
     const [ listEndTime, setListEndTime] = useState<string[]>([]);
+    const [ selectedRouteId, setSelectedRouteId ] = useState<string | undefined>();
     const [ formCalendarEvent, setFormCalendarEvent ] = useState<Omit<CalendarEvent, 'id' | 'authorName' | 'colorInstitution'>>({
         title : '',
         description : '',
         dateStart : new Date(),
         authorID : '',
         timeStart : '',
-        timeEnd : ''
+        timeEnd : '',
+        routeID: undefined
     }) 
     const [ formErrors, setFormErrors ] = useState({
         errorTitle : '',
@@ -54,6 +57,9 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
         errorStartTime : '',
         errorEndTime : ''
     })
+
+    // Obtener rutas del usuario actual
+    const { data: userRoutes } = useRoutesByUser(authorID, !!authorID)
 
     const getEndTime = (indexStart : number) => (
         timeSlots.filter((_, index) => ( index > indexStart ))
@@ -64,7 +70,8 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
         setStartTime(undefined)
         setEndTime(undefined)
         setListEndTime([])
-        setFormCalendarEvent({title : '', description : '', dateStart : new Date(), authorID : '', timeEnd : '' , timeStart : ''})
+        setSelectedRouteId(undefined)
+        setFormCalendarEvent({title : '', description : '', dateStart : new Date(), authorID : '', timeEnd : '' , timeStart : '', routeID: undefined})
         setFormErrors({errorDateStart : '', errorDescription : '', errorTitle : '', errorStartTime : '', errorEndTime : ''})
         reset()
     }
@@ -133,7 +140,8 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
             title: formCalendarEvent.title,
             authorID: authorID as string,
             timeStart: startTime as string,
-            timeEnd: endTime as string
+            timeEnd: endTime as string,
+            routeID: selectedRouteId
         }
         if(selectInfo) {
             console.log(selectInfo.startStr)
@@ -166,7 +174,11 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
     useEffect(() => {
        if(open) {
             if(selectInfo) {
-                setFormCalendarEvent(prev => ({...prev, dateStart : new Date(selectInfo.startStr)}))
+                // Parsear fecha correctamente sin problemas de timezone
+                const dateStr = selectInfo.startStr // "2026-05-05"
+                const [year, month, day] = dateStr.split('-').map(Number)
+                const localDate = new Date(year, month - 1, day)
+                setFormCalendarEvent(prev => ({...prev, dateStart : localDate}))
             } else {
                 setOpen(false)
                 alert('error: date nulltype')
@@ -243,6 +255,33 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
                             </div>                           
                             <Typography variant='caption' color='error'>
                                 {formErrors.errorStartTime ? formErrors.errorStartTime : formErrors.errorEndTime}
+                            </Typography>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <label htmlFor="ruta" className="text-sm font-medium text-gray-700">
+                                Ruta (Opcional)
+                            </label>
+                            <Autocomplete
+                                size='small'
+                                options={userRoutes?.map(r => ({ id: r.id, title: r.title })) || []}
+                                getOptionLabel={(option) => typeof option === 'string' ? option : (option?.title || '')}
+                                isOptionEqualToValue={(option, value) => value ? option.id === value.id : false}
+                                value={selectedRouteId ? userRoutes?.find(r => r.id === selectedRouteId) ? { id: selectedRouteId, title: userRoutes.find(r => r.id === selectedRouteId)?.title || '' } : null : null}
+                                onChange={(e, value) => {
+                                    if(value) {
+                                        setSelectedRouteId(value.id)
+                                        setFormCalendarEvent(prev => ({...prev, routeID: value.id}))
+                                    } else {
+                                        setSelectedRouteId(undefined)
+                                        setFormCalendarEvent(prev => ({...prev, routeID: undefined}))
+                                    }
+                                }}
+                                renderInput={(params) => 
+                                    <TextField {...params} variant='standard' label='Selecciona una ruta' />
+                                }
+                            />
+                            <Typography variant='caption' sx={{ color: 'text.secondary' }}>
+                                Selecciona una ruta para poder iniciarla desde el calendario
                             </Typography>
                         </div>
                     </div>
