@@ -44,13 +44,13 @@ export default function Login() {
     
     useEffect(() => {
       if(accessToken) {
-        navigate(`${import.meta.env.VITE_BASE_URL}/`)
+        navigate(`${import.meta.env.VITE_BASE_URL}/calendario`)
       }
     }, [accessToken])
 
     useEffect(() => {
       if(isSuccess) {
-        navigate(`${import.meta.env.VITE_BASE_URL}/`)
+        navigate(`${import.meta.env.VITE_BASE_URL}/calendario`)
       }
     }, [isSuccess, navigate])
 

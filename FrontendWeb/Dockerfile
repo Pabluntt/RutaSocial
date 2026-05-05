@@ -2,7 +2,7 @@
 FROM node:23.8-alpine
 WORKDIR /app
 
-ENV VITE_URL_BACKEND=https://rutasocial-production.up.railway.app
+ENV VITE_URL_BACKEND=http://localhost:8080
 
 COPY package*.json ./
 RUN npm ci

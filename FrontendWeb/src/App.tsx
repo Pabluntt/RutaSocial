@@ -53,8 +53,13 @@ function App() {
           <ZoomProvider>
             <ThemeProvider theme={customQuery}>
                 <Routes>
-                    <Route path={`${import.meta.env.VITE_BASE_URL}/`} element={<Home/>} />
+                    <Route path={`${import.meta.env.VITE_BASE_URL}/`} element={
+                      <EventCalendarUpdateProvider>
+                        <Schedule />
+                      </EventCalendarUpdateProvider>
+                    } />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/login`} element={<Login />} />
+                    <Route path={`${import.meta.env.VITE_BASE_URL}/mapa`} element={<Home/>} />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/perfil`} element={<Profile />} />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/calendario`} element={
                       <EventCalendarUpdateProvider>
