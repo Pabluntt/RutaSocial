@@ -7,6 +7,7 @@ import (
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"time"
 )
 
 // UserRepository define la interfaz para las operaciones relacionadas con usuarios.
@@ -17,6 +18,7 @@ type UserRepository interface {
 	UpdateUserInfo(userID bson.ObjectID, userData map[string]interface{}) (domain.Usuario, error)
 	GetAllUsers() ([]domain.Usuario, error)
 	GetPublicInfoByID(id string) (map[string]string, error)
+	CreateUserByAdmin(user domain.Usuario) (domain.Usuario, error)
 }
 
 // userRepository implementa la interfaz UserRepository.
@@ -150,4 +152,35 @@ func (u *userRepository) UpdateUserInfo(userID bson.ObjectID, userData map[strin
 	}
 
 	return updatedUser, nil
+}
+
+// CreateUserByAdmin crea un nuevo usuario desde el panel de administración.
+// Verifica si el correo ya existe, hashea la contraseña y guarda el usuario.
+func (u *userRepository) CreateUserByAdmin(user domain.Usuario) (domain.Usuario, error) {
+	existing := u.UserCollection.FindOne(context.Background(), bson.M{"email": user.Email})
+	if existing.Err() == nil {
+		return domain.Usuario{}, errors.New("el usuario ya existe")
+	}
+
+	hashedPassword, err := utils.HashPassword(user.Password)
+	if err != nil {
+		return domain.Usuario{}, err
+	}
+
+	user.Password = hashedPassword
+	user.CompletedRoutes = 0
+	user.ListRoutes = []domain.Route{}
+	user.DateRegister = time.Now()
+
+	res, err := u.UserCollection.Database().Collection("usuarios").InsertOne(context.Background(), user)
+	if err != nil {
+		return domain.Usuario{}, err
+	}
+
+	insertedID, ok := res.InsertedID.(bson.ObjectID)
+	if ok {
+		user.ID = insertedID
+	}
+
+	return user, nil
 }

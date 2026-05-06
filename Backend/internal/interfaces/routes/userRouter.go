@@ -21,6 +21,7 @@ func SetupUserRouter(r *gin.Engine) {
 	protected.GET("/profile", userController.GetUserProfile)
 	protected.GET("/public-info/:id", userController.GetPublicInfoByID)
 	protected.GET("/", middleware.RoleMiddleware("admin"), userController.GetAllUsers)
+	protected.POST("/", middleware.RoleMiddleware("admin"), userController.CreateUserByAdmin)
 	protected.GET("/:id", middleware.RoleMiddleware("admin"), userController.GetUserByID)
 	protected.PUT("/update", userController.UpdateUserInfo)
 }

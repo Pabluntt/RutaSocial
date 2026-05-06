@@ -16,6 +16,17 @@ type RegisterRequest struct {
 	InstitutionID string `json:"institutionID" binding:"required" example:"507f1f77bcf86cd799439011"`
 }
 
+// AdminCreateUserRequest representa el cuerpo de la petición para crear un usuario desde el panel admin.
+// Name y Phone son opcionales; Role es opcional y por defecto se asigna "usuario" si viene vacío.
+type AdminCreateUserRequest struct {
+	Name          string `json:"name" example:"Juan Pérez"`
+	Email         string `json:"email" binding:"required" example:"juan@ejemplo.com"`
+	Password      string `json:"password" binding:"required" example:"password123"`
+	Phone         string `json:"phone" example:"+56912345678"`
+	Role          string `json:"role" example:"usuario"`
+	InstitutionID string `json:"institutionID" binding:"required" example:"507f1f77bcf86cd799439011"`
+}
+
 // InstitutionRequest representa el cuerpo de la petición para crear o actualizar una institución.
 type InstitutionRequest struct {
 	Name  string `json:"name" binding:"required" example:"Hogar de cristo"`

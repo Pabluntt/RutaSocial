@@ -14,6 +14,9 @@ import (
 func SetupRouter() *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
+	
+	// CORS middleware debe ser el primero en la cadena de middlewares
+	// Insertamos al inicio usando `Use` que lo añade al inicio
 	r.Use(middleware.CORSMiddleware())
 
 	docs.SwaggerInfo.BasePath = "/"

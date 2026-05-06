@@ -8,11 +8,10 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import { FormControl, FormHelperText, Input, InputLabel, Typography } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { useRegister } from '../../api/hooks/UserHooks';
+import { useAdminCreateUser } from '../../api/hooks/UserHooks';
 import { IUser } from '../../api/models/User';
 import ComboBox from '../Button/ComboBox';
 import { useInstitutions } from '../../api/hooks/InstitutionHooks';
-import { Role } from '../../Enums/Role';
 
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
@@ -30,48 +29,55 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   }
 }));
 
-type UserRegister = Pick<IUser, 
-    'name'          | 
-    'email'         | 
-    'password'      | 
-    'phone'         | 
-    'institutionID' |
-    'role'
->
+type AdminCreateUser = Pick<IUser,
+    'email' |
+    'password' |
+    'institutionID'
+> & Partial<Pick<IUser,
+    'name' |
+    'phone'
+>>
 
-type UserRegisterError = Omit<{
-    [k in keyof UserRegister]: string
-}, 'password'>
+type AdminCreateUserError = {
+    name: string
+    email: string
+    password: string
+    phone: string
+    institutionID: string
+}
 
 
 
 export default function DialogCreateUser({ open, setOpen } : { open : boolean, setOpen: (ar : boolean) => void}) {
 
-    const [ user, setUser ] = useState<UserRegister>({
+    const [ user, setUser ] = useState<AdminCreateUser>({
         name : '',
         email : '',
         password : '',
         phone : '',
-        institutionID : '',
-        role : ''
+        institutionID : ''
     })
 
-    const [ inputError, setInputError ] = useState<UserRegisterError>({
+    const [ inputError, setInputError ] = useState<AdminCreateUserError>({
         name : '',
         email : '',
+        password : '',
         phone : '',
-        institutionID : '',
-        role: ''
+        institutionID : ''
     })
 
 
     const [ loading, setLoading ] = useState(false)
-    const { isError, isSuccess, mutate, error, data, reset } = useRegister()
+    const { isSuccess, mutate, error, data, reset } = useAdminCreateUser()
     const institutions = useInstitutions().data 
 
-    const handleInputChange = (input: keyof Omit<UserRegister, "password">) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setUser({ ...user, [input]: e.target.value });
-        setInputError({ ...inputError, [input]: (e.target.value.trim() === '' ? `Campo ${input} es obligatorio` : '')});
+    const handleInputChange = (input: keyof AdminCreateUser) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const value = e.target.value;
+        setUser({ ...user, [input]: value });
+
+        if (input === 'email' || input === 'password') {
+            setInputError({ ...inputError, [input]: (value.trim() === '' ? `Campo ${input} es obligatorio` : '')});
+        }
     };
 
 
@@ -85,27 +91,23 @@ export default function DialogCreateUser({ open, setOpen } : { open : boolean, s
     }, [data, isSuccess])
 
     const validateForm = () => {
-        if(user.name === '') {
-            setInputError({... inputError, name : 'Debe ingresar un nombre al usuario'})
-            return false
-        }
-        if(user.email === '') {
+        if(user.email.trim() === '') {
             setInputError({...inputError, email: 'Debe ingresar el correo del usuario'})
             return false
         }
-        if(user.phone === '') {
-            setInputError({...inputError, phone : 'Debe ingresar el teléfono del usuario'})
+        if(user.password.trim() === '') {
+            setInputError({...inputError, password: 'Debe ingresar la contraseña del usuario'})
             return false
         }
-        if(user.institutionID === '') {
+        if(user.password.length < 8) {
+            setInputError({...inputError, password: 'La contraseña debe tener al menos 8 caracteres'})
+            return false
+        }
+        if(user.institutionID.trim() === '') {
             setInputError({...inputError, institutionID : 'Debe seleccionar una institución'})
             return false 
         }
-        if(user.role === '') {
-            setInputError({...inputError, role : 'Debes seleccionar un rol para el usuario' })
-            return false
-        }
-        setInputError({name: '', email: '', institutionID:'', role: '', phone: ''})
+        setInputError({name: '', email: '', password: '', institutionID:'', phone: ''})
         return true
     }
 
@@ -114,13 +116,13 @@ export default function DialogCreateUser({ open, setOpen } : { open : boolean, s
         if(!validateForm()) return
         mutate({
             ...user,
-            password: Math.random().toString(36).slice(-8)
+            role: 'usuario'
         })
     }
 
     const handleOnClose = () => {
         setLoading(false)
-        setInputError({name :'', email : '', phone : '', institutionID : '', role: ''})
+        setInputError({name :'', email : '', password: '', phone : '', institutionID : ''})
         reset()
         setOpen(false)
     }
@@ -151,7 +153,7 @@ export default function DialogCreateUser({ open, setOpen } : { open : boolean, s
                 <DialogContent>
                     <div className="flex flex-col gap-6">
                         <div className='flex flex-col gap-6 px-2'>
-                            <FormControl variant="standard" required error={inputError.name !== ''} className='rounded-b-sm border border-gray-600'>
+                            <FormControl variant="standard" error={inputError.name !== ''} className='rounded-b-sm border border-gray-600'>
                                 <InputLabel htmlFor="nombres-input" shrink>Nombre Completo</InputLabel>
                                 <Input onBlur={handleInputChange('name')} onChange={handleInputChange('name')} id="nombres-input" placeholder="Ingresa el Nombre Completo" />
                                 <FormHelperText error={inputError.name !== ''}>{inputError.name}</FormHelperText>
@@ -161,7 +163,12 @@ export default function DialogCreateUser({ open, setOpen } : { open : boolean, s
                                 <Input onBlur={handleInputChange('email')} onChange={handleInputChange('email')} id="email-input" placeholder="Ingresa el Correo Electrónico" />
                                 <FormHelperText error={inputError.email !== ''}>{inputError.email}</FormHelperText>
                             </FormControl>
-                            <FormControl variant="standard" required error={inputError.phone !== ''} className='rounded-b-sm border border-gray-600'>
+                            <FormControl variant="standard" required error={inputError.password !== ''} className='rounded-b-sm border border-gray-600'>
+                                <InputLabel htmlFor="password-input" shrink>Contraseña</InputLabel>
+                                <Input type="password" onBlur={handleInputChange('password')} onChange={handleInputChange('password')} id="password-input" placeholder="Ingresa la Contraseña" />
+                                <FormHelperText error={inputError.password !== ''}>{inputError.password}</FormHelperText>
+                            </FormControl>
+                            <FormControl variant="standard" error={inputError.phone !== ''} className='rounded-b-sm border border-gray-600'>
                                 <InputLabel htmlFor="phone-input" shrink>Teléfono</InputLabel>
                                 <Input onBlur={handleInputChange('phone')} onChange={handleInputChange('phone')} id="phone-input" placeholder="Ingresa el Número de Teléfono" />
                                 <FormHelperText error={inputError.phone !== ''}>{inputError.phone}</FormHelperText>
@@ -194,23 +201,10 @@ export default function DialogCreateUser({ open, setOpen } : { open : boolean, s
                                 </div>
 
                                 <div className="w-1/4">
-                                    <FormControl required variant="standard" fullWidth>
+                                    <FormControl variant="standard" fullWidth>
                                         <InputLabel htmlFor='rol-input' shrink>Rol</InputLabel>
-                                        <ComboBox
-                                            fullWidth
-                                            variant="standard"
-                                            size="medium"
-                                            label="Rol"
-                                            options={Object.values(Role)}
-                                            onChange={(e, v) => {
-                                                const role = v as Role;
-                                                console.log(role)
-                                                if (!role) return;
-                                                setUser({ ...user, role: role });
-                                            }}
-                                        />
+                                        <Input disabled value="usuario" id="rol-input" />
                                     </FormControl>
-                                    <FormHelperText error={inputError.role !== ''}>{inputError.role}</FormHelperText>
                                 </div>
                             </div>
 

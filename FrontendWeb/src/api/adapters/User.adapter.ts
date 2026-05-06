@@ -30,6 +30,16 @@ export type TRegisterRequest = Pick<TUserBackend,
     'role'
 >
 
+export type TAdminCreateUserRequest = Pick<TUserBackend,
+    'email' |
+    'password' |
+    'institutionID'
+> & Partial<Pick<TUserBackend,
+    'name' |
+    'phone' |
+    'role'
+>>
+
 export type TUpdateUserRequest = Pick<TUserBackend,
     'name' |
     'phone' |
@@ -87,6 +97,24 @@ export function MapUserToCreateRequest( data :
             institutionID : data.institutionID,
             role: data.role
         }
+}
+
+export function MapUserToAdminCreateRequest(data : {
+    email : string
+    password : string
+    institutionID : string
+    name ?: string
+    phone ?: string
+    role ?: string
+}) : TAdminCreateUserRequest {
+    return {
+        email : data.email,
+        password : data.password,
+        institutionID : data.institutionID,
+        name : data.name,
+        phone : data.phone,
+        role : data.role
+    }
 }
 
 export function MapUserToUpdateRequest( data : 

@@ -1,4 +1,4 @@
-import { MapUserFromBackend, TLoginRequest, TRegisterRequest, TUpdateUserRequest, TUserBackend } from "../adapters/User.adapter"
+import { MapUserFromBackend, TAdminCreateUserRequest, TLoginRequest, TRegisterRequest, TUpdateUserRequest, TUserBackend } from "../adapters/User.adapter"
 import { IUser } from "../models/User"
 import { axiosInstance } from "./axiosInstance"
 
@@ -20,6 +20,11 @@ export class UserService {
     static async Register(user : TRegisterRequest) : Promise<string> {
         const { data } = await axiosInstance.post(`/register`, user)
         return data?.token
+    }
+
+    static async CreateUserByAdmin(user : TAdminCreateUserRequest) : Promise<IUser> {
+        const { data } = await axiosInstance.post(`/user`, user)
+        return MapUserFromBackend(data?.message as TUserBackend)
     }
 
     static async GetProfile() : Promise<IUser> {

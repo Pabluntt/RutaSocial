@@ -6,6 +6,7 @@ import (
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"net/http"
 )
 
@@ -17,6 +18,7 @@ type UserUseCase interface {
 	UpdateUserInfo(c *gin.Context)
 	GetAllUsers(c *gin.Context)
 	GetPublicInfoByID(c *gin.Context)
+	CreateUserByAdmin(c *gin.Context)
 }
 
 // UserUseCase implementa la interfaz UserUseCase.
@@ -118,6 +120,75 @@ func (u userUseCase) GetAllUsers(c *gin.Context) {
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": users})
+}
+
+// CreateUserByAdmin maneja la solicitud para crear un usuario desde el panel admin.
+// Valida los datos requeridos y registra al usuario en la base de datos sin emitir token.
+func (u userUseCase) CreateUserByAdmin(c *gin.Context) {
+	var req domain.AdminCreateUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al procesar los datos del usuario"})
+		return
+	}
+
+	if !utils.IsValidEmail(req.Email) {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "El correo electrónico no es válido"})
+		return
+	}
+
+	if len(req.Password) < 8 {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "La contraseña debe tener al menos 8 caracteres"})
+		return
+	}
+
+	if req.Name != "" && !utils.IsValidString(req.Name) {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "El nombre contiene caracteres inválidos"})
+		return
+	}
+
+	if req.Phone != "" && !utils.IsValidPhone(req.Phone) {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Teléfono inválido"})
+		return
+	}
+
+	if req.InstitutionID == "" {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Debe indicar la institución"})
+		return
+	}
+
+	institutionID, err := bson.ObjectIDFromHex(req.InstitutionID)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Institución inválida"})
+		return
+	}
+
+	if req.Role != "" && !utils.IsValidString(req.Role) {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "El rol contiene caracteres inválidos"})
+		return
+	}
+
+	role := req.Role
+	if role == "" {
+		role = "usuario"
+	}
+
+	newUser := domain.Usuario{
+		Name:          req.Name,
+		Email:         req.Email,
+		Password:      req.Password,
+		Phone:         req.Phone,
+		Role:          role,
+		InstitutionID: institutionID,
+	}
+
+	createdUser, err := u.userRepository.CreateUserByAdmin(newUser)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear usuario"})
+		return
+	}
+
+	createdUser.Password = ""
+	c.IndentedJSON(http.StatusCreated, gin.H{"message": createdUser})
 }
 
 // ValidateUser valida el token JWT del usuario autenticado y retorna la información del usuario.

@@ -8,8 +8,15 @@ import (
 
 // RoleMiddleware es un middleware de Gin que verifica si el usuario tiene uno de los roles permitidos.
 // Si el usuario tiene un rol permitido, se permite el acceso a la ruta; de lo contrario, se devuelve un error 401 Unauthorized.
+// Las peticiones OPTIONS (CORS preflight) se permiten sin validación de rol.
 func RoleMiddleware(allowedRoles ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Permitir peticiones OPTIONS sin validación de rol (CORS preflight)
+		if c.Request.Method == "OPTIONS" {
+			c.Next()
+			return
+		}
+
 		claims, exists := c.Get("user")
 		if !exists {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "No autorizado"})

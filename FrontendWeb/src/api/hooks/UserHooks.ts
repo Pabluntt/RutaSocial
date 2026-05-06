@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { UserService } from "../services/UserService";
 import useSessionStore from "../../stores/useSessionStore";
-import { MapUserToCreateRequest, MapUserToLoginRequest, MapUserToUpdateRequest } from "../adapters/User.adapter";
+import { MapUserToAdminCreateRequest, MapUserToCreateRequest, MapUserToLoginRequest, MapUserToUpdateRequest } from "../adapters/User.adapter";
 import { IUser } from "../models/User";
 
 
@@ -20,6 +20,19 @@ export function useLogin() {
 export function useRegister() {
     return useMutation({
         mutationFn: ( user : Pick<IUser, 'email' | 'password' | 'phone' | 'institutionID' | 'name' | 'role'>) => (UserService.Register(MapUserToCreateRequest(user)))
+    })
+}
+
+export function useAdminCreateUser() {
+    return useMutation({
+        mutationFn: (user : {
+            email : string
+            password : string
+            institutionID : string
+            name ?: string
+            phone ?: string
+            role ?: string
+        }) => (UserService.CreateUserByAdmin(MapUserToAdminCreateRequest(user)))
     })
 }
 

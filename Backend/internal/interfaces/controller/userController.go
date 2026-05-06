@@ -117,3 +117,22 @@ func (u *userController) GetUserByID(c *gin.Context) {
 func (u *userController) GetPublicInfoByID(c *gin.Context) {
 	u.userUseCase.GetPublicInfoByID(c)
 }
+
+// CreateUserByAdmin maneja la solicitud para crear un usuario desde el panel admin.
+// @Summary Crear usuario (admin)
+// @Description Crea un nuevo usuario desde el panel de administración. Requiere autenticación y rol de administrador.
+// @Tags Usuarios
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param user body domain.AdminCreateUserRequest true "Datos del nuevo usuario"
+// @Success 201 {object} domain.Usuario "Usuario creado exitosamente"
+// @Failure 400 {object} domain.ErrorResponse "Error al crear usuario"
+// @Failure 401 {object} domain.ErrorResponse "No autorizado"
+// @Failure 401 {object} domain.ErrorResponse "Token inválido"
+// @Failure 401 {object} domain.ErrorResponse "Rol no encontrado"
+// @Failure 400 {object} domain.ErrorResponse "Acceso denegado"
+// @Router /user [post]
+func (u *userController) CreateUserByAdmin(c *gin.Context) {
+	u.userUseCase.CreateUserByAdmin(c)
+}
