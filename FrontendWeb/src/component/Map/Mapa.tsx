@@ -101,6 +101,14 @@ function HeatmapLayer({ helpPoints, showHeatmap }: { helpPoints: HelpPoint[], sh
     return null;
 }
 
+function getPointPeople(helpPoint: HelpPoint) {
+    return helpPoint.people.length > 0
+        ? helpPoint.people
+        : helpPoint.peopleHelped
+            ? [helpPoint.peopleHelped]
+            : []
+}
+
 type MapaProps = {
     stateCurrentLocation : [ Position, React.Dispatch<React.SetStateAction<Position>> ]
     helpPoints : HelpPoint[]
@@ -159,14 +167,27 @@ export default function Mapa({ stateCurrentLocation, risks, helpPoints, children
                     helpPoint.disabled ? null : 
                     <Marker key={helpPoint.id ?? index} icon={redIcon} position={(helpPoint.coords as L.LatLngExpression)} >
                         <Popup >
-                            <div className="flex flex-col items-center justify-center gap-2">
-                                <b>Nombre: {helpPoint.peopleHelped.name === '' ? 'Sin Especificar' : helpPoint.peopleHelped.name}</b>
+                            <div className="flex min-w-56 flex-col items-center justify-center gap-2">
+                                <b className="text-center">Punto de registro</b>
                                 <Divider className="w-full" />
-                                <b>Edad: {helpPoint.peopleHelped.age === -1 ? 'N/A' : helpPoint.peopleHelped.age}</b>
+                                <div className="flex w-full flex-col gap-1 text-sm">
+                                    <span><b>Comentario:</b> {helpPoint.comment?.trim() || 'Sin comentario'}</span>
+                                    <span><b>Fecha:</b> {format(helpPoint.dateRegister, 'dd-MM-yyyy', {locale : es}) ?? 'error'}</span>
+                                </div>
                                 <Divider className="w-full"  variant='middle'/>
-                                <b>Género: {helpPoint.peopleHelped?.gender ?? 'Sin Especificar'}</b>
-                                <Divider className="w-full"  variant='middle'/>
-                                <b>Fecha: {format(helpPoint.dateRegister, 'dd-MM-yyyy', {locale : es}) ?? 'error'}</b>
+                                <div className="flex w-full flex-col gap-2 text-sm">
+                                    <b>Personas vistas</b>
+                                    {getPointPeople(helpPoint).length > 0 ? getPointPeople(helpPoint).map((person, personIndex) => (
+                                        <div key={`${helpPoint.id}-${personIndex}`} className="flex flex-col gap-1 rounded bg-slate-50 p-2">
+                                            <span><b>Nombre:</b> {person.name || 'Sin especificar'}</span>
+                                            <span><b>Edad:</b> {person.age > 0 ? person.age : 'N/A'}</span>
+                                            <span><b>RUT:</b> {person.rut || 'Sin especificar'}</span>
+                                            <span><b>Género:</b> {person.gender || 'Sin especificar'}</span>
+                                        </div>
+                                    )) : (
+                                        <span>Sin personas registradas en este punto</span>
+                                    )}
+                                </div>
                             </div>
                         </Popup>
                     </Marker>

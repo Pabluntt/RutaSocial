@@ -13,7 +13,7 @@ import (
 // Contiene métodos para obtener, crear, actualizar y eliminar puntos de ayuda, así como buscar por ID y usuario.
 type HelpPointRepository interface {
 	GetAllPoints() ([]domain.PuntoAyuda, error)
-	CreateHelpingPoint(helpPoint domain.PuntoAyuda, userID string) error
+	CreateHelpingPoint(helpPoint domain.PuntoAyuda, userID string) (domain.PuntoAyuda, error)
 	UpdateHelpingPoint(data map[string]interface{}) (domain.PuntoAyuda, error)
 	DeleteHelpingPoint(id string) error
 	FindByIDAndUserID(id string, userID string) error
@@ -37,22 +37,30 @@ func NewHelpPointRepository(helpPointCollection *mongo.Collection, peopleHelpedC
 
 // CreateHelpingPoint crea un nuevo punto de ayuda en la base de datos.
 // Asigna un ID nuevo, la fecha de registro y el ID del autor antes de insertar el documento.
-func (h *helpPointRepository) CreateHelpingPoint(helpPoint domain.PuntoAyuda, userID string) error {
+// Tambien guarda una copia de cada persona en la coleccion people_helped para mantener compatibilidad.
+func (h *helpPointRepository) CreateHelpingPoint(helpPoint domain.PuntoAyuda, userID string) (domain.PuntoAyuda, error) {
 	helpPoint.ID = bson.NewObjectID()
 	helpPoint.DateRegister = time.Now()
 	helpPoint.AuthorID, _ = bson.ObjectIDFromHex(userID)
+	if len(helpPoint.People) == 0 && (helpPoint.PeopleHelped.Name != "" || helpPoint.PeopleHelped.Gender != "" || helpPoint.PeopleHelped.Age != 0 || helpPoint.PeopleHelped.Rut != "") {
+		helpPoint.People = []domain.PersonaAyudada{helpPoint.PeopleHelped}
+	}
+	if len(helpPoint.People) > 0 {
+		helpPoint.PeopleHelped = helpPoint.People[0]
+	}
 	_, err := h.HelpPointCollection.InsertOne(context.Background(), helpPoint)
 	if err != nil {
-		return err
+		return domain.PuntoAyuda{}, err
 	}
-	personHelped := helpPoint.PeopleHelped
-	personHelped.DateRegister = time.Now()
-	personHelped.ID = bson.NewObjectID()
-	_, err = h.PeopleHelpedCollections.InsertOne(context.Background(), personHelped)
-	if err != nil {
-		return err
+	for _, personHelped := range helpPoint.People {
+		personHelped.DateRegister = time.Now()
+		personHelped.ID = bson.NewObjectID()
+		_, err = h.PeopleHelpedCollections.InsertOne(context.Background(), personHelped)
+		if err != nil {
+			return domain.PuntoAyuda{}, err
+		}
 	}
-	return nil
+	return helpPoint, nil
 }
 
 // UpdateHelpingPoint actualiza un punto de ayuda en la base de datos.

@@ -6,9 +6,10 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import ReplayIcon from '@mui/icons-material/Replay';
-import { Alert, CircularProgress, TextField, Typography, Zoom } from '@mui/material';
-import ComboBox from '../Button/ComboBox';
-import { useEffect, useState } from 'react';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import AddIcon from '@mui/icons-material/Add';
+import { Alert, CircularProgress, IconButton, TextField, Typography, Zoom } from '@mui/material';
+import { useEffect, useMemo, useState } from 'react';
 import getCurrentLocation, { Position } from '../../utils/getCurrentLocation';
 import useSessionStore from '../../stores/useSessionStore';
 import CloseDialogButton from '../Button/CloseDialogButton';
@@ -16,9 +17,9 @@ import { LocationMethod } from '../../Enums/LocationMethod';
 import { useCreateHelpPoint, useHelpPoints } from '../../api/hooks/HelpPointHooks';
 import { TUserRegister } from '../../pages/home';
 import { useProfile } from '../../api/hooks/UserHooks';
+import { HelpedPerson } from '../../api/models/HelpPoint';
 
-
-const SIN_ESPECIFICAR = "Sin especificar" 
+const SIN_ESPECIFICAR = 'Sin especificar';
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
@@ -29,57 +30,69 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
-
+type PersonDraft = {
+    id: string
+    name: string
+    rut: string
+    age: string
+};
 
 export type DialogCreateAttendedProps = { 
-    stateOpen : [ boolean, React.Dispatch<React.SetStateAction<boolean>>]
+    stateOpen : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateOnSelectLocationMap : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateLocationMethod : [ LocationMethod, React.Dispatch<React.SetStateAction<LocationMethod>> ]
-    stateAttended : [ TUserRegister, React.Dispatch<React.SetStateAction<TUserRegister>>]
+    stateAttended : [ TUserRegister, React.Dispatch<React.SetStateAction<TUserRegister>> ]
     location : Position
 }
 
+function createPersonDraft(seed?: Partial<TUserRegister>): PersonDraft {
+    return {
+        id: `${Date.now()}-${Math.random()}`,
+        name: seed?.name && seed.name !== SIN_ESPECIFICAR ? seed.name : '',
+        rut: '',
+        age: seed?.age && seed.age > 0 ? String(seed.age) : '',
+    }
+}
+
+function normalizeRut(rut: string) {
+    return rut.replace(/\s+/g, '').toUpperCase();
+}
+
+function isValidRutFormat(rut: string) {
+    if (!rut) return true;
+    return /^(?:\d{1,2}\.\d{3}\.\d{3}-[\dkK]|\d{7,8}-[\dkK])$/.test(normalizeRut(rut));
+}
 
 export default function DialogCreateAttended({ stateAttended, stateOpen, stateOnSelectLocationMap, location, stateLocationMethod } : DialogCreateAttendedProps) {
 
     const authorID = useProfile().data?.id
-    const { accessToken, routeId } = useSessionStore()
+    const { routeId } = useSessionStore()
     const [ open, setOpen ] = stateOpen
     const [ _, setOnSelectLocationMap ] = stateOnSelectLocationMap
-
-    const [ attendedP, setAttendedP] = stateAttended
-
-    const gender = attendedP.gender
-    const name = attendedP.name
-    const age = attendedP.age
-
-    const setName = (name: string) => setAttendedP(prev => ({ ...prev, name }))
-    const setAge = (age: number) => setAttendedP(prev => ({ ...prev, age }))
-    const setGender = (gender: string) => setAttendedP(prev => ({ ...prev, gender }))
+    const [ attendedP, setAttendedP ] = stateAttended
 
     const [ coords, setCoords ] = useState<number[]>([])
-
     const [ locationMethod, setLocationMethod ] = stateLocationMethod
     const [ createButtonDisable, setCreateButtonDisable ] = useState(true)
     const [ error, setError ] = useState<string | undefined>()
+    const [ comment, setComment ] = useState('')
+    const [ people, setPeople ] = useState<PersonDraft[]>(() => [createPersonDraft(attendedP)])
 
-    const { mutate, data, isError, isSuccess, isPending, isIdle, reset } = useCreateHelpPoint()
+    const { mutate, isError, isSuccess, isPending, isIdle, reset } = useCreateHelpPoint()
     const { refetch } = useHelpPoints()
 
-
+    const primaryPerson = useMemo(() => people[0], [people])
 
     const handleCurrentLocation = async () => {
         setLocationMethod(LocationMethod.Current)
         try {
             const currentPosition = await getCurrentLocation()
-            console.log(currentPosition)
             setCoords([currentPosition.latitude, currentPosition.longitude])
         } catch (e) {
             setError((e as Error).message)
             alert(`error : ${(e as Error).message}`)
         }
     }
-
 
     const handleSelectLocationMap = () => {
         setLocationMethod(LocationMethod.Map)
@@ -95,31 +108,50 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
     }, [location])
 
     useEffect(() => {
-        if(coords.length != 0) {
+        if(coords.length === 2) {
             setCreateButtonDisable(false)
         }
     }, [coords])
 
     useEffect(() => {
-        console.log(attendedP.name)
-    }, [])
-
-
-
+        if(primaryPerson) {
+            setAttendedP(prev => ({
+                ...prev,
+                name: primaryPerson.name || SIN_ESPECIFICAR,
+                age: primaryPerson.age ? Number(primaryPerson.age) : -1,
+                gender: SIN_ESPECIFICAR,
+            }))
+        }
+    }, [primaryPerson, setAttendedP])
 
     const clearStates = () => {
         reset()
         setCoords([])
         setCreateButtonDisable(true)
         setLocationMethod(LocationMethod.None)
+        setError(undefined)
+        setComment('')
+        setPeople([createPersonDraft()])
     }
 
     const handleClose = () => {
         setOpen(false)
     }
 
+    const updatePerson = (id: string, field: keyof Omit<PersonDraft, 'id'>, value: string) => {
+        setPeople(prev => prev.map(person => person.id === id ? { ...person, [field]: value } : person))
+    }
+
+    const addPerson = () => {
+        setPeople(prev => [...prev, createPersonDraft()])
+    }
+
+    const removePerson = (id: string) => {
+        setPeople(prev => prev.length > 1 ? prev.filter(person => person.id !== id) : prev)
+    }
+
     const handleSubmit = () => {
-        if(coords.length != 2) {
+        if(coords.length !== 2) {
             alert('no hay coordenadas registradas')
             return
         }
@@ -127,29 +159,62 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
             alert('ha ocurrido un error inesperado')
             return
         }
+
+        const validPeople = people
+            .map(person => ({
+                name: person.name.trim(),
+                rut: normalizeRut(person.rut),
+                age: person.age.trim(),
+            }))
+            .filter(person => person.name.length > 0 || person.rut.length > 0 || person.age.length > 0)
+
+        if(validPeople.length === 0) {
+            alert('Debes agregar al menos una persona con nombre')
+            return
+        }
+
+        if(validPeople.some(person => person.name.length === 0)) {
+            alert('El nombre de cada persona es obligatorio')
+            return
+        }
+
+        if(validPeople.some(person => !isValidRutFormat(person.rut))) {
+            alert('El formato del RUT no es válido')
+            return
+        }
+
         mutate({
-            routeID: (routeId as string),
-            coords: coords,
-            peopleHelped: {
-                name : name === '' ? SIN_ESPECIFICAR : name,
-                age  : age,
-                gender : gender === '' ? SIN_ESPECIFICAR : gender
-            },
+            routeID: routeId as string,
+            coords,
+            comment,
+            people: validPeople.map(person => ({
+                name: person.name,
+                rut: person.rut,
+                age: person.age.length > 0 ? Number(person.age) : -1,
+                gender: SIN_ESPECIFICAR,
+            })) as HelpedPerson[],
+            peopleHelped: validPeople[0]
+                ? {
+                    name: validPeople[0].name,
+                    rut: validPeople[0].rut,
+                    age: validPeople[0].age.length > 0 ? Number(validPeople[0].age) : -1,
+                    gender: SIN_ESPECIFICAR,
+                }
+                : undefined,
             authorID: authorID as string,
-            disabled: false
+            disabled: false,
         })
     }
 
     useEffect(() => {
         if(isSuccess) {
             refetch()
-            setAttendedP({name: 'Sin Especificar', gender: 'Sin Especificar', age: -1})
+            setAttendedP({ name: SIN_ESPECIFICAR, gender: SIN_ESPECIFICAR, age: -1 })
             setTimeout(() => {
                 handleClose()
             }, 2000)
         }
     }, [isSuccess])
-
 
     return (
         <BootstrapDialog 
@@ -168,9 +233,9 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
         >
             <DialogTitle className='m-0 p-2' id="attended-titulo">
                 {
-                    isIdle ? 'Crear un Registro' : 
+                    isIdle ? 'Crear un Punto' : 
                     isPending ? 'Cargando...' :
-                    isSuccess ? 'Registro Guardado' :
+                    isSuccess ? 'Punto Guardado' :
                     isError ? 'Ha ocurrido un error' :
                     'Error desconocido'
                 }
@@ -179,48 +244,73 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
 
             <DialogContent>
                 { isIdle ?
-                    <form className='flex flex-col gap-10 p-2'>
-                        <div className='flex grow flex-row gap-5'>
-                            <TextField
-                                fullWidth
-                                id="name" 
-                                variant='standard'
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                label='Nombre '
-                                slotProps={{
-                                    inputLabel: {
-                                    shrink: true,
-                                    },
-                                }}    
-                                onFocus={(event) => {
-                                        event.target.select();
-                                }}
-                            />
-                            <TextField
-                                id="edad"
-                                variant='standard'
-                                onChange={(e) => {setAge(Number(e.target.value))}}
-                                label='edad'
-                                type='number'
-                                value={age}
-                                slotProps={{
-                                    inputLabel: {
-                                        shrink: true,
-                                    }
-                                }}
-                            />
+                    <form className='flex flex-col gap-8 p-2'>
+                        <div className='flex flex-col gap-3'>
+                            <div className='flex items-center justify-between gap-2'>
+                                <Typography variant='h6'>Personas vistas</Typography>
+                                <Button startIcon={<AddIcon />} variant='outlined' onClick={addPerson}>
+                                    Agregar persona
+                                </Button>
+                            </div>
+                            <div className='flex flex-col gap-4'>
+                                {people.map((person, index) => (
+                                    <div key={person.id} className='flex flex-col gap-3 rounded border border-dashed border-gray-300 p-3'>
+                                        <div className='flex items-center justify-between'>
+                                            <Typography variant='subtitle2'>Persona {index + 1}</Typography>
+                                            {people.length > 1 ? (
+                                                <IconButton color='error' onClick={() => removePerson(person.id)}>
+                                                    <DeleteOutlineIcon fontSize='small' />
+                                                </IconButton>
+                                            ) : null}
+                                        </div>
+                                        <div className='flex flex-col gap-3 md:flex-row'>
+                                            <TextField
+                                                fullWidth
+                                                id={`name-${person.id}`}
+                                                variant='standard'
+                                                value={person.name}
+                                                onChange={(e) => updatePerson(person.id, 'name', e.target.value)}
+                                                label='Nombre *'
+                                                slotProps={{ inputLabel: { shrink: true } }}
+                                            />
+                                            <TextField
+                                                fullWidth
+                                                id={`rut-${person.id}`}
+                                                variant='standard'
+                                                value={person.rut}
+                                                onChange={(e) => updatePerson(person.id, 'rut', e.target.value)}
+                                                label='RUT'
+                                                placeholder='12.345.678-9'
+                                                slotProps={{ inputLabel: { shrink: true } }}
+                                            />
+                                            <TextField
+                                                fullWidth
+                                                id={`age-${person.id}`}
+                                                variant='standard'
+                                                onChange={(e) => updatePerson(person.id, 'age', e.target.value)}
+                                                label='Edad'
+                                                type='number'
+                                                value={person.age}
+                                                slotProps={{ inputLabel: { shrink: true } }}
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        <div className='flex grow'>
-                            <ComboBox 
-                                className='grow'
-                                label={'Género'} 
-                                value={gender}
-                                onChange={(e, value) => {setGender(value as string)}}
-                                options={['Hombre', 'Mujer', 'Sin Especificar']}  
-                                defaultValue={'Sin Especificar'}                          
-                            />  
-                        </div>
+
+                        <TextField
+                            fullWidth
+                            id='comment'
+                            variant='standard'
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            label='Comentario del punto'
+                            multiline
+                            minRows={3}
+                            slotProps={{ inputLabel: { shrink: true } }}
+                        />
+
                         <div className='flex flex-col gap-2'>
                             <Typography>Seleccionar Ubicación</Typography>
                             <div className='flex grow justify-center items-center gap-2'>
@@ -257,8 +347,8 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                                     </Zoom>
                                 </Button>
                             </div>
-                            <Alert severity={error ? 'error' : coords.length != 0 ? 'success' : 'warning'}> 
-                                {error ? error : coords.length != 0 ? 'Ubicación Completada' : 'Selecciona una opción para establecer la ubicación'}
+                            <Alert severity={error ? 'error' : coords.length !== 0 ? 'success' : 'warning'}> 
+                                {error ? error : coords.length !== 0 ? 'Ubicación Completada' : 'Selecciona una opción para establecer la ubicación'}
                             </Alert>
                         </div>
                     </form>
@@ -269,7 +359,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                     </div>
                     :
                     <Alert sx={{ mt: 2, width: '100%', minHeight: '80px', display: 'flex', alignItems: 'center', fontSize: '1rem' }} variant='standard' severity={ isSuccess ? 'success' : isError ? 'error' : 'info'}>
-                            {isSuccess ? 'Se Creo el registro exitosamente' : isError ? 'Hubo un error al intentar finalizar' : 'Error desconocido'}
+                            {isSuccess ? 'Se Creo el punto exitosamente' : isError ? 'Hubo un error al intentar finalizar' : 'Error desconocido'}
                     </Alert>
                 }
                 
@@ -281,7 +371,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                     :
                     <>
                         <Button variant='contained' disabled={createButtonDisable} onClick={handleSubmit}>
-                            Crear Registro
+                            Crear Punto
                         </Button>
                         <Button variant='contained' color='error' onClick={handleClose}>
                             Cancelar

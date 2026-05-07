@@ -44,8 +44,9 @@ type CalendarEventRequest struct {
 
 // HelpPointRequest representa el cuerpo de la petición para crear un punto de ayuda.
 type HelpPointRequest struct {
-	Coords       []float64      `json:"coords" binding:"required" example:"-33.4489,-70.6693"`
-	PeopleHelped PersonaAyudada `json:"people_helped" binding:"required"`
+	Coords  []float64        `json:"coords" binding:"required" example:"-33.4489,-70.6693"`
+	Comment string           `json:"comment" example:"Comentario del punto"`
+	People  []PersonaAyudada `json:"people"`
 }
 
 // RiskRequest representa el cuerpo de la petición para crear un riesgo.

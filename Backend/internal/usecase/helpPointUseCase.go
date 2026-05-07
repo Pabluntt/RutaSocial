@@ -57,18 +57,37 @@ func (h helpingPointUseCase) CreateHelpingPoint(c *gin.Context) {
 		return
 	}
 
-	if !utils.IsValidString(helpPoint.PeopleHelped.Gender) || !utils.IsValidString(helpPoint.PeopleHelped.Name) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Se presentaron caracteres inválidos en el género o nombre de la persona ayudada"})
+	if len(helpPoint.People) == 0 && (helpPoint.PeopleHelped.Name != "" || helpPoint.PeopleHelped.Gender != "" || helpPoint.PeopleHelped.Rut != "" || helpPoint.PeopleHelped.Age != 0) {
+		helpPoint.People = append(helpPoint.People, helpPoint.PeopleHelped)
+	}
+
+	for _, person := range helpPoint.People {
+		if person.Name == "" {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "El nombre de cada persona es obligatorio"})
+			return
+		}
+		if !utils.IsValidString(person.Name) || (person.Gender != "" && !utils.IsValidString(person.Gender)) {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Se presentaron caracteres inválidos en el nombre o género de una persona"})
+			return
+		}
+		if person.Rut != "" && !utils.IsValidRut(person.Rut) {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "El formato del RUT no es válido"})
+			return
+		}
+	}
+
+	if helpPoint.Comment != "" && !utils.IsValidString(helpPoint.Comment) {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Se presentaron caracteres inválidos en el comentario del punto"})
 		return
 	}
 
-	err := h.helpingPointRepository.CreateHelpingPoint(helpPoint, userID)
+	createdHelpPoint, err := h.helpingPointRepository.CreateHelpingPoint(helpPoint, userID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear punto de ayuda"})
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"message": helpPoint})
+	c.IndentedJSON(http.StatusOK, gin.H{"message": createdHelpPoint})
 }
 
 // UpdateHelpingPoint maneja la solicitud para actualizar un punto de ayuda existente.

@@ -34,6 +34,12 @@ func IsValidColor(color string) bool {
 	return re.MatchString(color)
 }
 
+// IsValidRut verifica si un RUT chileno tiene un formato valido.
+func IsValidRut(rut string) bool {
+	re := regexp.MustCompile(`^(?:\d{1,2}\.\d{3}\.\d{3}-[\dkK]|\d{7,8}-[\dkK])$`)
+	return re.MatchString(rut)
+}
+
 // SanitizeStringFields recorre un mapa de datos de actualización y sanitiza los campos de tipo string.
 // Si un campo contiene caracteres inválidos, devuelve un error 400 Bad Request al cliente y retorna false.
 func SanitizeStringFields(c *gin.Context, updateData map[string]interface{}) bool {

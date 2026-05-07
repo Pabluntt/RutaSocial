@@ -31,8 +31,7 @@ export default function DialogUpdateAtended() {
     const [ name, setName ] = useState('')
     const [ age, setAge ] = useState(0)
     const [ gender, setGender ] = useState('')
-    const [ city, setCity ] = useState('')
-    const [ nationality, setNationality ] = useState('') 
+    const [ comment, setComment ] = useState('')
 
 
     const { mutate, data, isError, isSuccess, isPending, isIdle, reset, error } = useUpdateHelpPoint()
@@ -40,11 +39,12 @@ export default function DialogUpdateAtended() {
 
 
     useEffect(() => {
-        console.log(helpPoint)
-        if(helpPoint?.peopleHelped) {
-            setName(helpPoint.peopleHelped.name ?? '')
-            setAge(helpPoint.peopleHelped.age ?? 0)
-            setGender(helpPoint.peopleHelped.gender ?? '')
+        const primaryPerson = helpPoint?.people?.[0] ?? helpPoint?.peopleHelped
+        if(primaryPerson) {
+            setName(primaryPerson.name ?? '')
+            setAge(primaryPerson.age ?? 0)
+            setGender(primaryPerson.gender ?? '')
+            setComment(helpPoint?.comment ?? '')
         }
     }, [helpPoint])
 
@@ -60,11 +60,19 @@ export default function DialogUpdateAtended() {
     const handleSubmit = () => {
         if(!helpPoint) return
 
-        mutate({...helpPoint, peopleHelped : {
+        const updatedPerson = {
             name,
             age,
-            gender
-        }})
+            gender,
+            rut: helpPoint.people?.[0]?.rut ?? helpPoint.peopleHelped?.rut
+        }
+
+        mutate({
+            ...helpPoint,
+            comment,
+            people: [updatedPerson, ...(helpPoint.people?.slice(1) ?? [])],
+            peopleHelped: updatedPerson
+        })
     }
 
     useEffect(() => {
@@ -98,7 +106,7 @@ export default function DialogUpdateAtended() {
             <CloseDialogButton handleClose={handleClose} />
 
             <DialogContent>
-                {   helpPoint?.peopleHelped === undefined ?
+                {   helpPoint?.peopleHelped === undefined && (helpPoint?.people?.length ?? 0) === 0 ?
                     <CircularProgress />
                     :
                     isIdle ?
@@ -149,6 +157,19 @@ export default function DialogUpdateAtended() {
                                 value={gender}                      
                             />  
                         </div>
+                        <TextField
+                            fullWidth
+                            id="comment"
+                            variant='standard'
+                            label='Comentario del punto'
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            slotProps={{
+                                inputLabel: {
+                                    shrink: true,
+                                },
+                            }}
+                        />
                     </div>
                     :
                     isPending ? 
