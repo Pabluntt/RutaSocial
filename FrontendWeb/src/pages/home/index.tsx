@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import DrawerList from "../../component/DrawerList";
 import CustomDrawer from "../../component/CustomDrawer";
-import { Backdrop, Card, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Backdrop, Card, Typography, useMediaQuery, useTheme, Fab, Tooltip } from "@mui/material";
 import MensajesFijados from "../../component/MensajesFijados";
 import DialogCreateRoute from "../../component/Dialog/DialogCreateRoute";
 import useSessionStore from "../../stores/useSessionStore";
@@ -28,6 +28,7 @@ import { Risk } from "../../api/models/Risk";
 import { HelpPoint } from "../../api/models/HelpPoint";
 import { useRisks } from "../../api/hooks/RiskHooks";
 import { useHelpPoints } from "../../api/hooks/HelpPointHooks";
+import type { AlojamientoData } from "../../component/Dialog/DialogCreateAlojamiento";
 
 
 
@@ -36,6 +37,8 @@ export type TUserRegister = {
     age : number 
     gender: string
 }
+
+const ALOJAMIENTOS_STORAGE_KEY = 'rutasocial-alojamientos'
 
 export default function Home() {
 
@@ -76,10 +79,40 @@ export default function Home() {
     const stateOpenCreateRoute = useState(false)
     const stateOpenJoinRoute = useState(false)
     const [ openDialogAlojamiento, setOpenDialogAlojamiento ] = useState(false)
-    const [ alojamientos, setAlojamientos ] = useState<{ id:string, coords:number[], name:string, cupos:number }[]>([])
+    const [ selectingAlojamiento, setSelectingAlojamiento ] = useState(false)
+    const [ alojamientos, setAlojamientos ] = useState<AlojamientoData[]>([])
 
-    const handleCreateAlojamiento = (data: { id: string, coords:number[], name:string, cupos:number }) => {
+    useEffect(() => {
+        const storedAlojamientos = localStorage.getItem(ALOJAMIENTOS_STORAGE_KEY)
+
+        if(!storedAlojamientos) {
+            return
+        }
+
+        try {
+            const parsedAlojamientos = JSON.parse(storedAlojamientos) as AlojamientoData[]
+            if(Array.isArray(parsedAlojamientos)) {
+                setAlojamientos(parsedAlojamientos)
+            }
+        } catch {
+            localStorage.removeItem(ALOJAMIENTOS_STORAGE_KEY)
+        }
+    }, [])
+
+    useEffect(() => {
+        localStorage.setItem(ALOJAMIENTOS_STORAGE_KEY, JSON.stringify(alojamientos))
+    }, [alojamientos])
+
+    const handleCreateAlojamiento = (data: AlojamientoData) => {
         setAlojamientos(prev => [...prev, data])
+    }
+
+    const handleUpdateAlojamientoCupos = (id: string, cupos: number) => {
+        setAlojamientos(prev => prev.map((alojamiento) => (
+            alojamiento.id === id
+                ? { ...alojamiento, cupos: Math.max(0, cupos) }
+                : alojamiento
+        )))
     }
 
     useEffect(() => {
@@ -123,9 +156,18 @@ export default function Home() {
                     {alojamientos.map((a, i) => (
                         <Marker key={a.id ?? i} position={[a.coords[0], a.coords[1]]}>
                             <Popup>
-                                <div className="flex flex-col items-start gap-1">
+                                <div className="flex min-w-44 flex-col items-start gap-2">
                                     <b>{a.name}</b>
-                                    <span>Cupos disponibles: {a.cupos}</span>
+                                    <div className="flex w-full flex-col gap-1">
+                                        <span>Cupos disponibles</span>
+                                        <input
+                                            className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
+                                            type="number"
+                                            min={0}
+                                            value={a.cupos}
+                                            onChange={(event: { target: { value: string } }) => handleUpdateAlojamientoCupos(a.id, Number(event.target.value) || 0)}
+                                        />
+                                    </div>
                                 </div>
                             </Popup>
                         </Marker>
@@ -135,6 +177,7 @@ export default function Home() {
                         stateOnSelectLocationMap={[onSelectLocationMap, setOnSelectLocationMap]}
                         stateDialogAttended={[openDialogAttended, setOpenDialogAttended]}
                         stateDialogRisk={[openDialogRisk, setOpenDialogRisk]}
+                        stateAlojamientoSelection={[selectingAlojamiento, setSelectingAlojamiento]}
                         stateDialogAlojamiento={[openDialogAlojamiento, setOpenDialogAlojamiento]}
                     />
                     <LocationHandler 
@@ -155,15 +198,9 @@ export default function Home() {
                             : 
                             null
                         }
-                        <div className={"absolute bottom-16 z-20 " + (computerDevice ? "right-16 scale-120" : "right-8")}>
+                        <div className={"absolute bottom-16 z-20 flex flex-row items-end gap-3 " + (computerDevice ? "right-16" : "right-8")}>
                             {!routeStatus ? 
                                 <>
-                                    <div className="mb-2 flex justify-end">
-                                        <HotelIcon className="cursor-pointer" sx={{ fontSize: 40 }} onClick={() => {
-                                            setOnSelectLocationMap(true)
-                                            setOpenDialogAlojamiento(true)
-                                        }} />
-                                    </div>
                                     <SpeedDialCreateRoute
                                         stateOpen={[openSpeedCreateRoute, setOpenSpeedCreateRoute]}
                                         stateOpenCreateRoute={stateOpenCreateRoute}
@@ -172,6 +209,19 @@ export default function Home() {
                                         <DialogCreateRoute stateOpen={stateOpenCreateRoute} />
                                         <DialogJoinRoute stateOpen={stateOpenJoinRoute} />
                                     </SpeedDialCreateRoute>
+                                    <Tooltip title="Crear alojamiento">
+                                        <Fab 
+                                            color="secondary" 
+                                            size="large"
+                                            onClick={() => {
+                                                setOnSelectLocationMap(true)
+                                                setSelectingAlojamiento(true)
+                                                setOpenDialogAlojamiento(false)
+                                            }}
+                                        >
+                                            <HotelIcon />
+                                        </Fab>
+                                    </Tooltip>
                                 </>
                                 :
                                 <SpeedDialRoute 

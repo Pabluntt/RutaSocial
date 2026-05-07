@@ -40,7 +40,7 @@ export default function DrawerList() {
 
 
     const onClickSchedule = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/calendario`)
+        navigate(`${import.meta.env.VITE_BASE_URL}/mapa`)
     }
 
     const onClickSendNotice = () => {

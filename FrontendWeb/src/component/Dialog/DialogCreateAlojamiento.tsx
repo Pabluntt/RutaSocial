@@ -2,10 +2,17 @@ import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } 
 import { Position } from "../../utils/getCurrentLocation";
 import { useState, useEffect } from "react";
 
+export type AlojamientoData = {
+    id: string
+    coords: [number, number]
+    name: string
+    cupos: number
+}
+
 type Props = {
-    stateOpen: [boolean, React.Dispatch<React.SetStateAction<boolean>>]
+    stateOpen: [boolean, (value: boolean) => void]
     location: Position
-    onCreate: (data: { id: string, coords: number[], name: string, cupos: number }) => void
+    onCreate: (data: AlojamientoData) => void
 }
 
 export default function DialogCreateAlojamiento({ stateOpen, location, onCreate }: Props) {
@@ -26,7 +33,7 @@ export default function DialogCreateAlojamiento({ stateOpen, location, onCreate 
 
     const handleSubmit = () => {
         const id = Date.now().toString()
-        const coords = [location.latitude, location.longitude]
+        const coords: [number, number] = [location.latitude, location.longitude]
         onCreate({ id, coords, name: name || 'Alojamiento', cupos })
         setOpen(false)
     }
@@ -41,7 +48,7 @@ export default function DialogCreateAlojamiento({ stateOpen, location, onCreate 
                     label="Nombre"
                     fullWidth
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e: { target: { value: string } }) => setName(e.target.value)}
                 />
                 <TextField
                     margin="dense"
@@ -49,7 +56,7 @@ export default function DialogCreateAlojamiento({ stateOpen, location, onCreate 
                     type="number"
                     fullWidth
                     value={cupos}
-                    onChange={(e) => setCupos(Number(e.target.value))}
+                    onChange={(e: { target: { value: string } }) => setCupos(Math.max(0, Number(e.target.value) || 0))}
                 />
             </DialogContent>
             <DialogActions>

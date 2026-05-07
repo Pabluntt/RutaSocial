@@ -46,7 +46,7 @@ export default function Sidebar() {
     }
 
     const onClickSchedule = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/calendario`)
+        navigate(`${import.meta.env.VITE_BASE_URL}/mapa`)
     }
 
     const onClickHome = () => {
@@ -63,7 +63,7 @@ export default function Sidebar() {
             <div className="flex flex-col py-5 gap-7 justify-start items-center">
                 <Tooltip title="Perfil"><IconButton onClick={onClickProfile} sx={{ ...hoverStyles }}><AccountBoxIcon htmlColor="#374151" fontSize="large"/></IconButton></Tooltip>
                 <Tooltip title="Historial"><IconButton onClick={onClickHistory} sx={{ ...hoverStyles }}><HistoryIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
-                <Tooltip title="Agendar ruta"><IconButton onClick={onClickSchedule} sx={{ ...hoverStyles }}><EventIcon htmlColor="#374151" fontSize="large"/></IconButton></Tooltip>
+                <Tooltip title="Mapa"><IconButton onClick={onClickSchedule} sx={{ ...hoverStyles }}><EventIcon htmlColor="#374151" fontSize="large"/></IconButton></Tooltip>
                 <Tooltip title="Enviar aviso"><IconButton onClick={handleClickOpen} sx={{ ...hoverStyles }}><CampaignIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
                 { role === Role.admin  ?
 
