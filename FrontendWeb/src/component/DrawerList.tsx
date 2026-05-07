@@ -10,6 +10,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import { useState } from "react";
 import DialogSendNotice from "./Dialog/DialogSendNotice";
 import CampaignIcon from '@mui/icons-material/Campaign';
+import WbSunnyIcon from '@mui/icons-material/WbSunny';
 
 export default function DrawerList() {
 
@@ -85,6 +86,12 @@ export default function DrawerList() {
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
                     <CampaignIcon/>
                     <Typography>Crear Aviso</Typography>
+                </div>
+            </Button>
+            <Button fullWidth color="info" onClick={() => {}}>
+                <div className="flex w-full justify-start px-2 gap-5 items-center">
+                    <WbSunnyIcon/>
+                    <Typography>Clima</Typography>
                 </div>
             </Button>
             <div className="flex grow items-end w-full" >

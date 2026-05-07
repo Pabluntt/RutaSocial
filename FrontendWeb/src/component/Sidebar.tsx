@@ -7,9 +7,10 @@ import { useAuth } from "../context/AuthContext";
 import DialogSendNotice from "./Dialog/DialogSendNotice";
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import HistoryIcon from '@mui/icons-material/History';
-import EventIcon from '@mui/icons-material/Event';  
+import MapIcon from '@mui/icons-material/Map';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import LogoutIcon from '@mui/icons-material/Logout';
+import WbSunnyIcon from '@mui/icons-material/WbSunny';
 import useSessionStore from "../stores/useSessionStore";
 import DialogLogout from "./Dialog/DialogLogout";
 import { Role } from "../Enums/Role";
@@ -63,8 +64,9 @@ export default function Sidebar() {
             <div className="flex flex-col py-5 gap-7 justify-start items-center">
                 <Tooltip title="Perfil"><IconButton onClick={onClickProfile} sx={{ ...hoverStyles }}><AccountBoxIcon htmlColor="#374151" fontSize="large"/></IconButton></Tooltip>
                 <Tooltip title="Historial"><IconButton onClick={onClickHistory} sx={{ ...hoverStyles }}><HistoryIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
-                <Tooltip title="Mapa"><IconButton onClick={onClickSchedule} sx={{ ...hoverStyles }}><EventIcon htmlColor="#374151" fontSize="large"/></IconButton></Tooltip>
+                <Tooltip title="Mapa"><IconButton onClick={onClickSchedule} sx={{ ...hoverStyles }}><MapIcon htmlColor="#374151" fontSize="large"/></IconButton></Tooltip>
                 <Tooltip title="Enviar aviso"><IconButton onClick={handleClickOpen} sx={{ ...hoverStyles }}><CampaignIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
+                <Tooltip title="Clima"><IconButton onClick={() => {}} sx={{ ...hoverStyles }}><WbSunnyIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
                 { role === Role.admin  ?
 
                     <Tooltip title="Gestionar Usuarios">

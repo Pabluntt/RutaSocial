@@ -6,6 +6,7 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
 import Mensaje from "./Mensaje";
 import { useMarkNotices, useNoticesMap } from "../api/hooks/NoticeHooks";
+import WbSunnyIcon from '@mui/icons-material/WbSunny';
 
 export default function MensajesFijados() {
 
@@ -50,7 +51,14 @@ export default function MensajesFijados() {
 
 
     return (
-        <div className={"absolute right-8 " + (computerDevice ? (routeStatus ? 'top-16' : 'top-8') : (routeStatus ? 'top-8' : 'top-6')) }>
+        <div className={"absolute right-8 flex gap-2 " + (computerDevice ? (routeStatus ? 'top-16' : 'top-8') : (routeStatus ? 'top-8' : 'top-6')) }>
+            <Paper className="relative inline-block" sx={{ borderRadius : 9}}>
+                <Tooltip title="Clima">
+                    <IconButton onClick={() => {}}>
+                        <WbSunnyIcon sx={{ color: '#000000' }} fontSize="large" />
+                    </IconButton>
+                </Tooltip>
+            </Paper>
             <Paper className="relative inline-block" sx={{ borderRadius : 9}}>
                 <Badge badgeContent={isSuccess ? data.unread.length : 0} color="error" overlap="circular" >
                     <IconButton onClick={handleClick}>
