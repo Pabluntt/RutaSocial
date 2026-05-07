@@ -17,6 +17,9 @@ import ButtonCurrentLocation from "../../component/Map/ButtonCurrentLocation";
 import LocationHandler from "../../component/Map/LocationHandler";
 import SpeedDialCreateRoute from "../../component/Button/SpeedDialCreateRoute";
 import DialogJoinRoute from "../../component/Dialog/DialogJoinRoute";
+import DialogCreateAlojamiento from "../../component/Dialog/DialogCreateAlojamiento";
+import HotelIcon from '@mui/icons-material/Hotel';
+import { Marker, Popup } from 'react-leaflet'
 import { useAuth } from "../../context/AuthContext";
 import Sidebar from "../../component/Sidebar";
 import DialogUpdateRisk from "../../component/Dialog/DialogUpdateRisk";
@@ -72,6 +75,12 @@ export default function Home() {
     const [ openSpeedCreateRoute, setOpenSpeedCreateRoute ] = useState(false)
     const stateOpenCreateRoute = useState(false)
     const stateOpenJoinRoute = useState(false)
+    const [ openDialogAlojamiento, setOpenDialogAlojamiento ] = useState(false)
+    const [ alojamientos, setAlojamientos ] = useState<{ id:string, coords:number[], name:string, cupos:number }[]>([])
+
+    const handleCreateAlojamiento = (data: { id: string, coords:number[], name:string, cupos:number }) => {
+        setAlojamientos(prev => [...prev, data])
+    }
 
     useEffect(() => {
         if(riskQuery.data) {
@@ -111,11 +120,22 @@ export default function Home() {
                     helpPoints={helpPoints}
                     risks={risks}
                 >
+                    {alojamientos.map((a, i) => (
+                        <Marker key={a.id ?? i} position={[a.coords[0], a.coords[1]]}>
+                            <Popup>
+                                <div className="flex flex-col items-start gap-1">
+                                    <b>{a.name}</b>
+                                    <span>Cupos disponibles: {a.cupos}</span>
+                                </div>
+                            </Popup>
+                        </Marker>
+                    ))}
                     <MapEvents 
                         setLocation={setLocation}
                         stateOnSelectLocationMap={[onSelectLocationMap, setOnSelectLocationMap]}
                         stateDialogAttended={[openDialogAttended, setOpenDialogAttended]}
                         stateDialogRisk={[openDialogRisk, setOpenDialogRisk]}
+                        stateDialogAlojamiento={[openDialogAlojamiento, setOpenDialogAlojamiento]}
                     />
                     <LocationHandler 
                         stateErrorGeolocation={[errorGeolocation, setErrorGeolocation]}
@@ -137,14 +157,22 @@ export default function Home() {
                         }
                         <div className={"absolute bottom-16 z-20 " + (computerDevice ? "right-16 scale-120" : "right-8")}>
                             {!routeStatus ? 
-                                <SpeedDialCreateRoute
-                                    stateOpen={[openSpeedCreateRoute, setOpenSpeedCreateRoute]}
-                                    stateOpenCreateRoute={stateOpenCreateRoute}
-                                    stateOpenJoinRoute={stateOpenJoinRoute}
-                                >
-                                    <DialogCreateRoute stateOpen={stateOpenCreateRoute} />
-                                    <DialogJoinRoute stateOpen={stateOpenJoinRoute} />
-                                </SpeedDialCreateRoute>
+                                <>
+                                    <div className="mb-2 flex justify-end">
+                                        <HotelIcon className="cursor-pointer" sx={{ fontSize: 40 }} onClick={() => {
+                                            setOnSelectLocationMap(true)
+                                            setOpenDialogAlojamiento(true)
+                                        }} />
+                                    </div>
+                                    <SpeedDialCreateRoute
+                                        stateOpen={[openSpeedCreateRoute, setOpenSpeedCreateRoute]}
+                                        stateOpenCreateRoute={stateOpenCreateRoute}
+                                        stateOpenJoinRoute={stateOpenJoinRoute}
+                                    >
+                                        <DialogCreateRoute stateOpen={stateOpenCreateRoute} />
+                                        <DialogJoinRoute stateOpen={stateOpenJoinRoute} />
+                                    </SpeedDialCreateRoute>
+                                </>
                                 :
                                 <SpeedDialRoute 
                                     stateOpen={[ openDialRoute, setOpenDialRoute ]}
@@ -171,7 +199,6 @@ export default function Home() {
                                     />
                                 </SpeedDialRoute>
                             }
-                            
                         </div>
                     </>
                     :
@@ -188,6 +215,7 @@ export default function Home() {
                     </Card>
                 }
             </div>
+            <DialogCreateAlojamiento stateOpen={[openDialogAlojamiento, setOpenDialogAlojamiento]} location={location} onCreate={handleCreateAlojamiento} />
             <DialogUpdateRisk />
         </div>
     )

@@ -8,13 +8,15 @@ type MapEventsProps = {
     stateOnSelectLocationMap : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateDialogAttended : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ],
     stateDialogRisk : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ],
+    stateDialogAlojamiento?: [ boolean, React.Dispatch<React.SetStateAction<boolean>> ],
 }
 
-export default function MapEvents({setLocation, stateOnSelectLocationMap, stateDialogAttended, stateDialogRisk} : MapEventsProps) {
+export default function MapEvents({setLocation, stateOnSelectLocationMap, stateDialogAttended, stateDialogRisk, stateDialogAlojamiento} : MapEventsProps) {
     
     const [ flag, setFlag ] = useState('')
     const [ openDialogAttended, setOpenDialogAttended ] = stateDialogAttended
     const [ openDialogRisk, setOpenDialogRisk ] = stateDialogRisk
+    const [ openDialogAlojamiento, setOpenDialogAlojamiento ] = stateDialogAlojamiento ?? [false, () => {}]
     const [ onSelectLocationMap, setOnSelectLocationMap ] = stateOnSelectLocationMap
 
 
@@ -23,8 +25,10 @@ export default function MapEvents({setLocation, stateOnSelectLocationMap, stateD
             setFlag('attended')
         } else if(openDialogRisk) {
             setFlag('risk')
-        }   
-    }, [ openDialogAttended, openDialogRisk])
+        } else if(openDialogAlojamiento) {
+            setFlag('alojamiento')
+        }
+    }, [ openDialogAttended, openDialogRisk, openDialogAlojamiento])
     
     useMapEvents( {
         click(e) {
@@ -34,6 +38,8 @@ export default function MapEvents({setLocation, stateOnSelectLocationMap, stateD
                 setOpenDialogRisk(true)
             } else if(flag == 'attended') {
                 setOpenDialogAttended(true)
+            } else if(flag == 'alojamiento') {
+                setOpenDialogAlojamiento(true)
             }
         },
     });

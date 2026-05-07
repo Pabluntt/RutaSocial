@@ -34,7 +34,7 @@ export default function ListIconHome() {
     }
 
     const onClickSchedule = () => {
-        navigate(`${import.meta.env.VITE_BASE_URL}/calendario`)
+        navigate(`${import.meta.env.VITE_BASE_URL}/mapa`)
     }
 
     return(
