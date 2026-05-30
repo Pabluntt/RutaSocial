@@ -23,7 +23,17 @@ export default function MapEvents({setLocation, stateOnSelectLocationMap, stateD
 
 
     useEffect(() => {
-        if(openDialogAttended) {
+        // Usar onSelectLocationMap para determinar el flag si estamos en modo selección
+        if(onSelectLocationMap) {
+            // Determinar qué diálogo estaba abierto antes
+            if(openDialogAttended) {
+                setFlag('attended')
+            } else if(openDialogRisk) {
+                setFlag('risk')
+            } else if(selectingAlojamiento) {
+                setFlag('alojamiento')
+            }
+        } else if(openDialogAttended) {
             setFlag('attended')
         } else if(openDialogRisk) {
             setFlag('risk')
@@ -32,23 +42,32 @@ export default function MapEvents({setLocation, stateOnSelectLocationMap, stateD
         } else {
             setFlag('')
         }
-    }, [ openDialogAttended, openDialogRisk, selectingAlojamiento])
+    }, [ openDialogAttended, openDialogRisk, selectingAlojamiento, onSelectLocationMap])
     
     useMapEvents( {
         click(e: { latlng: { lat: number; lng: number } }) {
+            console.log('[MapEvents] CLICK en mapa con coords:', {latitude: e.latlng.lat, longitude: e.latlng.lng})
             setLocation({latitude: e.latlng.lat, longitude: e.latlng.lng})
             setOnSelectLocationMap(false)
+            
             if(flag == 'risk') {
-                setOpenDialogRisk(true)
-                setFlag('')
+                setOpenDialogRisk(false)
+                setTimeout(() => {
+                    setOpenDialogRisk(true)
+                }, 50)
             } else if(flag == 'attended') {
-                setOpenDialogAttended(true)
-                setFlag('')
+                setOpenDialogAttended(false)
+                setTimeout(() => {
+                    setOpenDialogAttended(true)
+                }, 50)
             } else if(flag == 'alojamiento') {
-                setOpenDialogAlojamiento(true)
-                setSelectingAlojamiento(false)
-                setFlag('')
+                setOpenDialogAlojamiento(false)
+                setTimeout(() => {
+                    setOpenDialogAlojamiento(true)
+                    setSelectingAlojamiento(false)
+                }, 50)
             }
+            setFlag('')
         },
     });
     return false

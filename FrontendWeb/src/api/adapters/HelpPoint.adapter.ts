@@ -23,6 +23,9 @@ export type THelpPointCreateRequest = Omit<THelpPointBackend, '_id' | 'date_regi
 export type THelpPointUpdateRequest = THelpPointCreateRequest & Pick<THelpPointBackend, '_id'>
 
 export function MapHelpedPersonFromBackend(data: Partial<TPeopleHelpedBackend>): HelpedPerson {
+    const requiredFields = ['age', 'gender', 'name'] as const;
+    const optionalFields = ['rut'] as const;
+    
     const person: Partial<HelpedPerson> = {
         age: data.age,
         gender: data.gender,
@@ -30,11 +33,12 @@ export function MapHelpedPersonFromBackend(data: Partial<TPeopleHelpedBackend>):
         rut: data.rut
     };
 
-    Object.entries(person).forEach(([key, value]) => {
-        if (value === undefined) {
+    requiredFields.forEach((key) => {
+        if (person[key] === undefined) {
             throw new Error(`Missing required field in HelpedPerson: ${key}`)
         }
     })
+    
     return person as HelpedPerson
 }
 
@@ -47,15 +51,17 @@ export function MapHelpPointFromBackend(data: Partial<THelpPointBackend>): HelpP
         routeID: data.route_id,
         authorID : data.author_id,
         coords: data.coords,
-        dateRegister: data.date_register ? new Date(data.date_register) : undefined,
+        dateRegister: data.date_register ? new Date(data.date_register) : new Date(),
         comment: data.comment ?? '',
         people: mappedPeople,
         peopleHelped: mappedPeople[0],
         disabled: false 
     }
 
-    Object.entries(point).forEach(([key, value]) => {
-        if (value === undefined) {
+    const requiredFields = ['id', 'routeID', 'authorID', 'coords', 'dateRegister', 'comment', 'people', 'disabled'] as const;
+    
+    requiredFields.forEach((key) => {
+        if (point[key] === undefined) {
             throw new Error(`Missing required field in HelpPoint: ${key}`);
         }
     })

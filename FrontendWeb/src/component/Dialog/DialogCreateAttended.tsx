@@ -9,7 +9,7 @@ import ReplayIcon from '@mui/icons-material/Replay';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import AddIcon from '@mui/icons-material/Add';
 import { Alert, CircularProgress, IconButton, TextField, Typography, Zoom } from '@mui/material';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import getCurrentLocation, { Position } from '../../utils/getCurrentLocation';
 import useSessionStore from '../../stores/useSessionStore';
 import CloseDialogButton from '../Button/CloseDialogButton';
@@ -42,6 +42,8 @@ export type DialogCreateAttendedProps = {
     stateOnSelectLocationMap : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateLocationMethod : [ LocationMethod, React.Dispatch<React.SetStateAction<LocationMethod>> ]
     stateAttended : [ TUserRegister, React.Dispatch<React.SetStateAction<TUserRegister>> ]
+    statePeople : [ PersonDraft[], React.Dispatch<React.SetStateAction<PersonDraft[]>> ]
+    stateCoords : [ number[], React.Dispatch<React.SetStateAction<number[]>> ]
     location : Position
 }
 
@@ -63,23 +65,33 @@ function isValidRutFormat(rut: string) {
     return /^(?:\d{1,2}\.\d{3}\.\d{3}-[\dkK]|\d{7,8}-[\dkK])$/.test(normalizeRut(rut));
 }
 
-export default function DialogCreateAttended({ stateAttended, stateOpen, stateOnSelectLocationMap, location, stateLocationMethod } : DialogCreateAttendedProps) {
+export default function DialogCreateAttended({ stateAttended, stateOpen, stateOnSelectLocationMap, location, stateLocationMethod, statePeople, stateCoords } : DialogCreateAttendedProps) {
 
     const authorID = useProfile().data?.id
     const { routeId } = useSessionStore()
     const [ open, setOpen ] = stateOpen
-    const [ _, setOnSelectLocationMap ] = stateOnSelectLocationMap
+    const [ onSelectLocationMap, setOnSelectLocationMap ] = stateOnSelectLocationMap
     const [ attendedP, setAttendedP ] = stateAttended
+    const [ people, setPeople ] = statePeople
+    const [ coords, setCoords ] = stateCoords
 
-    const [ coords, setCoords ] = useState<number[]>([])
     const [ locationMethod, setLocationMethod ] = stateLocationMethod
     const [ createButtonDisable, setCreateButtonDisable ] = useState(true)
     const [ error, setError ] = useState<string | undefined>()
     const [ comment, setComment ] = useState('')
-    const [ people, setPeople ] = useState<PersonDraft[]>(() => [createPersonDraft(attendedP)])
 
     const { mutate, isError, isSuccess, isPending, isIdle, reset } = useCreateHelpPoint()
     const { refetch } = useHelpPoints()
+    
+    // Rastrear el valor anterior de onSelectLocationMap
+    const prevOnSelectLocationMapRef = useRef(onSelectLocationMap)
+    const hasLocationRef = useRef(false)
+    const isSelectingLocationRef = useRef(false)
+
+    useEffect(() => {
+        // Actualizar la ref cada vez que onSelectLocationMap cambia
+        isSelectingLocationRef.current = onSelectLocationMap
+    }, [onSelectLocationMap])
 
     const primaryPerson = useMemo(() => people[0], [people])
 
@@ -95,19 +107,39 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
     }
 
     const handleSelectLocationMap = () => {
+        console.log('[DialogCreateAttended] handleSelectLocationMap presionado. Antes: onSelectLocationMap=', onSelectLocationMap)
         setLocationMethod(LocationMethod.Map)
         setOnSelectLocationMap(true)
-        setOpen(false)
+        console.log('[DialogCreateAttended] handleSelectLocationMap ejecutado. Después: onSelectLocationMap debería ser true')
     }
 
     useEffect(() => {
+        // Detectar transición de true a false
+        const wasSelecting = prevOnSelectLocationMapRef.current
+        const nowSelecting = onSelectLocationMap
+        
+        console.log('[DialogCreateAttended] onSelectLocationMap cambió. wasSelecting:', wasSelecting, 'nowSelecting:', nowSelecting)
+        
+        if (wasSelecting && !nowSelecting) {
+            console.log('[DialogCreateAttended] TRANSICIÓN DETECTADA: true -> false, setea hasLocationRef.current = true')
+            hasLocationRef.current = true
+        }
+        
+        prevOnSelectLocationMapRef.current = onSelectLocationMap
+    }, [onSelectLocationMap])
+
+    useEffect(() => {
+        console.log('[DialogCreateAttended] location cambió:', location)
         if(location.latitude != 0) {
+            console.log('[DialogCreateAttended] ESTABLECIENDO COORDS:', [location.latitude, location.longitude])
             setLocationMethod(LocationMethod.Map)
             setCoords([location.latitude, location.longitude])
+            // NO resetear hasLocationRef, solo setear coords
         }
     }, [location])
 
     useEffect(() => {
+        console.log('[DialogCreateAttended] useEffect coords cambió:', coords, 'createButtonDisable:', createButtonDisable)
         if(coords.length === 2) {
             setCreateButtonDisable(false)
         }
@@ -126,16 +158,27 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
 
     const clearStates = () => {
         reset()
-        setCoords([])
+        // No limpiar coords ya que se mantiene en el padre
+        // setCoords([])
         setCreateButtonDisable(true)
         setLocationMethod(LocationMethod.None)
         setError(undefined)
         setComment('')
-        setPeople([createPersonDraft()])
+        setPeople([createPersonDraft()])  // Resetear a 1 persona vacía
     }
 
     const handleClose = () => {
+        // Usar la ref para determinar si estamos en modo seleccionar ubicación
+        // Esto asegura que tenemos el valor actual, no el del closure anterior
+        if (isSelectingLocationRef.current) {
+            // Do nothing - dejar todo como está, solo se ocultará visualmente
+            return
+        }
+        
+        // Si es un cierre real (no por seleccionar ubicación), limpiar todo
+        clearStates()
         setOpen(false)
+        reset()
     }
 
     const updatePerson = (id: string, field: keyof Omit<PersonDraft, 'id'>, value: string) => {
@@ -160,25 +203,22 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
             return
         }
 
+        // Filtrar solo personas que tienen al menos nombre (es lo único obligatorio)
         const validPeople = people
+            .filter(person => person.name.trim().length > 0)
             .map(person => ({
                 name: person.name.trim(),
                 rut: normalizeRut(person.rut),
                 age: person.age.trim(),
             }))
-            .filter(person => person.name.length > 0 || person.rut.length > 0 || person.age.length > 0)
 
         if(validPeople.length === 0) {
             alert('Debes agregar al menos una persona con nombre')
             return
         }
 
-        if(validPeople.some(person => person.name.length === 0)) {
-            alert('El nombre de cada persona es obligatorio')
-            return
-        }
-
-        if(validPeople.some(person => !isValidRutFormat(person.rut))) {
+        // Validar formato de RUT si está presente
+        if(validPeople.some(person => person.rut.length > 0 && !isValidRutFormat(person.rut))) {
             alert('El formato del RUT no es válido')
             return
         }
@@ -219,17 +259,10 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
     return (
         <BootstrapDialog 
             fullWidth
-            open={open} 
+            open={open && !onSelectLocationMap}
             onClose={handleClose}
             aria-labelledby='attended-titulo'
             keepMounted
-            slotProps={{
-                transition : {
-                    onExited: () => {
-                        clearStates()
-                    }
-                }
-            }}    
         >
             <DialogTitle className='m-0 p-2' id="attended-titulo">
                 {

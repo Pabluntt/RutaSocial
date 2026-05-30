@@ -60,6 +60,15 @@ export default function Home() {
         gender : 'Sin especificar'
     })
     const [ locationMethod, setLocationMethod ] = useState<LocationMethod>(LocationMethod.None)
+    
+    // Estado para personas en el diálogo de punto de atención
+    // Se mantiene en el padre para no perderse si el diálogo se desmonta
+    const [ attendedPeople, setAttendedPeople ] = useState<{ id: string; name: string; rut: string; age: string }[]>(() => [
+        { id: `${Date.now()}-${Math.random()}`, name: '', rut: '', age: '' }
+    ])
+    
+    // Estado para coordenadas del diálogo de punto de atención
+    const [ attendedCoords, setAttendedCoords ] = useState<number[]>([])
 
     const [ risks, setRisks ] = useState<Risk[]>([])
     const [ helpPoints, setHelpPoints ] = useState<HelpPoint[]>([])
@@ -120,9 +129,15 @@ export default function Home() {
             setRisks(riskQuery.data)
         }
         if(helpPointQuery.data) {
-            setHelpPoints(helpPointQuery.data)
+            // Si hay una ruta activa, filtrar solo los puntos de esa ruta
+            if(routeStatus && routeId) {
+                const filteredPoints = helpPointQuery.data.filter(hp => hp.routeID === routeId)
+                setHelpPoints(filteredPoints)
+            } else {
+                setHelpPoints(helpPointQuery.data)
+            }
         }
-    }, [riskQuery.data, helpPointQuery.data])
+    }, [riskQuery.data, helpPointQuery.data, routeStatus, routeId])
 
     useEffect(() => {
         console.log("ROL DEL USUARIO: ", role)
@@ -235,6 +250,8 @@ export default function Home() {
                                         stateOpen={[openDialogAttended, setOpenDialogAttended]} 
                                         stateOnSelectLocationMap={[ onSelectLocationMap, setOnSelectLocationMap]} 
                                         stateLocationMethod={[locationMethod, setLocationMethod]}
+                                        statePeople={[attendedPeople, setAttendedPeople]}
+                                        stateCoords={[attendedCoords, setAttendedCoords]}
                                         location={location}
                                     />
                                     <DialogCreateRisk 
