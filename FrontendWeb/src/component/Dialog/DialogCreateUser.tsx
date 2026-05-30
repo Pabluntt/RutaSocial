@@ -6,12 +6,13 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
-import { FormControl, FormHelperText, Input, InputLabel, Typography } from '@mui/material';
+import { FormControl, FormHelperText, Input, InputLabel, Typography, Alert } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useAdminCreateUser } from '../../api/hooks/UserHooks';
 import { IUser } from '../../api/models/User';
 import ComboBox from '../Button/ComboBox';
 import { useInstitutions } from '../../api/hooks/InstitutionHooks';
+import { Role } from '../../Enums/Role';
 
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
@@ -32,7 +33,8 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
 type AdminCreateUser = Pick<IUser,
     'email' |
     'password' |
-    'institutionID'
+    'institutionID' |
+    'role'
 > & Partial<Pick<IUser,
     'name' |
     'phone'
@@ -44,6 +46,7 @@ type AdminCreateUserError = {
     password: string
     phone: string
     institutionID: string
+    role: string
 }
 
 
@@ -55,7 +58,8 @@ export default function DialogCreateUser({ open, setOpen } : { open : boolean, s
         email : '',
         password : '',
         phone : '',
-        institutionID : ''
+        institutionID : '',
+        role: Role.volunteer
     })
 
     const [ inputError, setInputError ] = useState<AdminCreateUserError>({
@@ -63,13 +67,30 @@ export default function DialogCreateUser({ open, setOpen } : { open : boolean, s
         email : '',
         password : '',
         phone : '',
-        institutionID : ''
+        institutionID : '',
+        role: ''
     })
 
 
     const [ loading, setLoading ] = useState(false)
-    const { isSuccess, mutate, error, data, reset } = useAdminCreateUser()
+    const { isSuccess, mutate, error, data, reset, isPending } = useAdminCreateUser()
     const institutions = useInstitutions().data 
+
+    useEffect(() => {
+        if(data || isSuccess) {
+            setTimeout(() => {
+                handleOnClose()
+            }, 1000)
+        }
+    }, [data, isSuccess])
+
+    useEffect(() => {
+        if(isPending) {
+            setLoading(true)
+        } else {
+            setLoading(false)
+        }
+    }, [isPending])
 
     const handleInputChange = (input: keyof AdminCreateUser) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const value = e.target.value;
@@ -79,16 +100,6 @@ export default function DialogCreateUser({ open, setOpen } : { open : boolean, s
             setInputError({ ...inputError, [input]: (value.trim() === '' ? `Campo ${input} es obligatorio` : '')});
         }
     };
-
-
-    useEffect(() => {
-        if(data || isSuccess) {
-            
-            setTimeout(() => {
-                handleOnClose()
-            }, 1000)
-        }
-    }, [data, isSuccess])
 
     const validateForm = () => {
         if(user.email.trim() === '') {
@@ -107,22 +118,28 @@ export default function DialogCreateUser({ open, setOpen } : { open : boolean, s
             setInputError({...inputError, institutionID : 'Debe seleccionar una institución'})
             return false 
         }
-        setInputError({name: '', email: '', password: '', institutionID:'', phone: ''})
+        setInputError({name: '', email: '', password: '', institutionID:'', phone: '', role: ''})
         return true
     }
 
     const handleUserRegister = () => {
-        setLoading(true)
         if(!validateForm()) return
         mutate({
-            ...user,
-            role: 'usuario'
+            ...user
         })
     }
 
     const handleOnClose = () => {
         setLoading(false)
-        setInputError({name :'', email : '', password: '', phone : '', institutionID : ''})
+        setInputError({name :'', email : '', password: '', phone : '', institutionID : '', role: ''})
+        setUser({
+            name : '',
+            email : '',
+            password : '',
+            phone : '',
+            institutionID : '',
+            role: Role.volunteer
+        })
         reset()
         setOpen(false)
     }
@@ -201,16 +218,29 @@ export default function DialogCreateUser({ open, setOpen } : { open : boolean, s
                                 </div>
 
                                 <div className="w-1/4">
-                                    <FormControl variant="standard" fullWidth>
+                                    <FormControl variant="standard" fullWidth required error={inputError.role !== ''}>
                                         <InputLabel htmlFor='rol-input' shrink>Rol</InputLabel>
-                                        <Input disabled value="usuario" id="rol-input" />
+                                        <ComboBox
+                                            fullWidth
+                                            variant="standard"
+                                            size="medium"
+                                            label="Rol"
+                                            options={[Role.volunteer, Role.admin]}
+                                            onChange={(e, v) => {
+                                                const rolSelected = v as string;
+                                                setUser({ ...user, role: rolSelected as any });
+                                            }}
+                                            value={user.role || ''}
+                                        />
+                                        <FormHelperText error={inputError.role !== ''}>{inputError.role}</FormHelperText>
                                     </FormControl>
                                 </div>
                             </div>
 
                         </div>
                         <div className='px-2'>
-                            {<Typography className={isSuccess ? 'text-blue-600' : 'text-red-700'}>{isSuccess ? 'Se creo correctamente' : (error ? (error as any).error : '')}</Typography>}
+                            {error && <Alert severity="error">{(error as any)?.error || 'Error al crear el usuario'}</Alert>}
+                            {isSuccess && <Alert severity="success">Usuario creado correctamente</Alert>}
                         </div>
                     </div>
                 </DialogContent>

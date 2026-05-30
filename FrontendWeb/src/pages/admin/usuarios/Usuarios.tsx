@@ -66,8 +66,8 @@ export default function Usuarios() {
     const theme = useTheme();
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'));
 
-    // Verificar si el usuario es admin
-    if(role !== Role.admin) {
+    // Verificar si el usuario está autenticado
+    if(!role || (role !== Role.admin && role !== Role.volunteer)) {
         return (
             <div className={"flex grow " + (computerDevice ? 'flex-row' : 'flex-col')}>
                 { computerDevice ? 
@@ -83,7 +83,7 @@ export default function Usuarios() {
                 <div className="flex w-full h-full items-center justify-center">
                     <Alert severity="error">
                         <Typography variant="h6">Acceso Denegado</Typography>
-                        <Typography>Solo los administradores pueden acceder a esta página.</Typography>
+                        <Typography>No tienes permiso para acceder a esta página.</Typography>
                     </Alert>
                 </div>
             </div>
@@ -130,10 +130,12 @@ export default function Usuarios() {
                         </Paper>
                         <Button size="small" variant="contained" onClick={()=>{setOpen(true)}}>
                             Agregar Usuario
-                        </Button> 
-                        <Button size="small" variant="contained" onClick={() => {setOpenAddInstitution(true)}}>
-                            Agregar Institución    
-                        </Button> 
+                        </Button>
+                        {role === Role.admin && (
+                            <Button size="small" variant="contained" onClick={() => {setOpenAddInstitution(true)}}>
+                                Agregar Institución    
+                            </Button> 
+                        )}
                         <Tooltip title={'exportar datos'}>
                             <Button color='info' variant="contained" onClick={handleExport}>
                                 <FileDownloadIcon fontSize="large" />
@@ -157,7 +159,7 @@ export default function Usuarios() {
                             </Typography>
                         </div>
                         :
-                        <TableUser users={users} setUsers={setUsers} prefixSearch={prefix} institutions={institutions} setInstitutions={setInstitutions}/>
+                        <TableUser users={users} setUsers={setUsers} prefixSearch={prefix} institutions={institutions} setInstitutions={setInstitutions} isAdmin={role === Role.admin}/>
                     }
                 </div>
             </div>

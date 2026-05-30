@@ -19,6 +19,7 @@ type UserUseCase interface {
 	GetAllUsers(c *gin.Context)
 	GetPublicInfoByID(c *gin.Context)
 	CreateUserByAdmin(c *gin.Context)
+	DeleteUser(c *gin.Context)
 }
 
 // UserUseCase implementa la interfaz UserUseCase.
@@ -162,14 +163,15 @@ func (u userUseCase) CreateUserByAdmin(c *gin.Context) {
 		return
 	}
 
-	if req.Role != "" && !utils.IsValidString(req.Role) {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "El rol contiene caracteres inválidos"})
-		return
-	}
-
+	// Validar y establecer rol
 	role := req.Role
 	if role == "" {
-		role = "usuario"
+		role = "voluntario"
+	}
+	// Solo permitir roles conocidos
+	if role != "admin" && role != "voluntario" {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "El rol debe ser 'admin' o 'voluntario'"})
+		return
 	}
 
 	newUser := domain.Usuario{
@@ -189,6 +191,31 @@ func (u userUseCase) CreateUserByAdmin(c *gin.Context) {
 
 	createdUser.Password = ""
 	c.IndentedJSON(http.StatusCreated, gin.H{"message": createdUser})
+}
+
+// DeleteUser maneja la solicitud para eliminar un usuario por su ID.
+// @Summary Eliminar usuario
+// @Description Elimina un usuario específico mediante su ID. Requiere autenticación y rol de administrador.
+// @Tags Usuarios
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "ID del usuario a eliminar"
+// @Success 200 {object} object "Usuario eliminado exitosamente"
+// @Failure 400 {object} domain.ErrorResponse "Usuario no encontrado"
+// @Failure 401 {object} domain.ErrorResponse "No autorizado"
+// @Failure 401 {object} domain.ErrorResponse "Token inválido"
+// @Failure 401 {object} domain.ErrorResponse "Rol no encontrado"
+// @Failure 400 {object} domain.ErrorResponse "Acceso denegado"
+// @Router /user/{id} [delete]
+func (u userUseCase) DeleteUser(c *gin.Context) {
+	id := c.Param("id")
+	err := u.userRepository.DeleteUserByID(id)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "Usuario eliminado exitosamente"})
 }
 
 // ValidateUser valida el token JWT del usuario autenticado y retorna la información del usuario.

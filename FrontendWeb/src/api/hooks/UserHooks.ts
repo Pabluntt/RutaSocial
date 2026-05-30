@@ -80,3 +80,9 @@ export function useUserParticipation( id: string) {
     })
 }
 
+export function useDeleteUser() {
+    return useMutation({
+        mutationFn: (id: string) => (UserService.DeleteUser(id)),
+    })
+}
+

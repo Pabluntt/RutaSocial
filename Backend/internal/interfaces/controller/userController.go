@@ -136,3 +136,22 @@ func (u *userController) GetPublicInfoByID(c *gin.Context) {
 func (u *userController) CreateUserByAdmin(c *gin.Context) {
 	u.userUseCase.CreateUserByAdmin(c)
 }
+
+// DeleteUser maneja la solicitud para eliminar un usuario por su ID.
+// @Summary Eliminar usuario
+// @Description Elimina un usuario específico mediante su ID. Requiere autenticación y rol de administrador.
+// @Tags Usuarios
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "ID del usuario a eliminar"
+// @Success 200 {object} object "Usuario eliminado exitosamente"
+// @Failure 400 {object} domain.ErrorResponse "Usuario no encontrado"
+// @Failure 401 {object} domain.ErrorResponse "No autorizado"
+// @Failure 401 {object} domain.ErrorResponse "Token inválido"
+// @Failure 401 {object} domain.ErrorResponse "Rol no encontrado"
+// @Failure 400 {object} domain.ErrorResponse "Acceso denegado"
+// @Router /user/{id} [delete]
+func (u *userController) DeleteUser(c *gin.Context) {
+	u.userUseCase.DeleteUser(c)
+}

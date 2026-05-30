@@ -1,11 +1,13 @@
-import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, Divider, Checkbox, alpha, Box, IconButton, TableSortLabel, Toolbar, Tooltip, Typography, useMediaQuery, useTheme, CircularProgress } from "@mui/material";
+import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, Divider, Checkbox, alpha, Box, IconButton, TableSortLabel, Toolbar, Tooltip, Typography, useMediaQuery, useTheme, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Button as MuiButton, TextField, Alert } from "@mui/material";
 import { visuallyHidden } from '@mui/utils';
 import DeleteIcon from '@mui/icons-material/Delete';
-import React, { useEffect } from "react";
+import EditIcon from '@mui/icons-material/Edit';
+import React, { useEffect, useState } from "react";
 import { Order, getComparator } from "../utils/utilsSort";
 import { IUser } from "../api/models/User";
 import { useInstitution } from "../api/hooks/InstitutionHooks";
 import { Institution } from "../api/models/Institution";
+import { useDeleteUser, useUpdateUser } from "../api/hooks/UserHooks";
 
 type SortableUserKeys = keyof Omit<IUser, 'listRoutes' | 'dateRegister' | 'completedRoutes'>;
 
@@ -55,12 +57,13 @@ interface EnhancedTableProps {
   order: Order;
   orderBy: string;
   rowCount: number;
+  isAdmin: boolean;
 }
 
 function EnhancedTableHead(props: EnhancedTableProps) {
   const theme = useTheme();
   const computerDevice = useMediaQuery(theme.breakpoints.up('sm'));
-  const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort } =
+  const { onSelectAllClick, order, orderBy, numSelected, rowCount, onRequestSort, isAdmin } =
     props;
   const createSortHandler =
     (property: SortableUserKeys) => (event: React.MouseEvent<unknown>) => {
@@ -102,6 +105,11 @@ function EnhancedTableHead(props: EnhancedTableProps) {
             </TableSortLabel>
           </TableCell>
         ))}
+        {isAdmin && (
+          <TableCell align="center" sx={{ width: 120 }}>
+            Acciones
+          </TableCell>
+        )}
       </TableRow>
     </TableHead>
   );
@@ -166,13 +174,21 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
   );
 }
 
-export default function TableUser({ users, setUsers, prefixSearch, institutions, setInstitutions } : { users : IUser[], setUsers : (newUsers : IUser[]) => void, prefixSearch : string, institutions : Institution[], setInstitutions : (instutions : Institution[]) => void }) {
+export default function TableUser({ users, setUsers, prefixSearch, institutions, setInstitutions, isAdmin = false } : { users : IUser[], setUsers : (newUsers : IUser[]) => void, prefixSearch : string, institutions : Institution[], setInstitutions : (instutions : Institution[]) => void, isAdmin?: boolean }) {
   
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<SortableUserKeys>('email');
   const [selected, setSelected] = React.useState<readonly string[]>([]);
+  const [editingUser, setEditingUser] = useState<IUser | null>(null);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [editFormData, setEditFormData] = useState<Partial<IUser>>({});
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertSeverity, setAlertSeverity] = useState<'success' | 'error'>('success');
+  const [showAlert, setShowAlert] = useState(false);
   const theme = useTheme();
   const computerDevice = useMediaQuery(theme.breakpoints.up('sm'));
+  const { mutate: deleteUserMutate, isPending: isDeleting } = useDeleteUser();
+  const { mutate: updateUserMutate, isPending: isUpdating } = useUpdateUser();
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
     property: SortableUserKeys,
@@ -224,8 +240,74 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
     setSelected([])
   }
 
+  const handleEditClick = (user: IUser) => {
+    setEditingUser(user);
+    setEditFormData(user);
+    setOpenEditDialog(true);
+  };
+
+  const handleDeleteClick = (user: IUser) => {
+    if (window.confirm(`¿Estás seguro de que deseas eliminar a ${user.name}?`)) {
+      deleteUserMutate(user.id, {
+        onSuccess: () => {
+          setUsers(users.filter((u) => u.id !== user.id));
+          setAlertMessage('Usuario eliminado exitosamente');
+          setAlertSeverity('success');
+          setShowAlert(true);
+          setTimeout(() => setShowAlert(false), 3000);
+        },
+        onError: (error) => {
+          setAlertMessage('Error al eliminar usuario');
+          setAlertSeverity('error');
+          setShowAlert(true);
+          setTimeout(() => setShowAlert(false), 3000);
+        }
+      });
+    }
+  };
+
+  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditFormData({
+      ...editFormData,
+      [name]: value,
+    });
+  };
+
+  const handleSaveEdit = () => {
+    if (editingUser) {
+      updateUserMutate(editFormData, {
+        onSuccess: () => {
+          setUsers(
+            users.map((user) =>
+              user.id === editingUser.id ? { ...user, ...editFormData } : user
+            )
+          );
+          setOpenEditDialog(false);
+          setEditingUser(null);
+          setEditFormData({});
+          setAlertMessage('Usuario actualizado exitosamente');
+          setAlertSeverity('success');
+          setShowAlert(true);
+          setTimeout(() => setShowAlert(false), 3000);
+        },
+        onError: () => {
+          setAlertMessage('Error al actualizar usuario');
+          setAlertSeverity('error');
+          setShowAlert(true);
+          setTimeout(() => setShowAlert(false), 3000);
+        }
+      });
+    }
+  };
+
   return (
     <Box sx={{ width: '100%' }}>
+      {showAlert && (
+        <Alert severity={alertSeverity} sx={{ mb: 2 }}>
+          {alertMessage}
+        </Alert>
+      )}
       <Paper sx={{ width: '100%', mb: 2 }}>
         <EnhancedTableToolbar numSelected={selected.length} onDeleteUsers={onDeleteUsers}/>
         <TableContainer>
@@ -242,6 +324,7 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
               onSelectAllClick={handleSelectAllClick}
               onRequestSort={handleRequestSort}
               rowCount={users.length}
+              isAdmin={isAdmin}
             />
             <TableBody>
               {visibleRows.map((row, index) => {
@@ -309,7 +392,28 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
                     </TableCell>
                     <TableCell align={'center'}>{row.role}</TableCell>
                     <TableCell align={("center")}>{row.phone}</TableCell>
-                    
+                    {isAdmin && (
+                      <TableCell align="center" onClick={(e) => e.stopPropagation()}>
+                        <Tooltip title="Editar">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleEditClick(row)}
+                            color="primary"
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Eliminar">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDeleteClick(row)}
+                            color="error"
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })}
@@ -317,6 +421,46 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
           </Table>
         </TableContainer>
       </Paper>
+
+      {/* Dialog de edición de usuario */}
+      {isAdmin && (
+        <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>Editar Usuario</DialogTitle>
+          <DialogContent sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="Nombre"
+              name="name"
+              value={editFormData.name || ''}
+              onChange={handleEditFormChange}
+              fullWidth
+              variant="outlined"
+            />
+            <TextField
+              label="Email"
+              name="email"
+              value={editFormData.email || ''}
+              onChange={handleEditFormChange}
+              fullWidth
+              variant="outlined"
+              disabled
+            />
+            <TextField
+              label="Teléfono"
+              name="phone"
+              value={editFormData.phone || ''}
+              onChange={handleEditFormChange}
+              fullWidth
+              variant="outlined"
+            />
+          </DialogContent>
+          <DialogActions>
+            <MuiButton onClick={() => setOpenEditDialog(false)}>Cancelar</MuiButton>
+            <MuiButton onClick={handleSaveEdit} variant="contained">
+              Guardar
+            </MuiButton>
+          </DialogActions>
+        </Dialog>
+      )}
     </Box>
   );
 }

@@ -6,10 +6,10 @@ import useSessionStore from '../../stores/useSessionStore'
 
 export const axiosInstance = axios.create({
     baseURL: import.meta.env.VITE_URL_BACKEND,
-    timeout: 3000,
+    timeout: 10000,
     headers: {
         'Content-Type': 'application/json',
-        Accept: 'applicacion/json'
+        Accept: 'application/json'
     }
 })
 

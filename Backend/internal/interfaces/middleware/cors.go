@@ -48,17 +48,21 @@ func CORSMiddleware() gin.HandlerFunc {
 		
 		log.Printf("[CORS DEBUG] isAllowed: %v, Allowed origins: %v", isAllowed, allowedOrigins)
 		
-		// SIEMPRE establecer headers CORS
-		if isAllowed {
-			if origin != "" {
-				c.Header("Access-Control-Allow-Origin", origin)
-				log.Printf("[CORS DEBUG] Set Access-Control-Allow-Origin: %s", origin)
-			} else {
-				c.Header("Access-Control-Allow-Origin", "*")
-				log.Printf("[CORS DEBUG] Set Access-Control-Allow-Origin: *")
-			}
+		// Siempre establecer headers CORS para solicitudes desde orígenes permitidos
+		if isAllowed && origin != "" {
+			c.Header("Access-Control-Allow-Origin", origin)
+			log.Printf("[CORS DEBUG] Set Access-Control-Allow-Origin: %s", origin)
+		} else if isAllowed {
+			c.Header("Access-Control-Allow-Origin", "*")
+			log.Printf("[CORS DEBUG] Set Access-Control-Allow-Origin: *")
 		} else {
-			log.Printf("[CORS DEBUG] Origin %s is NOT allowed", origin)
+			// Para desarrollo, permitir localhost incluso si no está en la lista
+			if origin != "" && (strings.Contains(origin, "localhost") || strings.Contains(origin, "127.0.0.1")) {
+				c.Header("Access-Control-Allow-Origin", origin)
+				log.Printf("[CORS DEBUG] Set Access-Control-Allow-Origin (development): %s", origin)
+			} else {
+				log.Printf("[CORS DEBUG] Origin %s is NOT allowed", origin)
+			}
 		}
 		
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD")
@@ -69,7 +73,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		
 		// Manejar peticiones OPTIONS
 		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
+			c.JSON(204, nil)
 			return
 		}
 		

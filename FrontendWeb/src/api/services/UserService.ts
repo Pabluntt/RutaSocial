@@ -53,4 +53,8 @@ export class UserService {
         const { data } = await axiosInstance.get(`/route/participation/${id}`)
         return data?.message as TParticipationRespone
     }
+
+    static async DeleteUser(id : string) : Promise<void> {
+        await axiosInstance.delete(`/user/${id}`)
+    }
 } 

@@ -19,6 +19,7 @@ type UserRepository interface {
 	GetAllUsers() ([]domain.Usuario, error)
 	GetPublicInfoByID(id string) (map[string]string, error)
 	CreateUserByAdmin(user domain.Usuario) (domain.Usuario, error)
+	DeleteUserByID(id string) error
 }
 
 // userRepository implementa la interfaz UserRepository.
@@ -183,4 +184,24 @@ func (u *userRepository) CreateUserByAdmin(user domain.Usuario) (domain.Usuario,
 	}
 
 	return user, nil
+}
+
+// DeleteUserByID elimina un usuario por su ID.
+// Recibe el ID como string, lo convierte a ObjectID y lo elimina de la base de datos.
+func (u *userRepository) DeleteUserByID(id string) error {
+	objID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return errors.New("ID de usuario inválido")
+	}
+
+	result, err := u.UserCollection.DeleteOne(context.Background(), bson.M{"_id": objID})
+	if err != nil {
+		return err
+	}
+
+	if result.DeletedCount == 0 {
+		return errors.New("usuario no encontrado")
+	}
+
+	return nil
 }
