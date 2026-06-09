@@ -4,7 +4,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Alert, CircularProgress, Typography, Zoom } from '@mui/material';
+import { Alert, CircularProgress, Typography, Zoom, Chip, Paper } from '@mui/material';
 import { useEffect, useState } from 'react';
 import getCurrentLocation, { Position } from '../../utils/getCurrentLocation';
 import InputDescription from '../Input/InputDescription';
@@ -21,7 +21,10 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
     padding: theme.spacing(0, 3),
   },
   '& .MuiDialogActions-root': {
-    padding: theme.spacing(1),
+    padding: theme.spacing(1.5, 3),
+  },
+  '& .MuiDialog-paper': {
+    borderRadius: '16px',
   },
 }));
 
@@ -33,14 +36,12 @@ export type DialogCreateRiskProps = {
     location : Position
 }
 
-
 export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, location, stateLocationMethod, stateDescription } : DialogCreateRiskProps) {
 
     const [ open, setOpen ] = stateOpen
     const [ , setOnSelectLocationMap ] = stateOnSelectLocationMap 
 
     const authorID = useProfile().data?.id
-
 
     const [ description, setDescription ] = stateDescription
     const [ coords, setCoords ] = useState<number[]>([])
@@ -51,7 +52,6 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
 
     const { mutate, data, isError, isSuccess, isPending, isIdle, reset } = useCreateRisk()
     const { refetch } = useRisks()
-
 
     const handleCurrentLocation = async () => {
         setLocationMethod(LocationMethod.Current)
@@ -85,13 +85,6 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
 
     const handleClose = () => {
         setOpen(false)
-        //reset()
-        //setRequired(false)
-        //setDescription('')
-        //setLocationMethod(LocationMethod.None)
-        //setError(undefined)
-        //setCreateButtonDisable(true)
-        //setCoords([])
     }
 
     const handleSubmit = () => {
@@ -126,6 +119,7 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
     return (
         <BootstrapDialog 
             fullWidth
+            maxWidth="sm"
             open={open} 
             onClose={handleClose}
             aria-labelledby='risk-titulo'
@@ -143,59 +137,65 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
                     }
                 }
             }}      
-            
         >
-            <DialogTitle className='m-0 p-2' id="risk-titulo">
-                { 
-                    isIdle ? 'Crear un riesgo' :
-                    isPending ? 'Cargando...' :
-                    isSuccess ? 'Riesgo Creado':
-                    isError ? 'Ha ocurrido un error' :
-                    'Error desconocido'
-                }
+            <DialogTitle sx={{ m: 0, p: 2.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Chip 
+                    label={isIdle ? 'Nuevo' : isPending ? 'Enviando...' : isSuccess ? 'Completado' : 'Error'} 
+                    size="small"
+                    color={isSuccess ? 'success' : isError ? 'error' : isPending ? 'warning' : 'default'}
+                    variant="outlined"
+                    sx={{ fontWeight: 600, fontSize: 11 }}
+                />
+                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
+                    { 
+                        isIdle ? 'Crear un riesgo' :
+                        isPending ? 'Cargando...' :
+                        isSuccess ? 'Riesgo Creado' :
+                        isError ? 'Ha ocurrido un error' :
+                        'Error desconocido'
+                    }
+                </Typography>
             </DialogTitle>
             <CloseDialogButton handleClose={handleClose} />
             
-            <DialogContent>
+            <DialogContent dividers sx={{ borderTop: 'none', borderBottom: 'none' }}>
                 { isIdle ? 
-                    <div className='flex flex-col gap-4'>
-                        <Typography variant="body1" sx={{ lineHeight: 2, fontSize: {
-                                xs : '0.75rem',
-                                sm : '0.75rem',
-                                md : '0.95rem' 
-                            }}}>
-                            {"\u2022"} Un riesgo señala una zona de <b>alerta</b> en el sector. <br/>
-                            {"\u2022"} Podrás detallar la causa del riesgo agregando una breve descripción. <br />
-                            {"\u2022"} Se podrá actualizar a lo largo del tiempo, reflejando el estado actual del riesgo.
-                        </Typography>
+                    <div className='flex flex-col gap-4 py-3'>
+                        <Paper variant="outlined" sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: '8px' }}>
+                            <Typography variant="body2" sx={{ lineHeight: 1.8, color: '#555' }}>
+                                {"\u2022"} Un riesgo señala una zona de <b>alerta</b> en el sector. <br/>
+                                {"\u2022"} Podrás detallar la causa del riesgo agregando una breve descripción. <br />
+                                {"\u2022"} Se podrá actualizar a lo largo del tiempo, reflejando el estado actual del riesgo.
+                            </Typography>
+                        </Paper>
                         <InputDescription 
                             maxLength={100}
                             maxRows={6}
                             required
                             error={required}
-                            variant='standard'
-                            label='Descripción'
-                            placeholder='ingresa la descripción del riesgo'
+                            variant='outlined'
+                            label='Descripción del riesgo'
+                            placeholder='Ingresa la descripción del riesgo'
                             value={description}       
                             onChange={(e) => {setDescription(e.target.value); setRequired(false)}}    
                             onBlur={(_) => {if(!description) setRequired(true)}}            
                         />
-                        {required ? <p className='text-red-600'> Debes de Ingresar una descripción</p> : <br />}
+                        {required ? <Typography variant="caption" color="error" sx={{ mt: -1 }}>Debes ingresar una descripción</Typography> : null}
                         <div className='flex flex-col gap-2'>
-                            <Typography>Seleccionar Ubicación</Typography>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Seleccionar ubicación</Typography>
                             <div className='flex grow justify-center items-center gap-2'>
                                 <Button 
                                     color={locationMethod === LocationMethod.Current ? error ? 'error' : 'success' : 'primary'} 
                                     fullWidth variant='contained' 
                                     onClick={handleCurrentLocation}
-                                    loadingIndicator
+                                    sx={{ textTransform: 'none', borderRadius: '8px', py: 1 }}
                                 >
                                     <Zoom in style={{ transition: 'ease-in-out'}}>
-                                        <div>
+                                        <div className="flex items-center gap-1">
                                             { locationMethod === LocationMethod.Current ? 
-                                                error ? <ReplayIcon />  : <TaskAltIcon />
+                                                error ? <ReplayIcon fontSize="small" />  : <TaskAltIcon fontSize="small" />
                                             : 
-                                                <span>Obtener Ubicación actual</span>
+                                                <span>Obtener ubicación actual</span>
                                             }
                                         </div>
                                     </Zoom>
@@ -205,11 +205,12 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
                                     variant='contained' 
                                     color={ locationMethod === LocationMethod.Map ? error ? 'error' : 'success' : 'secondary'}
                                     onClick={handleSelectLocationMap}
+                                    sx={{ textTransform: 'none', borderRadius: '8px', py: 1 }}
                                 >
                                     <Zoom in style={{ transition: 'ease-in-out'}}>
-                                        <div>
+                                        <div className="flex items-center gap-1">
                                             { locationMethod === LocationMethod.Map ? 
-                                                error ? <ReplayIcon /> : <TaskAltIcon/>
+                                                error ? <ReplayIcon fontSize="small" /> : <TaskAltIcon fontSize="small" />
                                             : 
                                                 <span>Seleccionar en el mapa</span>
                                             }
@@ -217,19 +218,19 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
                                     </Zoom>
                                 </Button>
                             </div>
-                            <Alert severity={error ? 'error' : coords.length != 0 ? 'success' : 'warning'}> 
-                                {error ? error : coords.length != 0 ? 'Ubicación Completada' : ' Necesitas Seleccionar un opción'}
+                            <Alert severity={error ? 'error' : coords.length != 0 ? 'success' : 'warning'} sx={{ borderRadius: '8px' }}> 
+                                {error ? error : coords.length != 0 ? 'Ubicación completada' : 'Necesitas seleccionar una opción'}
                             </Alert>
                         </div>
                     </div>
                     :
                     isPending ? 
-                    <div className='flex grow items-center justify-center'>
-                        <CircularProgress size={70} />
+                    <div className='flex grow items-center justify-center py-8'>
+                        <CircularProgress size={60} />
                     </div>    
                     :
-                    <Alert sx={{ mt: 2, width: '100%', minHeight: '80px', display: 'flex', alignItems: 'center', fontSize: '1rem' }} variant='standard' severity={ isSuccess ? 'success' : isError ? 'error' : 'info'}>
-                            {isSuccess ? 'Se Creo el riesgo exitosamente' : isError ? 'Hubo un error al intentar finalizar' : 'Error desconocido'}
+                    <Alert sx={{ mt: 2, borderRadius: '8px' }} variant='outlined' severity={ isSuccess ? 'success' : isError ? 'error' : 'info'}>
+                            {isSuccess ? 'Se creó el riesgo exitosamente' : isError ? 'Hubo un error al intentar crear el riesgo' : 'Error desconocido'}
                     </Alert>
                 }
             </DialogContent>
@@ -238,10 +239,10 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
                     <></>
                     :
                     <>
-                        <Button  variant='contained' disabled={createButtonDisable} onClick={handleSubmit}>
+                        <Button variant='contained' disabled={createButtonDisable} onClick={handleSubmit} sx={{ borderRadius: '8px', textTransform: 'none' }}>
                             Crear Riesgo
                         </Button>
-                        <Button variant='contained' color='error' onClick={handleClose}>
+                        <Button variant='outlined' color='error' onClick={handleClose} sx={{ borderRadius: '8px', textTransform: 'none' }}>
                             Cancelar
                         </Button>
                     </>

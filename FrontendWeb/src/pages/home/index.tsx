@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import L from "leaflet";
 import DrawerList from "../../component/DrawerList";
 import CustomDrawer from "../../component/CustomDrawer";
-import { Backdrop, Card, Typography, useMediaQuery, useTheme, Fab, Tooltip } from "@mui/material";
+import { Backdrop, Paper, Typography, useMediaQuery, useTheme, Fab, Tooltip } from "@mui/material";
 import MensajesFijados from "../../component/MensajesFijados";
 import DialogCreateRoute from "../../component/Dialog/DialogCreateRoute";
 import useSessionStore from "../../stores/useSessionStore";
@@ -29,6 +30,53 @@ import { HelpPoint } from "../../api/models/HelpPoint";
 import { useRisks } from "../../api/hooks/RiskHooks";
 import { useHelpPoints } from "../../api/hooks/HelpPointHooks";
 import type { AlojamientoData } from "../../component/Dialog/DialogCreateAlojamiento";
+
+const houseIcon = L.divIcon({
+    className: '',
+    iconSize: [36, 36],
+    iconAnchor: [18, 36],
+    popupAnchor: [0, -40],
+    html: `<svg viewBox="0 0 24 24" width="36" height="36" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+            </filter>
+        </defs>
+        <g filter="url(#shadow)">
+            <path d="M12 3L4 9v11h16V9l-8-6z" fill="#1976D2" stroke="#0D47A1" stroke-width="1.5" stroke-linejoin="round"/>
+            <rect x="10" y="14" width="4" height="6" fill="#E3F2FD" stroke="#1565C0" stroke-width="0.8" rx="0.5"/>
+            <rect x="8" y="7" width="8" height="5" fill="#E3F2FD" stroke="#1565C0" stroke-width="0.8" rx="1"/>
+            <rect x="9.5" y="8.5" width="2" height="2" fill="#90CAF9" stroke="#1565C0" stroke-width="0.5" rx="0.3"/>
+            <rect x="13" y="8.5" width="2" height="2" fill="#90CAF9" stroke="#1565C0" stroke-width="0.5" rx="0.3"/>
+            <line x1="4" y1="9" x2="12" y2="3" stroke="#0D47A1" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="12" y1="3" x2="20" y2="9" stroke="#0D47A1" stroke-width="1.5" stroke-linecap="round"/>
+        </g>
+    </svg>`,
+});
+
+const churchIcon = L.divIcon({
+    className: '',
+    iconSize: [34, 40],
+    iconAnchor: [17, 40],
+    popupAnchor: [0, -44],
+    html: `<svg viewBox="0 0 24 28" width="34" height="40" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <filter id="shadow2" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+            </filter>
+        </defs>
+        <g filter="url(#shadow2)">
+            <rect x="9" y="0" width="6" height="5" fill="#1976D2" rx="0.5"/>
+            <path d="M12 0L12 5" stroke="#0D47A1" stroke-width="1.2"/>
+            <line x1="12" y1="0" x2="12" y2="-3" stroke="#0D47A1" stroke-width="2" stroke-linecap="round"/>
+            <polygon points="3,10 12,4 21,10" fill="#1976D2" stroke="#0D47A1" stroke-width="1" stroke-linejoin="round"/>
+            <rect x="3" y="10" width="18" height="14" fill="#BBDEFB" stroke="#1565C0" stroke-width="1.2" rx="1"/>
+            <rect x="10" y="16" width="4" height="8" fill="#1565C0" rx="1"/>
+            <path d="M7 13h10v1H7z" fill="#1565C0"/>
+            <circle cx="12" cy="14" r="1.2" fill="#E3F2FD"/>
+        </g>
+    </svg>`,
+});
 
 
 
@@ -169,7 +217,7 @@ export default function Home() {
                     risks={risks}
                 >
                     {alojamientos.map((a, i) => (
-                        <Marker key={a.id ?? i} position={[a.coords[0], a.coords[1]]}>
+                        <Marker key={a.id ?? i} icon={i % 3 === 0 ? churchIcon : houseIcon} position={[a.coords[0], a.coords[1]]}>
                             <Popup>
                                 <div className="flex min-w-44 flex-col items-start gap-2">
                                     <b>{a.name}</b>
@@ -213,7 +261,7 @@ export default function Home() {
                             : 
                             null
                         }
-                        <div className={"absolute bottom-16 z-20 flex flex-row items-end gap-3 " + (computerDevice ? "right-16" : "right-8")}>
+                        <div className={"absolute bottom-20 z-20 flex flex-row items-end gap-4 " + (computerDevice ? "right-16" : "right-6")}>
                             {!routeStatus ? 
                                 <>
                                     <SpeedDialCreateRoute
@@ -269,17 +317,29 @@ export default function Home() {
                         </div>
                     </>
                     :
-                    <Card
+                    <Paper
+                        elevation={8}
                         sx={{
-                            position: "absolute", top: "10%", left: "50%", transform: "translate(-50%, -50%)",
-                            bgcolor: "rgba(46, 46, 46, 0.9)", px: 3, py: 2, borderRadius: 2, boxShadow: 3,
-                            zIndex: 1000, display: "flex", alignItems: "center", gap: 1,
+                            position: "absolute",
+                            top: "10%",
+                            left: "50%",
+                            transform: "translate(-50%, -50%)",
+                            bgcolor: "rgba(30, 30, 30, 0.92)",
+                            px: 3,
+                            py: 2,
+                            borderRadius: '14px',
+                            zIndex: 1000,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1.5,
+                            backdropFilter: 'blur(8px)',
+                            border: '1px solid rgba(255,255,255,0.1)',
                         }}
-                        >
-                        <Typography color="white" variant="h6" fontWeight={500}>
+                    >
+                        <Typography color="white" variant="h6" fontWeight={500} fontSize="1rem">
                             Selecciona un punto en el mapa
                         </Typography>
-                    </Card>
+                    </Paper>
                 }
             </div>
             <DialogCreateAlojamiento stateOpen={[openDialogAlojamiento, setOpenDialogAlojamiento]} location={location} onCreate={handleCreateAlojamiento} />

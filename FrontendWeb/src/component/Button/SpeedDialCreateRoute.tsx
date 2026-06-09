@@ -3,6 +3,7 @@ import NearMeIcon from '@mui/icons-material/NearMe';
 import GroupsIcon from '@mui/icons-material/Groups';
 import NavigationIcon from '@mui/icons-material/Navigation';
 import CloseIcon from '@mui/icons-material/Close';
+
 const icons = [
     {icon : <NearMeIcon /> , name : 'Crear una ruta'},
     {icon : <GroupsIcon /> , name : 'Unirse a una ruta'},
@@ -16,7 +17,6 @@ export type SpeedDialogRouteProps = {
 } 
 
 export default function SpeedDialCreateRoute({ stateOpen, stateOpenCreateRoute, stateOpenJoinRoute, children } : SpeedDialogRouteProps ) {
-
 
     const [ open, setOpen ] = stateOpen
 
@@ -33,9 +33,8 @@ export default function SpeedDialCreateRoute({ stateOpen, stateOpenCreateRoute, 
         setOpen : setOpenJoinRoute,}
     ]
 
-    
     return (
-        <div >
+        <div>
             <SpeedDial 
                 ariaLabel={"funcionalidades-ruta"} 
                 icon={open ? <CloseIcon /> : <NavigationIcon />}
@@ -52,9 +51,28 @@ export default function SpeedDialCreateRoute({ stateOpen, stateOpenCreateRoute, 
                         color: 'white',
                         '&:hover': {
                             bgcolor: 'secondary.dark',
+                            transform: 'scale(1.05)',
                         },
+                        transition: 'all 0.2s ease-in-out',
+                        boxShadow: '0 4px 14px rgba(156, 39, 176, 0.35)',
                     },
-                }}  
+                }}
+                sx={{
+                    '& .MuiSpeedDialAction-staticTooltipLabel': {
+                        width: '9rem',
+                        backgroundColor: 'rgba(46, 46, 46, 0.92)',
+                        color: 'white',
+                        fontSize: '13px',
+                        textAlign: 'center',
+                        borderRadius: '8px',
+                        padding: '6px 12px',
+                        fontWeight: 500,
+                        letterSpacing: '0.3px',
+                    },
+                    '& .MuiSpeedDialAction-fab': {
+                        transition: 'all 0.2s ease',
+                    },
+                }}
             >
                 {icons.map((obj, i) => (
                     <SpeedDialAction 
@@ -73,22 +91,20 @@ export default function SpeedDialCreateRoute({ stateOpen, stateOpenCreateRoute, 
                             },
                             staticTooltip : {
                                 title : obj.name,
-                                sx : {
-                                    fontSize : '3xl'
-                                }
                             },
                             staticTooltipLabel : {
                                 sx : {
                                     width : '9rem',
-                                    backgroundColor : 'rgb(46, 46, 46, 0.9)',
+                                    backgroundColor : 'rgb(46, 46, 46, 0.92)',
                                     color : 'white',
-                                    fontSize : '12px',
+                                    fontSize : '13px',
                                     textAlign : 'center',
+                                    borderRadius: '8px',
+                                    padding: '6px 12px',
+                                    fontWeight: 500,
                                 },
-                               
                             }
                         }} 
-                        
                     />
                 ))}
             </SpeedDial>
@@ -96,4 +112,3 @@ export default function SpeedDialCreateRoute({ stateOpen, stateOpenCreateRoute, 
         </div>
     )
 };
-

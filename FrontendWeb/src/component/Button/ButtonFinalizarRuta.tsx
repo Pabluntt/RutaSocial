@@ -1,4 +1,4 @@
-import { Button, Typography } from "@mui/material";
+import { Button, Typography, Paper } from "@mui/material";
 import DialogFinishRoute from "../Dialog/DialogFinishRoute";
 import DialogLeaveRoute from "../Dialog/DialogLeaveRoute";
 import { useState } from "react";
@@ -21,38 +21,56 @@ export default function ButtonFinalizarRuta() {
 
     if (isLeader) {
         return (
-            <div className="flex absolute w-full h-11">
+            <Paper elevation={4} sx={{ borderRadius: 0, position: 'absolute', width: '100%', zIndex: 10 }}>
                 <Button 
                     className="grow" 
                     size="large" 
                     variant="contained" 
-                    color="error" 
                     fullWidth 
-                    sx={{ border : 'none', borderRadius: 0}}
+                    sx={{ 
+                        borderRadius: 0,
+                        py: 1.5,
+                        background: 'linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%)',
+                        fontSize: '1rem',
+                        fontWeight: 600,
+                        letterSpacing: '0.5px',
+                        '&:hover': {
+                            background: 'linear-gradient(135deg, #f44336 0%, #d32f2f 100%)',
+                        },
+                    }}
                     onClick={() => {setOpenFinish(true)}}
                 >
                     Finalizar Ruta
                 </Button>
                 <DialogFinishRoute open={openFinish} setOpen={setOpenFinish}/>
-            </div>
+            </Paper>
         )
     }
 
     return (
-        <div className="flex absolute w-full h-11 items-center bg-orange-500 px-2 gap-2">
-            <Typography className="grow text-white text-sm text-center font-medium">
-                El administrador debe de finalizar la ruta
-            </Typography>
-            <Button 
-                size="small" 
-                variant="contained" 
-                color="error"
-                sx={{ border : 'none', borderRadius: 1, whiteSpace: 'nowrap', minWidth: 'auto' }}
-                onClick={() => {setOpenLeave(true)}}
-            >
-                Salir de Ruta
-            </Button>
-            <DialogLeaveRoute open={openLeave} setOpen={setOpenLeave}/>
-        </div>
+        <Paper elevation={4} sx={{ borderRadius: 0, position: 'absolute', width: '100%', zIndex: 10 }}>
+            <div className="flex w-full h-12 items-center px-3 gap-2" style={{ background: 'linear-gradient(135deg, #f57c00 0%, #e65100 100%)' }}>
+                <Typography className="grow text-white text-sm text-center font-medium">
+                    Solo el líder de la ruta puede finalizarla
+                </Typography>
+                <Button 
+                    size="small" 
+                    variant="contained" 
+                    color="error"
+                    sx={{ 
+                        borderRadius: '8px',
+                        whiteSpace: 'nowrap',
+                        minWidth: 'auto',
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        px: 2,
+                    }}
+                    onClick={() => {setOpenLeave(true)}}
+                >
+                    Salir de Ruta
+                </Button>
+                <DialogLeaveRoute open={openLeave} setOpen={setOpenLeave}/>
+            </div>
+        </Paper>
     )
 };

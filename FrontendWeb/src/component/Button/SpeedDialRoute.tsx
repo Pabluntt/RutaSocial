@@ -4,15 +4,11 @@ import ReportIcon from '@mui/icons-material/Report';
 import NavigationIcon from '@mui/icons-material/Navigation';
 import SpeedDialIcon from '@mui/material/SpeedDialIcon';
 
-
-
-
 const icons = [
-    {icon : <PersonPinCircleIcon /> , name : 'Registar Persona'},
+    {icon : <PersonPinCircleIcon /> , name : 'Registrar Persona'},
     {icon : <ReportIcon />, name: 'Reportar Riesgo'},
     {icon : <NavigationIcon />, name: 'Resumen Ruta'} 
 ]
-
 
 export type SpeedDialogRouteProps = {
     stateOpen : [ boolean, React.Dispatch<React.SetStateAction<boolean>>]
@@ -23,7 +19,6 @@ export type SpeedDialogRouteProps = {
 } 
 
 export default function SpeedDialRoute({ stateOpen, stateOpenDialogAttended, stateOpenDialogRisk, stateOpenDialogRoute, children } : SpeedDialogRouteProps ) {
-
 
     const [ open, setOpen ] = stateOpen
 
@@ -43,11 +38,9 @@ export default function SpeedDialRoute({ stateOpen, stateOpenDialogAttended, sta
         setOpen : setOpenDialogRoute 
     }]
 
-    
     return (
         <>
             <SpeedDial 
-                
                 ariaLabel={"funcionalidades-ruta"} 
                 icon={<SpeedDialIcon />}
                 open={open}
@@ -56,6 +49,37 @@ export default function SpeedDialRoute({ stateOpen, stateOpenDialogAttended, sta
                 }}
                 onClose={(_, reason) => {
                     if(reason == 'toggle') handleClose()
+                }}
+                FabProps={{
+                    sx: {
+                        bgcolor: '#0288d1',
+                        color: 'white',
+                        '&:hover': {
+                            bgcolor: '#01579b',
+                            transform: 'scale(1.05)',
+                        },
+                        transition: 'all 0.2s ease-in-out',
+                        boxShadow: '0 4px 14px rgba(2, 136, 209, 0.4)',
+                    },
+                }}
+                sx={{
+                    '& .MuiSpeedDialAction-staticTooltipLabel': {
+                        width: '9rem',
+                        backgroundColor: 'rgba(46, 46, 46, 0.92)',
+                        color: 'white',
+                        fontSize: '13px',
+                        textAlign: 'center',
+                        borderRadius: '8px',
+                        padding: '6px 12px',
+                        fontWeight: 500,
+                        letterSpacing: '0.3px',
+                    },
+                    '& .MuiSpeedDialAction-fab': {
+                        transition: 'all 0.2s ease',
+                    },
+                    '& .MuiSpeedDialAction-staticTooltip': {
+                        fontSize: '3xl',
+                    },
                 }}
             >
                 {icons.map((obj, i) => (
@@ -75,22 +99,20 @@ export default function SpeedDialRoute({ stateOpen, stateOpenDialogAttended, sta
                             },
                             staticTooltip : {
                                 title : obj.name,
-                                sx : {
-                                    fontSize : '3xl'
-                                }
                             },
                             staticTooltipLabel : {
                                 sx : {
                                     width : '9rem',
-                                    backgroundColor : 'rgb(46, 46, 46, 0.9)',
+                                    backgroundColor : 'rgb(46, 46, 46, 0.92)',
                                     color : 'white',
-                                    fontSize : '12px',
+                                    fontSize : '13px',
                                     textAlign : 'center',
+                                    borderRadius: '8px',
+                                    padding: '6px 12px',
+                                    fontWeight: 500,
                                 },
-                               
                             }
                         }} 
-                        
                     />
                 ))}
             </SpeedDial>
@@ -98,4 +120,3 @@ export default function SpeedDialRoute({ stateOpen, stateOpenDialogAttended, sta
         </>
     )
 };
-

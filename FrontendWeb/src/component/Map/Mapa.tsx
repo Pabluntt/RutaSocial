@@ -1,6 +1,6 @@
 import L, { LatLngExpression } from "leaflet";
 import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap, ZoomControl } from "react-leaflet";
-import { Button, Divider, Switch, FormControlLabel, Box} from "@mui/material";
+import { Button, Divider, Chip, Paper, Box, Typography } from "@mui/material";
 import { format } from 'date-fns';
 import { Position } from "../../utils/getCurrentLocation";
 import { useEffect, useState } from "react";
@@ -11,15 +11,6 @@ import { Risk } from "../../api/models/Risk";
 import { es } from "date-fns/locale";
 import { RiskStatus } from "../../Enums/RiskStatus";
 import 'leaflet.heat'
-
-var greenIcon = new L.Icon({
-    iconUrl: 'marker-icon-2x-green.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-});
 
 var redIcon = new L.Icon({
     iconUrl: 'marker-icon-red.png',
@@ -167,28 +158,52 @@ export default function Mapa({ stateCurrentLocation, risks, helpPoints, children
                     helpPoint.disabled ? null : 
                     <Marker key={helpPoint.id ?? index} icon={redIcon} position={(helpPoint.coords as L.LatLngExpression)} >
                         <Popup >
-                            <div className="flex min-w-56 flex-col items-center justify-center gap-2">
-                                <b className="text-center">Punto de registro</b>
-                                <Divider className="w-full" />
-                                <div className="flex w-full flex-col gap-1 text-sm">
-                                    <span><b>Comentario:</b> {helpPoint.comment?.trim() || 'Sin comentario'}</span>
-                                    <span><b>Fecha:</b> {format(helpPoint.dateRegister, 'dd-MM-yyyy', {locale : es}) ?? 'error'}</span>
-                                </div>
-                                <Divider className="w-full"  variant='middle'/>
-                                <div className="flex w-full flex-col gap-2 text-sm">
-                                    <b>Personas vistas</b>
-                                    {getPointPeople(helpPoint).length > 0 ? getPointPeople(helpPoint).map((person, personIndex) => (
-                                        <div key={`${helpPoint.id}-${personIndex}`} className="flex flex-col gap-1 rounded bg-slate-50 p-2">
-                                            <span><b>Nombre:</b> {person.name || 'Sin especificar'}</span>
-                                            <span><b>Edad:</b> {person.age > 0 ? person.age : 'N/A'}</span>
-                                            <span><b>RUT:</b> {person.rut || 'Sin especificar'}</span>
-                                            <span><b>Género:</b> {person.gender || 'Sin especificar'}</span>
+                            <Paper elevation={0} sx={{ minWidth: 240, p: 1 }}>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <Chip label="Punto de registro" size="small" color="error" variant="outlined" sx={{ fontWeight: 600, fontSize: 11 }} />
+                                    </div>
+                                    <Divider />
+                                    <div className="flex flex-col gap-1.5 text-sm">
+                                        <div className="flex items-start gap-1">
+                                            <span className="font-semibold text-gray-600 min-w-20">Comentario:</span>
+                                            <span>{helpPoint.comment?.trim() || 'Sin comentario'}</span>
                                         </div>
-                                    )) : (
-                                        <span>Sin personas registradas en este punto</span>
-                                    )}
+                                        <div className="flex items-start gap-1">
+                                            <span className="font-semibold text-gray-600 min-w-20">Fecha:</span>
+                                            <span>{format(helpPoint.dateRegister, 'dd-MM-yyyy', {locale : es})}</span>
+                                        </div>
+                                    </div>
+                                    <Divider />
+                                    <div className="flex flex-col gap-2">
+                                        <span className="font-semibold text-sm text-gray-700">Personas vistas</span>
+                                        {getPointPeople(helpPoint).length > 0 ? getPointPeople(helpPoint).map((person, personIndex) => (
+                                            <Paper key={`${helpPoint.id}-${personIndex}`} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5, bgcolor: '#fafafa' }}>
+                                                <div className="flex flex-col gap-1 text-sm">
+                                                    <div className="flex items-start gap-1">
+                                                        <span className="font-semibold text-gray-500 min-w-14">Nombre:</span>
+                                                        <span>{person.name || 'Sin especificar'}</span>
+                                                    </div>
+                                                    <div className="flex items-start gap-1">
+                                                        <span className="font-semibold text-gray-500 min-w-14">Edad:</span>
+                                                        <span>{person.age > 0 ? person.age : 'N/A'}</span>
+                                                    </div>
+                                                    <div className="flex items-start gap-1">
+                                                        <span className="font-semibold text-gray-500 min-w-14">RUT:</span>
+                                                        <span>{person.rut || 'Sin especificar'}</span>
+                                                    </div>
+                                                    <div className="flex items-start gap-1">
+                                                        <span className="font-semibold text-gray-500 min-w-14">Género:</span>
+                                                        <span>{person.gender || 'Sin especificar'}</span>
+                                                    </div>
+                                                </div>
+                                            </Paper>
+                                        )) : (
+                                            <span className="text-sm text-gray-500 italic">Sin personas registradas en este punto</span>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
+                            </Paper>
                         </Popup>
                     </Marker>
                 ))}
@@ -209,22 +224,37 @@ export default function Mapa({ stateCurrentLocation, risks, helpPoints, children
                 {risks.map((risk, index) => (
                     <Marker key={risk.id ?? index} icon={iconsMap[risk.status]} position={(risk.coords as L.LatLngExpression)}>
                         <Popup>
-                            <div className="flex flex-col items-start justify-center gap-2">
-                                <b className="text-sm">{risk.description}</b>
-                                <Divider className="w-full" variant="fullWidth"/>
-                                <p className="text-xs p-0 !m-0">Última modificación: {format(new Date(risk.createdAt), 'dd-MM-yyyy')}</p>
-                                <Button variant="contained" sx={{
-                                    alignSelf : 'left',
-                                    fontSize : 12,
-                                    p: 0,
-                                }} onClick={() => {
-                                    setRiskUpdate(risk)
-                                }}>
-                                    Editar
-                                </Button>
-                            </div>
+                            <Paper elevation={0} sx={{ minWidth: 200, p: 1 }}>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <Chip 
+                                            label={risk.status} 
+                                            size="small" 
+                                            color={
+                                                risk.status === RiskStatus.Severe ? 'error' :
+                                                risk.status === RiskStatus.Warning ? 'warning' :
+                                                risk.status === RiskStatus.Completed ? 'success' : 'info'
+                                            }
+                                            variant="outlined"
+                                            sx={{ fontWeight: 600, fontSize: 11 }}
+                                        />
+                                    </div>
+                                    <Typography className="text-sm font-medium">{risk.description}</Typography>
+                                    <Divider />
+                                    <div className="flex flex-col gap-1 text-xs text-gray-500">
+                                        <span>Última modificación: {format(new Date(risk.createdAt), 'dd-MM-yyyy')}</span>
+                                    </div>
+                                    <Button 
+                                        variant="contained" 
+                                        size="small"
+                                        sx={{ alignSelf: 'flex-start', textTransform: 'none' }}
+                                        onClick={() => setRiskUpdate(risk)}
+                                    >
+                                        Editar
+                                    </Button>
+                                </div>
+                            </Paper>
                         </Popup>
-                        
                     </Marker>
                 ))}
                 {children}

@@ -8,7 +8,7 @@ import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import ReplayIcon from '@mui/icons-material/Replay';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import AddIcon from '@mui/icons-material/Add';
-import { Alert, CircularProgress, IconButton, TextField, Typography, Zoom } from '@mui/material';
+import { Alert, CircularProgress, IconButton, TextField, Typography, Zoom, Chip, Paper, Divider } from '@mui/material';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import getCurrentLocation, { Position } from '../../utils/getCurrentLocation';
 import useSessionStore from '../../stores/useSessionStore';
@@ -26,7 +26,10 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
     padding: theme.spacing(3),
   },
   '& .MuiDialogActions-root': {
-    padding: theme.spacing(1),
+    padding: theme.spacing(1.5, 3),
+  },
+  '& .MuiDialog-paper': {
+    borderRadius: '16px',
   },
 }));
 
@@ -83,13 +86,11 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
     const { mutate, isError, isSuccess, isPending, isIdle, reset } = useCreateHelpPoint()
     const { refetch } = useHelpPoints()
     
-    // Rastrear el valor anterior de onSelectLocationMap
     const prevOnSelectLocationMapRef = useRef(onSelectLocationMap)
     const hasLocationRef = useRef(false)
     const isSelectingLocationRef = useRef(false)
 
     useEffect(() => {
-        // Actualizar la ref cada vez que onSelectLocationMap cambia
         isSelectingLocationRef.current = onSelectLocationMap
     }, [onSelectLocationMap])
 
@@ -107,21 +108,15 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
     }
 
     const handleSelectLocationMap = () => {
-        console.log('[DialogCreateAttended] handleSelectLocationMap presionado. Antes: onSelectLocationMap=', onSelectLocationMap)
         setLocationMethod(LocationMethod.Map)
         setOnSelectLocationMap(true)
-        console.log('[DialogCreateAttended] handleSelectLocationMap ejecutado. Después: onSelectLocationMap debería ser true')
     }
 
     useEffect(() => {
-        // Detectar transición de true a false
         const wasSelecting = prevOnSelectLocationMapRef.current
         const nowSelecting = onSelectLocationMap
         
-        console.log('[DialogCreateAttended] onSelectLocationMap cambió. wasSelecting:', wasSelecting, 'nowSelecting:', nowSelecting)
-        
         if (wasSelecting && !nowSelecting) {
-            console.log('[DialogCreateAttended] TRANSICIÓN DETECTADA: true -> false, setea hasLocationRef.current = true')
             hasLocationRef.current = true
         }
         
@@ -129,17 +124,13 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
     }, [onSelectLocationMap])
 
     useEffect(() => {
-        console.log('[DialogCreateAttended] location cambió:', location)
         if(location.latitude != 0) {
-            console.log('[DialogCreateAttended] ESTABLECIENDO COORDS:', [location.latitude, location.longitude])
             setLocationMethod(LocationMethod.Map)
             setCoords([location.latitude, location.longitude])
-            // NO resetear hasLocationRef, solo setear coords
         }
     }, [location])
 
     useEffect(() => {
-        console.log('[DialogCreateAttended] useEffect coords cambió:', coords, 'createButtonDisable:', createButtonDisable)
         if(coords.length === 2) {
             setCreateButtonDisable(false)
         }
@@ -158,24 +149,18 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
 
     const clearStates = () => {
         reset()
-        // No limpiar coords ya que se mantiene en el padre
-        // setCoords([])
         setCreateButtonDisable(true)
         setLocationMethod(LocationMethod.None)
         setError(undefined)
         setComment('')
-        setPeople([createPersonDraft()])  // Resetear a 1 persona vacía
+        setPeople([createPersonDraft()])
     }
 
     const handleClose = () => {
-        // Usar la ref para determinar si estamos en modo seleccionar ubicación
-        // Esto asegura que tenemos el valor actual, no el del closure anterior
         if (isSelectingLocationRef.current) {
-            // Do nothing - dejar todo como está, solo se ocultará visualmente
             return
         }
         
-        // Si es un cierre real (no por seleccionar ubicación), limpiar todo
         clearStates()
         setOpen(false)
         reset()
@@ -203,7 +188,6 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
             return
         }
 
-        // Filtrar solo personas que tienen al menos nombre (es lo único obligatorio)
         const validPeople = people
             .filter(person => person.name.trim().length > 0)
             .map(person => ({
@@ -217,7 +201,6 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
             return
         }
 
-        // Validar formato de RUT si está presente
         if(validPeople.some(person => person.rut.length > 0 && !isValidRutFormat(person.rut))) {
             alert('El formato del RUT no es válido')
             return
@@ -259,39 +242,49 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
     return (
         <BootstrapDialog 
             fullWidth
+            maxWidth="md"
             open={open && !onSelectLocationMap}
             onClose={handleClose}
             aria-labelledby='attended-titulo'
             keepMounted
         >
-            <DialogTitle className='m-0 p-2' id="attended-titulo">
-                {
-                    isIdle ? 'Crear un Punto' : 
-                    isPending ? 'Cargando...' :
-                    isSuccess ? 'Punto Guardado' :
-                    isError ? 'Ha ocurrido un error' :
-                    'Error desconocido'
-                }
+            <DialogTitle sx={{ m: 0, p: 2.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Chip 
+                    label={isIdle ? 'Nuevo' : isPending ? 'Enviando...' : isSuccess ? 'Completado' : 'Error'} 
+                    size="small"
+                    color={isSuccess ? 'success' : isError ? 'error' : isPending ? 'warning' : 'default'}
+                    variant="outlined"
+                    sx={{ fontWeight: 600, fontSize: 11 }}
+                />
+                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
+                    {
+                        isIdle ? 'Crear un punto de registro' : 
+                        isPending ? 'Cargando...' :
+                        isSuccess ? 'Punto guardado' :
+                        isError ? 'Ha ocurrido un error' :
+                        'Error desconocido'
+                    }
+                </Typography>
             </DialogTitle>
             <CloseDialogButton handleClose={handleClose} />
 
-            <DialogContent>
+            <DialogContent dividers>
                 { isIdle ?
-                    <form className='flex flex-col gap-8 p-2'>
+                    <div className='flex flex-col gap-6 py-2'>
                         <div className='flex flex-col gap-3'>
-                            <div className='flex items-center justify-between gap-2'>
-                                <Typography variant='h6'>Personas vistas</Typography>
-                                <Button startIcon={<AddIcon />} variant='outlined' onClick={addPerson}>
+                            <div className='flex items-center justify-between'>
+                                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>Personas vistas</Typography>
+                                <Button startIcon={<AddIcon />} variant='outlined' onClick={addPerson} size="small" sx={{ borderRadius: '8px', textTransform: 'none' }}>
                                     Agregar persona
                                 </Button>
                             </div>
                             <div className='flex flex-col gap-4'>
                                 {people.map((person, index) => (
-                                    <div key={person.id} className='flex flex-col gap-3 rounded border border-dashed border-gray-300 p-3'>
-                                        <div className='flex items-center justify-between'>
-                                            <Typography variant='subtitle2'>Persona {index + 1}</Typography>
+                                    <Paper key={person.id} variant="outlined" sx={{ p: 2, borderRadius: '10px', bgcolor: '#fafafa' }}>
+                                        <div className='flex items-center justify-between mb-2'>
+                                            <Chip label={`Persona ${index + 1}`} size="small" variant="outlined" sx={{ fontWeight: 500 }} />
                                             {people.length > 1 ? (
-                                                <IconButton color='error' onClick={() => removePerson(person.id)}>
+                                                <IconButton color='error' size="small" onClick={() => removePerson(person.id)}>
                                                     <DeleteOutlineIcon fontSize='small' />
                                                 </IconButton>
                                             ) : null}
@@ -300,7 +293,8 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                                             <TextField
                                                 fullWidth
                                                 id={`name-${person.id}`}
-                                                variant='standard'
+                                                variant='outlined'
+                                                size="small"
                                                 value={person.name}
                                                 onChange={(e) => updatePerson(person.id, 'name', e.target.value)}
                                                 label='Nombre *'
@@ -309,7 +303,8 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                                             <TextField
                                                 fullWidth
                                                 id={`rut-${person.id}`}
-                                                variant='standard'
+                                                variant='outlined'
+                                                size="small"
                                                 value={person.rut}
                                                 onChange={(e) => updatePerson(person.id, 'rut', e.target.value)}
                                                 label='RUT'
@@ -319,7 +314,8 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                                             <TextField
                                                 fullWidth
                                                 id={`age-${person.id}`}
-                                                variant='standard'
+                                                variant='outlined'
+                                                size="small"
                                                 onChange={(e) => updatePerson(person.id, 'age', e.target.value)}
                                                 label='Edad'
                                                 type='number'
@@ -327,7 +323,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                                                 slotProps={{ inputLabel: { shrink: true } }}
                                             />
                                         </div>
-                                    </div>
+                                    </Paper>
                                 ))}
                             </div>
                         </div>
@@ -335,30 +331,33 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                         <TextField
                             fullWidth
                             id='comment'
-                            variant='standard'
+                            variant='outlined'
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
                             label='Comentario del punto'
                             multiline
                             minRows={3}
+                            size="small"
                             slotProps={{ inputLabel: { shrink: true } }}
                         />
 
+                        <Divider />
+
                         <div className='flex flex-col gap-2'>
-                            <Typography>Seleccionar Ubicación</Typography>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Seleccionar ubicación</Typography>
                             <div className='flex grow justify-center items-center gap-2'>
                                 <Button 
                                     color={locationMethod === LocationMethod.Current ? error ? 'error' : 'success' : 'primary'} 
                                     fullWidth variant='contained' 
                                     onClick={handleCurrentLocation}
-                                    loadingIndicator
+                                    sx={{ textTransform: 'none', borderRadius: '8px', py: 1 }}
                                 >
                                     <Zoom in style={{ transition: 'ease-in-out'}}>
-                                        <div>
+                                        <div className="flex items-center gap-1">
                                             { locationMethod === LocationMethod.Current ? 
-                                                error ? <ReplayIcon />  : <TaskAltIcon />
+                                                error ? <ReplayIcon fontSize="small" />  : <TaskAltIcon fontSize="small" />
                                             : 
-                                                <span>Obtener Ubicación actual</span>
+                                                <span>Obtener ubicación actual</span>
                                             }
                                         </div>
                                     </Zoom>
@@ -368,11 +367,12 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                                     variant='contained' 
                                     color={ locationMethod === LocationMethod.Map ? error ? 'error' : 'success' : 'secondary'}
                                     onClick={handleSelectLocationMap}
+                                    sx={{ textTransform: 'none', borderRadius: '8px', py: 1 }}
                                 >
                                     <Zoom in style={{ transition: 'ease-in-out'}}>
-                                        <div>
+                                        <div className="flex items-center gap-1">
                                             { locationMethod === LocationMethod.Map ? 
-                                                error ? <ReplayIcon /> : <TaskAltIcon/>
+                                                error ? <ReplayIcon fontSize="small" /> : <TaskAltIcon fontSize="small" />
                                             : 
                                                 <span>Seleccionar en el mapa</span>
                                             }
@@ -380,33 +380,32 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                                     </Zoom>
                                 </Button>
                             </div>
-                            <Alert severity={error ? 'error' : coords.length !== 0 ? 'success' : 'warning'}> 
-                                {error ? error : coords.length !== 0 ? 'Ubicación Completada' : 'Selecciona una opción para establecer la ubicación'}
+                            <Alert severity={error ? 'error' : coords.length !== 0 ? 'success' : 'warning'} sx={{ borderRadius: '8px' }}> 
+                                {error ? error : coords.length !== 0 ? 'Ubicación completada' : 'Selecciona una opción para establecer la ubicación'}
                             </Alert>
                         </div>
-                    </form>
-                    :
-                    isPending ? 
-                    <div className='flex grow items-center justify-center'>
-                        <CircularProgress size={70} />
                     </div>
                     :
-                    <Alert sx={{ mt: 2, width: '100%', minHeight: '80px', display: 'flex', alignItems: 'center', fontSize: '1rem' }} variant='standard' severity={ isSuccess ? 'success' : isError ? 'error' : 'info'}>
-                            {isSuccess ? 'Se Creo el punto exitosamente' : isError ? 'Hubo un error al intentar finalizar' : 'Error desconocido'}
+                    isPending ? 
+                    <div className='flex grow items-center justify-center py-8'>
+                        <CircularProgress size={60} />
+                    </div>
+                    :
+                    <Alert sx={{ borderRadius: '8px' }} variant='outlined' severity={ isSuccess ? 'success' : isError ? 'error' : 'info'}>
+                            {isSuccess ? 'Se creó el punto exitosamente' : isError ? 'Hubo un error al intentar crear el punto' : 'Error desconocido'}
                     </Alert>
                 }
                 
             </DialogContent>
             <DialogActions>
                 { isSuccess ?
-                    <>
-                    </>
+                    <></>
                     :
                     <>
-                        <Button variant='contained' disabled={createButtonDisable} onClick={handleSubmit}>
+                        <Button variant='contained' disabled={createButtonDisable} onClick={handleSubmit} sx={{ borderRadius: '8px', textTransform: 'none' }}>
                             Crear Punto
                         </Button>
-                        <Button variant='contained' color='error' onClick={handleClose}>
+                        <Button variant='outlined' color='error' onClick={handleClose} sx={{ borderRadius: '8px', textTransform: 'none' }}>
                             Cancelar
                         </Button>
                     </>
