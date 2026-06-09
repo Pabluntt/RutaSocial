@@ -21,6 +21,7 @@ type RouteRepository interface {
 	DeleteRoute(routeId string) error
 	FinishRoute(id string) error
 	JoinRoute(code string, userID string) (domain.Route, error)
+	LeaveRoute(routeId string, userID string) error
 	GetMyParticipation(userID string) (map[string]int, error)
 }
 
@@ -182,6 +183,50 @@ func (r *routeRepository) JoinRoute(code string, userID string) (domain.Route, e
 	}
 
 	return route, nil
+}
+
+// LeaveRoute permite a un usuario salir de una ruta.
+// Recibe el ID de la ruta y el ID del usuario, verifica que ambos sean válidos
+// y elimina al usuario del equipo de la ruta usando $pull.
+func (r *routeRepository) LeaveRoute(routeId string, userID string) error {
+	routeObjID, err := bson.ObjectIDFromHex(routeId)
+	if err != nil {
+		return errors.New("ID de ruta inválido")
+	}
+
+	userObjID, err := bson.ObjectIDFromHex(userID)
+	if err != nil {
+		return errors.New("ID de usuario inválido")
+	}
+
+	var route domain.Route
+	err = r.RouteCollection.FindOne(context.Background(), bson.M{"_id": routeObjID}).Decode(&route)
+	if err != nil {
+		return errors.New("Ruta no encontrada")
+	}
+
+	if route.Status == "Finalizada" {
+		return errors.New("No puedes salir de una ruta finalizada")
+	}
+
+	found := false
+	for _, member := range route.Team {
+		if member == userObjID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return errors.New("No eres parte de esta ruta")
+	}
+
+	update := bson.M{"$pull": bson.M{"team": userObjID}}
+	_, err = r.RouteCollection.UpdateOne(context.Background(), bson.M{"_id": routeObjID}, update)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetMyParticipation obtiene la participación de un usuario en rutas.

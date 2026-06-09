@@ -19,6 +19,7 @@ type RouteUseCase interface {
 	DeleteRoute(c *gin.Context)
 	FinishRoute(c *gin.Context)
 	JoinRoute(c *gin.Context)
+	LeaveRoute(c *gin.Context)
 	GetMyParticipation(c *gin.Context)
 }
 
@@ -174,6 +175,42 @@ func (r routeUseCase) JoinRoute(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": route})
+}
+
+// LeaveRoute maneja la solicitud para que un usuario salga de una ruta.
+// Verifica que el ID de la ruta sea válido y que el usuario esté autenticado.
+func (r routeUseCase) LeaveRoute(c *gin.Context) {
+	routeID := c.Param("id")
+	if routeID == "" {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "ID de ruta no proporcionado"})
+		return
+	}
+
+	claims, exists := c.Get("user")
+	if !exists {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Usuario no autenticado"})
+		return
+	}
+
+	mapClaims, ok := claims.(jwt.MapClaims)
+	if !ok {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Usuario no autenticado"})
+		return
+	}
+
+	userID, ok := mapClaims["user_id"].(string)
+	if !ok || userID == "" {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Usuario no autenticado"})
+		return
+	}
+
+	err := r.routeRepository.LeaveRoute(routeID, userID)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "Saliste de la ruta correctamente"})
 }
 
 // GetMyParticipation maneja la solicitud para obtener la participación de un usuario en una ruta (cantidad de rutas y puntos de ayuda).

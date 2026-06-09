@@ -26,5 +26,6 @@ func SetupRouteRouter(r *gin.Engine) {
 	protected.DELETE("/:id", middleware.RoleMiddleware("admin"), routeController.DeleteRoute)
 	protected.PATCH("/:id", routeController.FinishRoute)
 	protected.POST("/join/:code", routeController.JoinRoute)
+	protected.POST("/leave/:id", routeController.LeaveRoute)
 	protected.GET("/participation/:id", routeController.GetMyParticipation)
 }

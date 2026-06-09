@@ -144,6 +144,25 @@ func (r *routeController) JoinRoute(c *gin.Context) {
 	r.routeUseCase.JoinRoute(c)
 }
 
+// LeaveRoute maneja la solicitud para que un usuario salga de una ruta.
+// @Summary Salir de ruta
+// @Description Permite a un usuario salir de una ruta activa. Requiere autenticación.
+// @Tags Rutas
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "ID de la ruta"
+// @Success 200 {object} domain.SuccessResponse "Saliste de la ruta correctamente"
+// @Failure 400 {object} domain.ErrorResponse "ID de ruta no proporcionado"
+// @Failure 400 {object} domain.ErrorResponse "Error al salir de la ruta"
+// @Failure 401 {object} domain.ErrorResponse "Usuario no autenticado"
+// @Failure 401 {object} domain.ErrorResponse "No autorizado"
+// @Failure 401 {object} domain.ErrorResponse "Token inválido"
+// @Router /route/leave/{id} [post]
+func (r *routeController) LeaveRoute(c *gin.Context) {
+	r.routeUseCase.LeaveRoute(c)
+}
+
 // GetMyParticipation maneja la solicitud para obtener la participación de un usuario en rutas.
 // @Summary Obtener participación del usuario
 // @Description Obtiene información sobre la participación de un usuario en rutas (cantidad de rutas y puntos de ayuda). Requiere autenticación.

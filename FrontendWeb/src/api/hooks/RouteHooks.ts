@@ -48,6 +48,12 @@ export function useJoinRoute() {
     })
 }
 
+export function useLeaveRoute() {
+    return useMutation({
+        mutationFn : (routeId : string) => (RouteService.LeaveRoute(routeId))
+    })
+}
+
 export function useFinishRoute() {
     return useMutation({
         mutationFn : (routeId : string) => (RouteService.FinishRoute(routeId))

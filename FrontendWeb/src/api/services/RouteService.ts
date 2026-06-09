@@ -41,6 +41,11 @@ export class RouteService {
         }, [])
     }
 
+    static async LeaveRoute( routeId : string ) : Promise<string> {
+        const { data } = await axiosInstance.post(`/${this.RESOURCE_NAME}/leave/${routeId}`)
+        return data?.message
+    }
+
     static async JoinRoute( inviteCode : string ) : Promise<Route> {
         const { data } = await axiosInstance.post(`/${this.RESOURCE_NAME}/join/${inviteCode}`)
         return MapRouteFromBackend(data?.message as TRouteBackend)
