@@ -29,6 +29,8 @@ import { Risk } from "../../api/models/Risk";
 import { HelpPoint } from "../../api/models/HelpPoint";
 import { useRisks } from "../../api/hooks/RiskHooks";
 import { useHelpPoints } from "../../api/hooks/HelpPointHooks";
+import { useAlojamientos, useCreateAlojamiento, useUpdateAlojamiento } from "../../api/hooks/AlojamientoHooks";
+import { useProfile } from "../../api/hooks/UserHooks";
 import type { AlojamientoData } from "../../component/Dialog/DialogCreateAlojamiento";
 
 const houseIcon = L.divIcon({
@@ -86,8 +88,6 @@ export type TUserRegister = {
     gender: string
 }
 
-const ALOJAMIENTOS_STORAGE_KEY = 'rutasocial-alojamientos'
-
 export default function Home() {
 
     const { role, loading } = useAuth()
@@ -137,39 +137,33 @@ export default function Home() {
     const stateOpenJoinRoute = useState(false)
     const [ openDialogAlojamiento, setOpenDialogAlojamiento ] = useState(false)
     const [ selectingAlojamiento, setSelectingAlojamiento ] = useState(false)
-    const [ alojamientos, setAlojamientos ] = useState<AlojamientoData[]>([])
+    const alojamientosQuery = useAlojamientos()
+    const createAlojamientoMut = useCreateAlojamiento()
+    const updateAlojamientoMut = useUpdateAlojamiento()
+    const profileQuery = useProfile()
 
-    useEffect(() => {
-        const storedAlojamientos = localStorage.getItem(ALOJAMIENTOS_STORAGE_KEY)
-
-        if(!storedAlojamientos) {
-            return
-        }
-
-        try {
-            const parsedAlojamientos = JSON.parse(storedAlojamientos) as AlojamientoData[]
-            if(Array.isArray(parsedAlojamientos)) {
-                setAlojamientos(parsedAlojamientos)
-            }
-        } catch {
-            localStorage.removeItem(ALOJAMIENTOS_STORAGE_KEY)
-        }
-    }, [])
-
-    useEffect(() => {
-        localStorage.setItem(ALOJAMIENTOS_STORAGE_KEY, JSON.stringify(alojamientos))
-    }, [alojamientos])
+    const alojamientos: AlojamientoData[] = alojamientosQuery.data
+        ? alojamientosQuery.data.map((a: { _id: string; coords: number[]; name: string; cupos: number }) => ({
+            id: a._id,
+            coords: [a.coords[0], a.coords[1]] as [number, number],
+            name: a.name,
+            cupos: a.cupos,
+        }))
+        : []
 
     const handleCreateAlojamiento = (data: AlojamientoData) => {
-        setAlojamientos(prev => [...prev, data])
+        const authorID = profileQuery.data?.id
+        if (!authorID) return
+        createAlojamientoMut.mutate({
+            coords: data.coords,
+            name: data.name,
+            cupos: data.cupos,
+            author_id: authorID,
+        })
     }
 
     const handleUpdateAlojamientoCupos = (id: string, cupos: number) => {
-        setAlojamientos(prev => prev.map((alojamiento) => (
-            alojamiento.id === id
-                ? { ...alojamiento, cupos: Math.max(0, cupos) }
-                : alojamiento
-        )))
+        updateAlojamientoMut.mutate({ id, data: { cupos: Math.max(0, cupos) } })
     }
 
     useEffect(() => {
