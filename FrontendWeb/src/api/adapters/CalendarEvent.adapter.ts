@@ -55,11 +55,12 @@ export async function MapCalendarEventFromBackend(
         authorName: authorName,
         timeStart: data.time_start,
         timeEnd: data.time_end,
-        routeID: data.route_id,
+        routeID: data.route_id && data.route_id !== '000000000000000000000000' ? data.route_id : undefined,
         colorInstitution : colorInstitution
     }
-    Object.entries(event).forEach(([key, value]) => {
-        if (value === undefined) {
+    const requiredKeys: (keyof CalendarEvent)[] = ['id', 'title', 'description', 'dateStart', 'authorID', 'authorName', 'timeStart', 'timeEnd', 'colorInstitution']
+    requiredKeys.forEach((key) => {
+        if (event[key] === undefined) {
             throw new Error(`Missing required field in CalendarEvent: ${key}`);
         }
     })
@@ -69,21 +70,24 @@ export async function MapCalendarEventFromBackend(
 export function MapCalendarEventToCreateRequest(
     data: Omit<CalendarEvent, 'id' | 'authorName' | 'colorInstitution'>
 ): TCalendarEventCreateRequest {
-    return {
+    const req: TCalendarEventCreateRequest = {
         title: data.title,
         description: data.description,
         date_start: data.dateStart.toISOString(),
         time_start: data.timeStart,
         time_end: data.timeEnd,
         author_id: data.authorID,
-        route_id: data.routeID
     }
+    if (data.routeID && data.routeID !== '000000000000000000000000') {
+        req.route_id = data.routeID
+    }
+    return req
 }
 
 export function MapCalendarEventToUpdateRequest(
     data: CalendarEvent
 ): TCalendarEventUpdateRequest {
-    return {
+    const req: TCalendarEventUpdateRequest = {
         _id: data.id,
         title: data.title,
         description: data.description,
@@ -91,6 +95,9 @@ export function MapCalendarEventToUpdateRequest(
         author_id: data.authorID,
         time_start: data.timeStart,
         time_end: data.timeEnd,
-        route_id: data.routeID
     }
+    if (data.routeID && data.routeID !== '000000000000000000000000') {
+        req.route_id = data.routeID
+    }
+    return req
 }

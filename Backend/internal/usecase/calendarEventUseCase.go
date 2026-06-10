@@ -60,12 +60,12 @@ func (ce calendarEventUseCase) CreateCalendarEvent(c *gin.Context) {
 	userClaims := claims.(jwt.MapClaims)
 	userID := userClaims["user_id"].(string)
 
-	err := ce.calendarRepository.CreateCalendarEvent(event, userID)
+	createdEvent, err := ce.calendarRepository.CreateCalendarEvent(event, userID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear el evento: "})
 		return
 	}
-	c.IndentedJSON(http.StatusOK, event)
+	c.IndentedJSON(http.StatusOK, createdEvent)
 }
 
 // DeleteCalendarEvent maneja la solicitud para eliminar un evento de calendario.
@@ -128,6 +128,12 @@ func (ce calendarEventUseCase) UpdateCalendarEvent(c *gin.Context) {
 
 	if !utils.SanitizeStringFields(c, updateData) {
 		return
+	}
+
+	if routeID, ok := updateData["route_id"].(string); ok {
+		if routeID == "" || routeID == "000000000000000000000000" {
+			delete(updateData, "route_id")
+		}
 	}
 
 	updateEvent, err := ce.calendarRepository.UpdateCalendarEvent(updateData)

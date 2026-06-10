@@ -4,7 +4,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Alert, Typography, useTheme, useMediaQuery } from '@mui/material';
+import { Alert, Typography } from '@mui/material';
 import { useEffect } from 'react';
 import useSessionStore from '../../stores/useSessionStore';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -22,10 +22,8 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
 
 export default function DialogLeaveRoute({ open, setOpen } : { open : boolean, setOpen: (ar : boolean) => void}) {
 
-    const theme = useTheme();
-    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const { setRouteStatus, routeId, setRouteId } = useSessionStore()
-    const { mutate, isSuccess, isError, isIdle, isPending } = useLeaveRoute()
+    const { mutate, isSuccess, isError, isIdle, isPending, reset } = useLeaveRoute()
 
     useEffect(() => {
         if(isSuccess) {
@@ -43,14 +41,20 @@ export default function DialogLeaveRoute({ open, setOpen } : { open : boolean, s
         }
     }
 
+    const forceClearRoute = () => {
+        setRouteStatus(false)
+        setRouteId(undefined)
+        handleClose()
+    }
+
     const handleClose = () => {
+        reset()
         setOpen(false)
     }
     
     return (
         <>
             <BootstrapDialog 
-                fullScreen={fullScreen}
                 fullWidth
                 open={open} 
                 onClose={handleClose}
@@ -78,6 +82,16 @@ export default function DialogLeaveRoute({ open, setOpen } : { open : boolean, s
                     <DialogActions>
                         { isSuccess ?
                             <></>
+                            :
+                            isError ?
+                            <>
+                                <Button variant='contained' color='warning' onClick={forceClearRoute}>
+                                    Salir de todas formas
+                                </Button>
+                                <Button variant='contained' onClick={handleClose}>
+                                    Cancelar
+                                </Button>
+                            </>
                             :
                             <>
                                 <Button disabled={isPending} variant='contained' color='error' onClick={onLeaveRoute}>

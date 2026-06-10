@@ -12,7 +12,7 @@ import (
 // Contiene métodos para obtener, crear, eliminar, actualizar eventos de calendario y buscar por ID y usuario.
 type CalendarEventRepository interface {
 	GetAllCalendarEvents() ([]domain.EventoCalendario, error)
-	CreateCalendarEvent(event domain.EventoCalendario, userID string) error
+	CreateCalendarEvent(event domain.EventoCalendario, userID string) (domain.EventoCalendario, error)
 	DeleteCalendarEvent(id string) error
 	UpdateCalendarEvent(updateData map[string]interface{}) (domain.EventoCalendario, error)
 	FindByIDAndUserID(id string, userID string) error
@@ -59,11 +59,39 @@ func (c calendarEventRepository) GetAllCalendarEvents() ([]domain.EventoCalendar
 
 // CreateCalendarEvent crea un nuevo evento de calendario en la base de datos.
 // Asigna un nuevo ID al evento, establece el ID del autor y lo inserta en la colección.
-func (c calendarEventRepository) CreateCalendarEvent(event domain.EventoCalendario, userID string) error {
+// Si RouteID es el valor cero de ObjectID, se omite para evitar guardar ObjectID("000000000000000000000000") en MongoDB.
+// Retorna el evento creado con su ID real asignado por MongoDB.
+func (c calendarEventRepository) CreateCalendarEvent(event domain.EventoCalendario, userID string) (domain.EventoCalendario, error) {
 	event.ID = bson.NewObjectID()
 	event.AuthorID, _ = bson.ObjectIDFromHex(userID)
-	_, err := c.CalendarEventCollection.InsertOne(context.Background(), event)
-	return err
+
+	data, err := bson.Marshal(event)
+	if err != nil {
+		return domain.EventoCalendario{}, err
+	}
+
+	var doc bson.M
+	err = bson.Unmarshal(data, &doc)
+	if err != nil {
+		return domain.EventoCalendario{}, err
+	}
+
+	if event.RouteID.IsZero() {
+		delete(doc, "route_id")
+	}
+
+	_, err = c.CalendarEventCollection.InsertOne(context.Background(), doc)
+	if err != nil {
+		return domain.EventoCalendario{}, err
+	}
+
+	var created domain.EventoCalendario
+	err = c.CalendarEventCollection.FindOne(context.Background(), bson.M{"_id": event.ID}).Decode(&created)
+	if err != nil {
+		return domain.EventoCalendario{}, err
+	}
+
+	return created, nil
 }
 
 // DeleteCalendarEvent elimina un evento de calendario por su ID.

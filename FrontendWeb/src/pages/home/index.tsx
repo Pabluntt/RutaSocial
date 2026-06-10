@@ -243,7 +243,7 @@ export default function Home() {
                         stateCurrentLocation={[currentLocation, setCurrentLocation]}                        
                     />
                 </Mapa>
-                <ButtonCurrentLocation stateShowLocation={[ showLocation, setShowLocation ]} stateErrorGeolocation={[errorGeolocation, setErrorGeolocation]}/>
+                <ButtonCurrentLocation stateShowLocation={[ showLocation, setShowLocation ]} stateCurrentLocation={[ currentLocation, setCurrentLocation ]} stateErrorGeolocation={[errorGeolocation, setErrorGeolocation]}/>
 
                 { !onSelectLocationMap ?
                     <>

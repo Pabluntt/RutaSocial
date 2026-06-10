@@ -35,6 +35,7 @@ export default function LocationHandler({ stateShowLocation, stateCurrentLocatio
         }
         const id = navigator.geolocation.watchPosition( handleSuccess, handleError, {
             enableHighAccuracy : true,
+            maximumAge : 10000,
         })
 
         return () => {
@@ -44,7 +45,7 @@ export default function LocationHandler({ stateShowLocation, stateCurrentLocatio
 
 
     useEffect(() => {
-        if(showLocation && currentLocation.latitude) {
+        if(showLocation && (currentLocation.latitude !== 0 || currentLocation.longitude !== 0)) {
             map.flyTo([currentLocation.latitude, currentLocation.longitude], 17, {
                 duration: 1,
             })

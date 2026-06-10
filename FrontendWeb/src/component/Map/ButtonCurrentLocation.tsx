@@ -4,16 +4,19 @@ import GpsOffIcon from '@mui/icons-material/GpsOff';
 import CloseIcon from '@mui/icons-material/Close'
 import { useEffect, useState } from "react";
 import useSessionStore from "../../stores/useSessionStore";
+import getCurrentLocation, { Position } from "../../utils/getCurrentLocation";
 
 type CurrentLocationProps = {
     stateShowLocation : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
+    stateCurrentLocation : [ Position, React.Dispatch<React.SetStateAction<Position>> ]
     stateErrorGeolocation : [GeolocationPositionError | undefined, React.Dispatch<React.SetStateAction<GeolocationPositionError | undefined>>]
 }
 
-export default function ButtonCurrentLocation({ stateShowLocation, stateErrorGeolocation} : CurrentLocationProps) {
+export default function ButtonCurrentLocation({ stateShowLocation, stateCurrentLocation, stateErrorGeolocation} : CurrentLocationProps) {
 
     const { enableGPS, setEnableGPS, countRetryGPS, setCountRetryGPS } = useSessionStore()
     const [ , setShowLocation ] = stateShowLocation
+    const [ , setCurrentLocation ] = stateCurrentLocation
     const [ errorGeolocation, _] = stateErrorGeolocation
 
     useEffect(() => {
@@ -26,12 +29,18 @@ export default function ButtonCurrentLocation({ stateShowLocation, stateErrorGeo
         }
     }, [errorGeolocation])
 
-    const handleClick = () => {
+    const handleClick = async () => {
+        try {
+            const pos = await getCurrentLocation()
+            setCurrentLocation(pos)
+        } catch {
+            // Si falla la obtención de alta precisión, continuamos de todas formas
+        }
         if(!enableGPS) {
             setEnableGPS(true)
         }
         setShowLocation(true);
-        setTimeout(() => setShowLocation(false), 300) 
+        setTimeout(() => setShowLocation(false), 1000) 
     }
 
     const handleRetryGPS = () => {

@@ -23,6 +23,8 @@ import { useAuth } from '../context/AuthContext'
 import { Role } from '../Enums/Role'
 import { useNavigate } from 'react-router-dom'
 import useSessionStore from '../stores/useSessionStore'
+import { RouteService } from '../api/services/RouteService'
+import { CalendarService } from '../api/services/CalendarService'
 
 export default function Calendar() {
 
@@ -85,7 +87,7 @@ export default function Calendar() {
         }
     }
 
-    const handleStartRoute = () => {
+    const handleStartRoute = async () => {
         if(!eventClicked) return
         
         // Validar que la fecha del evento sea hoy
@@ -94,15 +96,47 @@ export default function Calendar() {
             return
         }
 
-        // Validar que el evento tenga una ruta vinculada
-        if(!eventClicked.routeID) {
-            alert('Este evento no tiene una ruta vinculada')
-            return
+        let routeId = eventClicked.routeID
+
+        // Si el evento no tiene ruta vinculada, crear una automáticamente
+        if(!routeId || routeId === '000000000000000000000000') {
+            try {
+                const newRoute = await RouteService.CreateRoute({
+                    title: eventClicked.title,
+                    description: eventClicked.description,
+                    route_leader: eventClicked.authorID
+                })
+                routeId = newRoute.id
+
+                await CalendarService.UpdateEvent({
+                    _id: eventClicked.id,
+                    title: eventClicked.title,
+                    description: eventClicked.description,
+                    date_start: eventClicked.dateStart.toISOString(),
+                    author_id: eventClicked.authorID,
+                    time_start: eventClicked.timeStart,
+                    time_end: eventClicked.timeEnd,
+                    route_id: routeId
+                })
+
+                refetch()
+            } catch {
+                alert('Error al crear la ruta automática. Intenta de nuevo.')
+                return
+            }
+        } else {
+            // Validar que la ruta exista en el backend
+            try {
+                await RouteService.FindRouteByID(routeId)
+            } catch {
+                alert('La ruta vinculada a este evento no existe o no está disponible.\nCreá una nueva ruta desde el menú + y vinculala al evento.')
+                return
+            }
         }
 
         // Establecer la ruta como activa
         setRouteStatus(true)
-        setRouteId(eventClicked.routeID)
+        setRouteId(routeId)
         
         // Cerrar el popover y navegar al mapa
         handleCloseEventView()
@@ -200,7 +234,7 @@ export default function Calendar() {
                                 <>
                                 </>
                             }
-                            {eventClicked?.routeID && isToday(eventClicked.dateStart) ? 
+                            {eventClicked && isToday(eventClicked.dateStart) ? 
                                 <Tooltip title={'Iniciar Ruta'}>
                                     <IconButton onClick={handleStartRoute} sx={{ color: 'success.main' }}>
                                         <PlayArrowIcon htmlColor="green" fontSize="small" />
