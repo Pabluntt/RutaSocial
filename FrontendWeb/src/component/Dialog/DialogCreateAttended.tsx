@@ -8,7 +8,7 @@ import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import ReplayIcon from '@mui/icons-material/Replay';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import AddIcon from '@mui/icons-material/Add';
-import { Alert, CircularProgress, IconButton, TextField, Typography, Zoom, Chip, Paper, Divider } from '@mui/material';
+import { Alert, CircularProgress, IconButton, TextField, Typography, Zoom, Chip, Paper, Divider, useTheme, useMediaQuery } from '@mui/material';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import getCurrentLocation, { Position } from '../../utils/getCurrentLocation';
 import useSessionStore from '../../stores/useSessionStore';
@@ -78,6 +78,8 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
     const [ people, setPeople ] = statePeople
     const [ coords, setCoords ] = stateCoords
 
+    const theme = useTheme();
+    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ locationMethod, setLocationMethod ] = stateLocationMethod
     const [ createButtonDisable, setCreateButtonDisable ] = useState(true)
     const [ error, setError ] = useState<string | undefined>()
@@ -241,6 +243,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
 
     return (
         <BootstrapDialog 
+            fullScreen={fullScreen}
             fullWidth
             maxWidth="md"
             open={open && !onSelectLocationMap}

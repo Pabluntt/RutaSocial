@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, useMediaQuery, useTheme } from "@mui/material";
 import { Position } from "../../utils/getCurrentLocation";
 import { useState, useEffect } from "react";
 
@@ -19,6 +19,8 @@ export default function DialogCreateAlojamiento({ stateOpen, location, onCreate 
     const [ open, setOpen ] = stateOpen
     const [ name, setName ] = useState('')
     const [ cupos, setCupos ] = useState<number>(1)
+    const theme = useTheme()
+    const isMobile = !useMediaQuery(theme.breakpoints.up('sm'))
 
     useEffect(() => {
         if(!open) {
@@ -32,14 +34,13 @@ export default function DialogCreateAlojamiento({ stateOpen, location, onCreate 
     }
 
     const handleSubmit = () => {
-        const id = Date.now().toString()
         const coords: [number, number] = [location.latitude, location.longitude]
-        onCreate({ id, coords, name: name || 'Alojamiento', cupos })
+        onCreate({ id: '', coords, name: name || 'Alojamiento', cupos })
         setOpen(false)
     }
 
     return (
-        <Dialog open={open} onClose={handleClose}>
+        <Dialog open={open} onClose={handleClose} fullScreen={isMobile}>
             <DialogTitle>Añadir Alojamiento</DialogTitle>
             <DialogContent>
                 <TextField

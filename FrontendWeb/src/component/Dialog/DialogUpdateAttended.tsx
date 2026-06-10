@@ -4,7 +4,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Alert, CircularProgress, TextField } from '@mui/material';
+import { Alert, CircularProgress, TextField, useTheme, useMediaQuery } from '@mui/material';
 import ComboBox from '../Button/ComboBox';
 import { useEffect, useState } from 'react';
 import useSessionStore from '../../stores/useSessionStore';
@@ -25,6 +25,8 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
 
 export default function DialogUpdateAtended() {
 
+    const theme = useTheme();
+    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ helpPoint, setHelpPoint ] = useHelpPointUpdateDialog() /*Context Provider */
 
 
@@ -87,6 +89,7 @@ export default function DialogUpdateAtended() {
 
     return (
         <BootstrapDialog 
+            fullScreen={fullScreen}
             fullWidth
             open={helpPoint !== undefined}
             onClose={handleClose}

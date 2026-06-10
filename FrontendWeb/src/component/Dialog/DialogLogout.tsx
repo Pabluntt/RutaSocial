@@ -7,7 +7,7 @@ import DialogActions from '@mui/material/DialogActions';
 import useSessionStore from '../../stores/useSessionStore';
 import CloseDialogButton from '../Button/CloseDialogButton';
 import { useNavigate } from 'react-router-dom';
-import { Typography } from '@mui/material';
+import { Typography, useTheme, useMediaQuery } from '@mui/material';
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
@@ -24,6 +24,8 @@ export type DialogLogoutProps = {
 
 export default function DialogLogout({ stateOpen } : DialogLogoutProps) {
 
+    const theme = useTheme();
+    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ open, setOpen ] = stateOpen
     const { clearSession } = useSessionStore()
 
@@ -41,6 +43,7 @@ export default function DialogLogout({ stateOpen } : DialogLogoutProps) {
     return (
         <>
             <BootstrapDialog 
+                fullScreen={fullScreen}
                 fullWidth
                 open={open} 
                 onClose={handleClose}

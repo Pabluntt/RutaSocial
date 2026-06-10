@@ -8,7 +8,7 @@ import ComboBox from '../Button/ComboBox';
 import CloseDialogButton from '../Button/CloseDialogButton';
 import InputDescription from '../Input/InputDescription';
 import { useEffect, useState } from 'react';
-import { Alert, CircularProgress, TextField } from '@mui/material';
+import { Alert, CircularProgress, TextField, useTheme, useMediaQuery } from '@mui/material';
 import { useEventCalendarUpdateDialog } from '../../context/EventCalendarUpdateContext';
 import { useCalendarEvents, useUpdateCalendarEvent } from '../../api/hooks/CalendarEventHooks';
 import { timeSlots } from '../../utils/calendar';
@@ -27,6 +27,8 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
 
 export default function DialogUpdateEventCalendar() {
 
+    const theme = useTheme();
+    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ eventCalendar, setEventCalendar ] = useEventCalendarUpdateDialog() /*Context Provider */
 
     const { isSuccess, isPending, isError, isIdle, mutate, error, reset } = useUpdateCalendarEvent()
@@ -76,6 +78,7 @@ export default function DialogUpdateEventCalendar() {
 
     return (
         <BootstrapDialog 
+            fullScreen={fullScreen}
             fullWidth
             open={eventCalendar !== undefined}
             onClose={handleClose}

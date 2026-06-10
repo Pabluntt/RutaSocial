@@ -4,7 +4,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Alert, CircularProgress, TextField, Typography, Autocomplete } from '@mui/material';
+import { Alert, CircularProgress, TextField, Typography, Autocomplete, useTheme, useMediaQuery } from '@mui/material';
 import InputDescription from '../Input/InputDescription';
 import CloseDialogButton from '../Button/CloseDialogButton';
 import useSessionStore from '../../stores/useSessionStore';
@@ -34,6 +34,8 @@ export type DialogCreateRiskProps = {
 
 export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo } : DialogCreateRiskProps) {
 
+    const theme = useTheme();
+    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const authorID = useProfile().data?.id
     const [ open, setOpen ] = stateOpen
     const [ selectInfo, setSelectInfo ] = stateSelectInfo
@@ -195,6 +197,7 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
     
     return (
         <BootstrapDialog 
+            fullScreen={fullScreen}
             fullWidth
             open={open} 
             onClose={handleClose}

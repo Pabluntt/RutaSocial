@@ -5,7 +5,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import IconButton from '@mui/material/IconButton';
-import { Paper, Snackbar, TextField, Typography } from '@mui/material';
+import { Paper, Snackbar, TextField, Typography, useTheme, useMediaQuery } from '@mui/material';
 import { useEffect, useState } from 'react';
 import useSessionStore from '../../stores/useSessionStore';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -46,6 +46,8 @@ export default function DialogCreateRoute({ stateOpen } : DialogCreateRouteProps
     const [ open, setOpen ] = stateOpen
     const { accessToken, routeStatus, setRouteStatus, routeId, setRouteId } = useSessionStore()
     const  leaderID  = useProfile().data?.id
+    const theme = useTheme();
+    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ acept, setAcept ] = useState(false)
     const [ inviteCode, setInviteCode ] = useState('')
     const [ confirmation, setConfirmation ] = useState(false)
@@ -143,6 +145,7 @@ export default function DialogCreateRoute({ stateOpen } : DialogCreateRouteProps
     return (
         <>
             <BootstrapDialog 
+                fullScreen={fullScreen}
                 fullWidth
                 open={open} 
                 onClose={handleClose}

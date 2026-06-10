@@ -4,7 +4,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Alert, Box, CircularProgress, Popover, TextField, Typography } from '@mui/material';
+import { Alert, Box, CircularProgress, Popover, TextField, Typography, useTheme, useMediaQuery } from '@mui/material';
 import CloseDialogButton from '../Button/CloseDialogButton';
 import { useEffect, useState } from 'react';
 import { useCreateInstitution } from '../../api/hooks/InstitutionHooks';
@@ -26,6 +26,8 @@ export type DialogCreateInstitutionProps = {
 
 export default function DialogCreateInstitution({ stateOpen } : DialogCreateInstitutionProps) {
 
+    const theme = useTheme();
+    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ open, setOpen ] = stateOpen
     const [ name, setName ] = useState<string>('')
     const [ nameError, setNameError ] = useState<string>('')
@@ -93,6 +95,7 @@ export default function DialogCreateInstitution({ stateOpen } : DialogCreateInst
 
     return (
         <BootstrapDialog 
+            fullScreen={fullScreen}
             fullWidth
             open={open} 
             onClose={handleClose}

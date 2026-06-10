@@ -4,7 +4,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Alert, TextField, Typography } from '@mui/material';
+import { Alert, TextField, Typography, useTheme, useMediaQuery } from '@mui/material';
 import { useEffect, useState } from 'react';
 import useSessionStore from '../../stores/useSessionStore';
 import CloseDialogButton from '../Button/CloseDialogButton';
@@ -28,6 +28,8 @@ export default function DialogJoinRoute({ stateOpen } : DialogJoinRouteProps) {
 
     const [ open, setOpen ] = stateOpen
     const { accessToken, routeStatus, setRouteStatus, routeId, setRouteId } = useSessionStore()
+    const theme = useTheme();
+    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ acept, setAcept ] = useState(false)
     const [ inviteCode, setInviteCode ] = useState('')
     const { isSuccess, isError, isIdle, data, mutate, error } = useJoinRoute()
@@ -62,6 +64,7 @@ export default function DialogJoinRoute({ stateOpen } : DialogJoinRouteProps) {
     return (
         <>
             <BootstrapDialog 
+                fullScreen={fullScreen}
                 fullWidth
                 open={open} 
                 onClose={handleClose}

@@ -72,13 +72,14 @@ export default function Login() {
           })
         ]}
       >
-        <div className="flex items-center justify-center w-full xs:max-w-sm">
-          <form className="max-xs:h-full" onSubmit={onSubmitForm} noValidate>
-              <Card variant='elevation' elevation={1} className="flex flex-col gap-6 rounded-2xl h-full lg:h-150 w-full lg:w-250">
-                <div className="flex grow flex-col lg:flex-row items-center justify-between p-16 gap-1 lg:gap-16">
-                  <div className="flex flex-col items-start justify-start gap-8 w-full lg:w-90 px-0 lg:px-6">
+        <div className="flex items-center justify-center w-full p-2">
+          <form className="w-full max-w-lg" onSubmit={onSubmitForm} noValidate>
+              <Card variant='elevation' elevation={1} className="flex flex-col gap-6 rounded-2xl w-full p-4 sm:p-8 md:p-16">
+                <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-16">
+                  <div className="flex flex-col items-start justify-start gap-6 w-full lg:w-90">
                     <Typography variant="h3" gutterBottom fontSize={{
-                      xs : '2.5rem'
+                      xs : '1.8rem',
+                      sm : '2.5rem'
                     }}>
                       Iniciar Sesión
                     </Typography>
@@ -130,6 +131,7 @@ export default function Login() {
                       sx={{
                         color : 'white',
                         background : '#009BA5',
+                        py: 1.5,
                       }}
                     >
                       Ingresar
@@ -154,12 +156,11 @@ export default function Login() {
                       ¿Se te olvidó la contraseña?
                     </Typography>*/}
                   </div>
-                  <div className="flex w-1/2 md:w-1/2 flex-col items-center justify-center">
-                      <img src="HDC_RGB_full-color-horizontal.png" loading="lazy"/>
+                  <div className="flex w-full lg:w-1/2 flex-col items-center justify-center">
+                      <img src="HDC_RGB_full-color-horizontal.png" loading="lazy" className="max-w-full h-auto"/>
                       <Typography variant='subtitle2' textAlign={'center'} fontSize={{
                         xs : '0.65rem',
                         sm : '1rem',
-                        md : '1rem',
                       }}>
                         Hecho con ❤️ por <a href="devSync"><b>DevSync</b></a>
                       </Typography>

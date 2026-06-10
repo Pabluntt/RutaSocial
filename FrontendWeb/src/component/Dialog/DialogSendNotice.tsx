@@ -4,7 +4,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Checkbox, FormControlLabel, Typography } from '@mui/material';
+import { Checkbox, FormControlLabel, Typography, useTheme, useMediaQuery } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useCreateNotice, useNoticesMap } from '../../api/hooks/NoticeHooks';
 import { Notice } from '../../api/models/Notice';
@@ -24,6 +24,8 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
 
 export default function DialogSendAviso({ open, setOpen } : { open : boolean, setOpen: (ar : boolean) => void}) {
 
+    const theme = useTheme();
+    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ notice, setNotice ] = useState<Omit<Notice, 'id' | 'createdAt' | 'authorName'>>({
         description : '',
         authorID : '',
@@ -84,6 +86,7 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
     return (
         <>
             <BootstrapDialog 
+                fullScreen={fullScreen}
                 fullWidth
                 open={open} 
                 onClose={handleClose}

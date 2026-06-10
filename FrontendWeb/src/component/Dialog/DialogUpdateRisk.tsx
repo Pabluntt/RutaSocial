@@ -11,7 +11,7 @@ import InputDescription from '../Input/InputDescription';
 import { RiskStatus } from '../../Enums/RiskStatus';
 import { useRisks, useUpdateRisk } from '../../api/hooks/RiskHooks';
 import { useEffect } from 'react';
-import { Alert, CircularProgress } from '@mui/material';
+import { Alert, CircularProgress, useTheme, useMediaQuery } from '@mui/material';
 
 
 
@@ -27,6 +27,8 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
 
 export default function DialogUpdateRisk() {
 
+    const theme = useTheme();
+    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ risk, setRisk ] = useRiskUpdateDialog() /*Context Provider */
     const { isSuccess, isPending, isError, isIdle, mutate, error, reset } = useUpdateRisk()
     const { refetch } = useRisks()
@@ -64,6 +66,7 @@ export default function DialogUpdateRisk() {
 
     return (
         <BootstrapDialog 
+            fullScreen={fullScreen}
             fullWidth
             open={risk !== undefined}
             onClose={handleClose}

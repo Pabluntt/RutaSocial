@@ -4,7 +4,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Alert, CircularProgress, Typography, Zoom, Chip, Paper } from '@mui/material';
+import { Alert, CircularProgress, Typography, Zoom, Chip, Paper, useTheme, useMediaQuery } from '@mui/material';
 import { useEffect, useState } from 'react';
 import getCurrentLocation, { Position } from '../../utils/getCurrentLocation';
 import InputDescription from '../Input/InputDescription';
@@ -38,6 +38,8 @@ export type DialogCreateRiskProps = {
 
 export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, location, stateLocationMethod, stateDescription } : DialogCreateRiskProps) {
 
+    const theme = useTheme();
+    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ open, setOpen ] = stateOpen
     const [ , setOnSelectLocationMap ] = stateOnSelectLocationMap 
 
@@ -118,6 +120,7 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
 
     return (
         <BootstrapDialog 
+            fullScreen={fullScreen}
             fullWidth
             maxWidth="sm"
             open={open} 

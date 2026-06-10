@@ -1,4 +1,4 @@
-import { Button, Typography } from "@mui/material";
+import { Button, Typography, useTheme, useMediaQuery } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import useSessionStore from "../stores/useSessionStore";
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
@@ -10,10 +10,13 @@ import HomeIcon from '@mui/icons-material/Home';
 import { useState } from "react";
 import DialogSendNotice from "./Dialog/DialogSendNotice";
 import CampaignIcon from '@mui/icons-material/Campaign';
-import WbSunnyIcon from '@mui/icons-material/WbSunny';
+
 
 export default function DrawerList() {
 
+    const theme = useTheme();
+    const isMobile = !useMediaQuery(theme.breakpoints.up('sm'));
+    const btnSx = isMobile ? { py: 1.5, minHeight: 52 } : { py: 0.5, minHeight: 40 };
     const navigate = useNavigate()
     const { clearSession } = useSessionStore()
     const [ openDialogNotice, setOpenDialogNotice ] = useState(false)
@@ -52,50 +55,44 @@ export default function DrawerList() {
     
     return (
         <div className={`py-5 gap-4 w-45 flex grow flex-col flex-wrap justify-items-between`}>
-            <Button fullWidth onClick={onClickHome} color='info'>
+            <Button fullWidth onClick={onClickHome} color='info' sx={btnSx}>
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
                     <HomeIcon  />
                      <Typography>Home</Typography>
                  </div>
             </Button>
-            <Button fullWidth onClick={onClickProfile} color='info' >
+            <Button fullWidth onClick={onClickProfile} color='info' sx={btnSx}>
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
                     <AccountBoxIcon />
                     <Typography>Perfil</Typography>
                 </div>
             </Button>
-            <Button fullWidth onClick={onClickSchedule} color='info' >
+            <Button fullWidth onClick={onClickSchedule} color='info' sx={btnSx}>
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
                     <EventIcon />
                     <Typography>Agendar</Typography>
                 </div>
             </Button>
-            <Button fullWidth onClick={onClickHistory} color='info' >
+            <Button fullWidth onClick={onClickHistory} color='info' sx={btnSx}>
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
                     <HistoryIcon />
                     <Typography>Historial</Typography>
                 </div>
             </Button>
-            <Button fullWidth onClick={onClickUsuarios} color='info' >
+            <Button fullWidth onClick={onClickUsuarios} color='info' sx={btnSx}>
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
                     <GroupIcon/>
                     <Typography>Usuarios</Typography>
                 </div>
             </Button>
-            <Button fullWidth onClick={onClickSendNotice} color="info">
+            <Button fullWidth onClick={onClickSendNotice} color="info" sx={btnSx}>
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
                     <CampaignIcon/>
                     <Typography>Crear Aviso</Typography>
                 </div>
             </Button>
-            <Button fullWidth color="info" onClick={() => {}}>
-                <div className="flex w-full justify-start px-2 gap-5 items-center">
-                    <WbSunnyIcon/>
-                    <Typography>Clima</Typography>
-                </div>
-            </Button>
             <div className="flex grow items-end w-full" >
-                <Button  fullWidth color="warning" onClick={onClickCerrarSesion}  >
+                <Button fullWidth color="warning" onClick={onClickCerrarSesion} sx={btnSx}>
                     <div className="flex w-full justify-start px-2 gap-5 items-center">
                         <LogoutIcon fontSize="small" />
                         <Typography variant="body2">Cerrar Sesión</Typography>

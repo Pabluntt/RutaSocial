@@ -4,7 +4,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Alert,  Typography } from '@mui/material';
+import { Alert, Typography, useTheme, useMediaQuery } from '@mui/material';
 import { useEffect } from 'react';
 import useSessionStore from '../../stores/useSessionStore';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -23,7 +23,8 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
 
 export default function DialogFinishRoute({ open, setOpen } : { open : boolean, setOpen: (ar : boolean) => void}) {
 
-   
+    const theme = useTheme();
+    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const { setRouteStatus, routeId, setRouteId, accessToken } = useSessionStore()
     const dataRoute = useRoute( routeId as string).data
     const { mutate, isSuccess, isError, isIdle, isPending } = useFinishRoute()
@@ -51,6 +52,7 @@ export default function DialogFinishRoute({ open, setOpen } : { open : boolean, 
     return (
         <>
             <BootstrapDialog 
+                fullScreen={fullScreen}
                 fullWidth
                 open={open} 
                 onClose={handleClose}

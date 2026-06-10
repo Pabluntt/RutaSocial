@@ -6,7 +6,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
-import { FormControl, FormHelperText, Input, InputLabel, Typography, Alert } from '@mui/material';
+import { FormControl, FormHelperText, Input, InputLabel, Typography, Alert, useTheme, useMediaQuery } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useAdminCreateUser } from '../../api/hooks/UserHooks';
 import { IUser } from '../../api/models/User';
@@ -53,6 +53,8 @@ type AdminCreateUserError = {
 
 export default function DialogCreateUser({ open, setOpen } : { open : boolean, setOpen: (ar : boolean) => void}) {
 
+    const theme = useTheme();
+    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ user, setUser ] = useState<AdminCreateUser>({
         name : '',
         email : '',
@@ -147,6 +149,7 @@ export default function DialogCreateUser({ open, setOpen } : { open : boolean, s
     return (
         <>
             <BootstrapDialog 
+                fullScreen={fullScreen}
                 fullWidth
                 open={open} 
                 onClose={handleOnClose}

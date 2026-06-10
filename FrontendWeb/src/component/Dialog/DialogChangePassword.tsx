@@ -4,7 +4,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Alert, AlertColor, TextField } from '@mui/material';
+import { Alert, AlertColor, TextField, useTheme, useMediaQuery } from '@mui/material';
 import { useEffect, useState } from 'react';
 import CloseDialogButton from '../Button/CloseDialogButton';
 import useSessionStore from '../../stores/useSessionStore';
@@ -22,6 +22,8 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
 
 export default function DialogChangePassword({ open, setOpen, email} : { open : boolean, setOpen: (ar : boolean) => void, email : string}) {
 
+    const theme = useTheme();
+    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const { accessToken } = useSessionStore()
     const [ oldPassword, setOldPassword ] = useState<string>('')
     const [ newPassword, setNewPassword ] = useState<string>('')
@@ -108,6 +110,7 @@ export default function DialogChangePassword({ open, setOpen, email} : { open : 
     return (
         <>
             <BootstrapDialog 
+                fullScreen={fullScreen}
                 fullWidth
                 open={open} 
                 onClose={handleClose}

@@ -6,7 +6,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
-import { Paper, Snackbar, Typography } from '@mui/material';
+import { Paper, Snackbar, Typography, useTheme, useMediaQuery } from '@mui/material';
 import { useState } from 'react';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DoneIcon from '@mui/icons-material/Done';
@@ -30,7 +30,8 @@ export type DialogResumeRiskProps = {
 
 export default function DialogResumeRoute({ stateOpen } : DialogResumeRiskProps) {
 
-
+    const theme = useTheme();
+    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const { routeId, accessToken } = useSessionStore()
 
     const [ open, setOpen ] = stateOpen
@@ -56,6 +57,7 @@ export default function DialogResumeRoute({ stateOpen } : DialogResumeRiskProps)
     return (
         <>
             <BootstrapDialog 
+                fullScreen={fullScreen}
                 fullWidth
                 open={open} 
                 onClose={handleClose}
