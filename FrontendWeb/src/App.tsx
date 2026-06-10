@@ -14,6 +14,7 @@ import { createTheme } from '@mui/material/styles'
 import Schedule from './pages/schedule'
 import { ZoomProvider } from './context/ZoomContext'
 import RouteHistory from './pages/history'
+import PeopleHelped from './pages/people-helped'
 import { HelpPointUpdateProvider } from './context/HelpPointUpdateContext'
 import { AuthProvider } from './context/AuthContext'
 import { RiskUpdateProvider } from './context/RiskUpdateContext'
@@ -74,6 +75,7 @@ function App() {
                       </HelpPointUpdateProvider>
                       } 
                     />
+                    <Route path={`${import.meta.env.VITE_BASE_URL}/personas-ayudadas`} element={<PeopleHelped />} />
                     <Route path='*' element={ <NotFound />} />
                 </Routes>
             </ThemeProvider>

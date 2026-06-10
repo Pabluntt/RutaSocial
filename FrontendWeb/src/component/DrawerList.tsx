@@ -10,6 +10,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import { useState } from "react";
 import DialogSendNotice from "./Dialog/DialogSendNotice";
 import CampaignIcon from '@mui/icons-material/Campaign';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
 
 
 export default function DrawerList() {
@@ -45,6 +46,10 @@ export default function DrawerList() {
 
     const onClickSchedule = () => {
         navigate(`${import.meta.env.VITE_BASE_URL}/mapa`)
+    }
+
+    const onClickPeopleHelped = () => {
+        navigate(`${import.meta.env.VITE_BASE_URL}/personas-ayudadas`)
     }
 
     const onClickSendNotice = () => {
@@ -89,6 +94,12 @@ export default function DrawerList() {
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
                     <CampaignIcon/>
                     <Typography>Crear Aviso</Typography>
+                </div>
+            </Button>
+            <Button fullWidth onClick={onClickPeopleHelped} color='info' sx={btnSx}>
+                <div className="flex w-full justify-start px-2 gap-5 items-center">
+                    <GroupAddIcon/>
+                    <Typography>Personas Ayudadas</Typography>
                 </div>
             </Button>
             <div className="flex grow items-end w-full" >

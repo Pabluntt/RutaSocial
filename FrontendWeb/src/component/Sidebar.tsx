@@ -10,6 +10,7 @@ import HistoryIcon from '@mui/icons-material/History';
 import MapIcon from '@mui/icons-material/Map';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import LogoutIcon from '@mui/icons-material/Logout';
+import GroupAddIcon from '@mui/icons-material/GroupAdd';
 
 import useSessionStore from "../stores/useSessionStore";
 import DialogLogout from "./Dialog/DialogLogout";
@@ -53,6 +54,9 @@ export default function Sidebar() {
     const onClickHome = () => {
         navigate(`${import.meta.env.VITE_BASE_URL}/`)
     }
+    const onClickPeopleHelped = () => {
+        navigate(`${import.meta.env.VITE_BASE_URL}/personas-ayudadas`)
+    }
     const onClickCerrarSesion = () => {
         setOpenLogout(true)
     }
@@ -66,6 +70,7 @@ export default function Sidebar() {
                 <Tooltip title="Historial"><IconButton onClick={onClickHistory} sx={{ ...hoverStyles }}><HistoryIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
                 <Tooltip title="Mapa"><IconButton onClick={onClickSchedule} sx={{ ...hoverStyles }}><MapIcon htmlColor="#374151" fontSize="large"/></IconButton></Tooltip>
                 <Tooltip title="Enviar aviso"><IconButton onClick={handleClickOpen} sx={{ ...hoverStyles }}><CampaignIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
+                <Tooltip title="Personas Ayudadas"><IconButton onClick={onClickPeopleHelped} sx={{ ...hoverStyles }}><GroupAddIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
                 { role === Role.admin  ?
 
                     <Tooltip title="Gestionar Usuarios">
