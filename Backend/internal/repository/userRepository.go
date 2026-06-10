@@ -63,7 +63,7 @@ func (u *userRepository) GetPublicInfoByID(id string) (map[string]string, error)
 	if err != nil {
 		return map[string]string{"name": ""}, err
 	}
-	return map[string]string{"name": user.Name, "institutionID": user.InstitutionID.String(), "phone": user.Phone}, nil
+	return map[string]string{"name": user.Name, "institutionID": user.InstitutionID.Hex(), "phone": user.Phone}, nil
 }
 
 // GetUserByID obtiene un usuario por su ID.

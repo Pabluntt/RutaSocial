@@ -28,7 +28,7 @@ export async function MapCalendarEventFromBackend(
     let authorName = 'Usuario Eliminado'
     let colorInstitution = '#000000'
     try {
-        const user = (await UserService.FindUserById(data.author_id as string))
+        const user = (await UserService.GetPublicInfoByID(data.author_id as string))
         colorInstitution = (await InstitutionService.FindByID(user.institutionID)).color
         authorName = user.name
     } catch(e) {

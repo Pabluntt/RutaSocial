@@ -44,6 +44,11 @@ export class UserService {
         ))
     }
 
+    static async GetPublicInfoByID(id: string): Promise<{ name: string; institutionID: string; phone: string }> {
+        const { data } = await axiosInstance.get(`/user/public-info/${id}`)
+        return data?.message as { name: string; institutionID: string; phone: string }
+    }
+
     static async FindUserById(id : string) : Promise<IUser> {
         const { data } = await axiosInstance.get(`/user/${id}`)
         return MapUserFromBackend(data?.message as TUserBackend)
