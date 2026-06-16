@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/SebaVCH/hdcProject/internal/config"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -12,7 +13,7 @@ import (
 // SetupUserRouter configura las rutas para la gestión de usuarios.
 // Crea el repositorio de usuarios, el caso de uso y el controlador, y define las rutas para obtener el perfil del usuario, su nombre por ID, todos los usuarios y actualizar la información del usuario.
 func SetupUserRouter(r *gin.Engine) {
-	userRepo := repository.NewUserRepository(database.Client.Database("pip").Collection("usuarios"))
+	userRepo := repository.NewUserRepository(database.Client.Database(config.DBName).Collection("usuarios"))
 	userUseCase := usecase.NewUserUseCase(userRepo)
 	userController := controller.NewUserController(userUseCase)
 

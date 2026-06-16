@@ -19,3 +19,7 @@ type Usuario struct {
 	InstitutionID   bson.ObjectID `bson:"institutionID" json:"institutionID"`
 	DateRegister    time.Time     `bson:"date_register" json:"date_register"`
 }
+
+func (u *Usuario) Sanitize() {
+	u.Password = ""
+}

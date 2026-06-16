@@ -11,6 +11,10 @@ import (
 // JwtSecret es la clave secreta utilizada para firmar y verificar tokens JWT.
 var JwtSecret []byte
 
+// DBName es el nombre de la base de datos MongoDB.
+// Se lee de la variable de entorno MONGODB_DB_NAME, con "pip" como valor por defecto.
+var DBName string
+
 // LoadEnv carga las variables de entorno necesarias para la aplicación.
 // Primero intenta cargar desde el archivo .env, luego carga la clave secreta para JWT desde la variable de entorno
 func LoadEnv() error {
@@ -23,6 +27,11 @@ func LoadEnv() error {
 	_ = godotenv.Load(envPath)
 
 	JwtSecret = []byte(os.Getenv("JWT_SECRET"))
+
+	DBName = os.Getenv("MONGODB_DB_NAME")
+	if DBName == "" {
+		DBName = "pip"
+	}
 
 	return nil
 }

@@ -45,6 +45,7 @@ func (u userUseCase) GetUserByID(c *gin.Context) {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": "Usuario no encontrado"})
 		return
 	}
+	user.Sanitize()
 	c.IndentedJSON(http.StatusOK, gin.H{"message": user})
 }
 
@@ -66,6 +67,7 @@ func (u userUseCase) GetUserProfile(c *gin.Context) {
 	if done {
 		return
 	}
+	user.Sanitize()
 	c.IndentedJSON(http.StatusOK, gin.H{"message": user})
 }
 
@@ -108,6 +110,7 @@ func (u userUseCase) UpdateUserInfo(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar usuario"})
 		return
 	}
+	updatedUser.Sanitize()
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": updatedUser})
 }
@@ -119,6 +122,9 @@ func (u userUseCase) GetAllUsers(c *gin.Context) {
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener usuarios"})
 		return
+	}
+	for i := range users {
+		users[i].Sanitize()
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": users})
 }

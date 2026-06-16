@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/SebaVCH/hdcProject/internal/config"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -13,7 +14,7 @@ import (
 // Crea el repositorio de notificaciones, el caso de uso y el controlador, y define las rutas para crear, obtener, actualizar y eliminar notificaciones.
 // También define rutas para obtener notificaciones leídas y no leídas, y para marcar notificaciones como leídas.
 func SetupNotificationRouter(r *gin.Engine) {
-	notificationRepo := repository.NewNotificationRepository(database.Client.Database("pip").Collection("alertas"), database.Client.Database("pip").Collection("usuarios"), database.Client.Database("pip").Collection("notification_person_relation"))
+	notificationRepo := repository.NewNotificationRepository(database.Client.Database(config.DBName).Collection("alertas"), database.Client.Database(config.DBName).Collection("usuarios"), database.Client.Database(config.DBName).Collection("notification_person_relation"))
 	notificationUseCase := usecase.NewNotificationUseCase(notificationRepo)
 	notificationController := controller.NewNotificationController(notificationUseCase)
 

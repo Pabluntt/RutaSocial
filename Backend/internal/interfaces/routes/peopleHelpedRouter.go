@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/SebaVCH/hdcProject/internal/config"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -13,8 +14,8 @@ import (
 // Esta función quedó "obsoleta" dado que las personas ayudadas ahora se manejan a través de los puntos de ayuda.
 func SetupPeopleHelpedRouter(r *gin.Engine) {
 	peopleHelpedRepo := repository.NewPeopleHelpedRepository(
-		database.Client.Database("pip").Collection("helping_points"),
-		database.Client.Database("pip").Collection("people_helped"),
+		database.Client.Database(config.DBName).Collection("helping_points"),
+		database.Client.Database(config.DBName).Collection("people_helped"),
 	)
 	peopleHelpedUseCase := usecase.NewPeopleHelpedUseCase(peopleHelpedRepo)
 	peopleHelpedController := controller.NewPeopleHelpedController(peopleHelpedUseCase)

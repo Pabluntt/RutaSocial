@@ -3,12 +3,12 @@
 package main
 
 import (
+	"log"
+
 	"github.com/SebaVCH/hdcProject/cmd/app"
 )
 
 // main es la función principal que inicia el backend de la aplicación.
-//
-// Si ocurre un error al iniciar el backend, se ejecuta un panic.
 
 // @title APIs de HDC
 // @version 1.0
@@ -26,9 +26,7 @@ import (
 // @description Se debe proporcionar un token JWT válido con el prefijo "Bearer" en el header de autorización para acceder a las rutas protegidas.
 
 func main() {
-
 	if err := app.StartBackend(); err != nil {
-		panic(err)
+		log.Fatalf("Error fatal iniciando backend: %v", err)
 	}
-
 }

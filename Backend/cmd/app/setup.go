@@ -3,6 +3,14 @@
 package app
 
 import (
+	"context"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/SebaVCH/hdcProject/internal/config"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/routes"
@@ -21,12 +29,39 @@ func StartBackend() error {
 		return err
 	}
 
-	if err := utils.CreateDefaultAdmin(database.Client.Database("pip").Collection("usuarios")); err != nil {
+	if err := utils.CreateDefaultAdmin(database.Client.Database(config.DBName).Collection("usuarios")); err != nil {
 		return err
 	}
-	
-	if err := routes.SetupRouter().Run(":8080"); err != nil {
-		return err
+
+	router := routes.SetupRouter()
+
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: router,
+	}
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		log.Println("Servidor iniciado en :8080")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Error en servidor HTTP: %v", err)
+		}
+	}()
+
+	<-quit
+	log.Println("Apagando servidor...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("Error al apagar servidor: %v", err)
+	}
+
+	if err := database.Client.Disconnect(ctx); err != nil {
+		log.Printf("Error al desconectar MongoDB: %v", err)
 	}
 
 	return nil

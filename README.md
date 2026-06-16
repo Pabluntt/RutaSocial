@@ -116,6 +116,7 @@ npm start
 ### Backend (.env)
 ```env
 MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/?appName=app
+MONGODB_DB_NAME=pip
 JWT_SECRET=tu_clave_secreta
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=Admin12345

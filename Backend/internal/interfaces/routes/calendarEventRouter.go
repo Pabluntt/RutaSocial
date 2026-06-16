@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/SebaVCH/hdcProject/internal/config"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -12,7 +13,7 @@ import (
 // SetupCalendarEventRouter configura las rutas para los eventos del calendario.
 // Crea el repositorio de eventos del calendario, el caso de uso y el controlador, y define las rutas para crear, obtener, actualizar y eliminar eventos.
 func SetupCalendarEventRouter(r *gin.Engine) {
-	calendarEventRepo := repository.NewCalendarEventRepository(database.Client.Database("pip").Collection("calendar_events"))
+	calendarEventRepo := repository.NewCalendarEventRepository(database.Client.Database(config.DBName).Collection("calendar_events"))
 	calendarEventUseCase := usecase.NewCalendarEventUseCase(calendarEventRepo)
 	calendarEventController := controller.NewCalendarEventController(calendarEventUseCase)
 

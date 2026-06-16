@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/SebaVCH/hdcProject/internal/config"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -12,7 +13,7 @@ import (
 // SetupExportDataRouter configura las rutas para la exportación de datos.
 // Crea el repositorio de exportación de datos, el caso de uso y el controlador, y define las rutas para exportar datos de personas ayudadas.
 func SetupExportDataRouter(r *gin.Engine) {
-	exportDataRepo := repository.NewExportDataRepository(database.Client.Database("pip").Collection("people_helped"))
+	exportDataRepo := repository.NewExportDataRepository(database.Client.Database(config.DBName).Collection("people_helped"))
 	exportDataUseCase := usecase.NewExportDataUseCase(exportDataRepo)
 	exportDataController := controller.NewExportDataController(exportDataUseCase)
 

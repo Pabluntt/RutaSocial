@@ -14,13 +14,15 @@ import (
 func SetupRouter() *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
-	
+	r.MaxMultipartMemory = 10 << 20 // 10 MB
+
 	// Deshabilitar redirect automático de trailing slash
 	r.RedirectTrailingSlash = false
-	
+
 	// CORS middleware debe ser el primero en la cadena de middlewares
 	// Insertamos al inicio usando `Use` que lo añade al inicio
 	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.BodySizeLimit(10 << 20)) // 10 MB limit
 
 	docs.SwaggerInfo.BasePath = "/"
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

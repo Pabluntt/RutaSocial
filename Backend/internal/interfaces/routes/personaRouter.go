@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/SebaVCH/hdcProject/internal/config"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -11,7 +12,7 @@ import (
 
 func SetupPersonaRouter(r *gin.Engine) {
 	personaRepo := repository.NewPersonaRepository(
-		database.Client.Database("pip").Collection("personas"),
+		database.Client.Database(config.DBName).Collection("personas"),
 	)
 	personaUseCase := usecase.NewPersonaUseCase(personaRepo)
 	personaController := controller.NewPersonaController(personaUseCase)

@@ -92,7 +92,7 @@ func (n notificationUseCase) UpdateNotification(c *gin.Context) {
 
 	if userRole != "admin" {
 		if err := n.notificationRepository.FindByIDAndUserID(notificationID, userID); err != nil {
-			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err})
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 	}

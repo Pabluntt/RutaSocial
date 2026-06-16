@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/SebaVCH/hdcProject/internal/config"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -12,7 +13,7 @@ import (
 // SetupRiskRouter configura las rutas para la gestión de riesgos.
 // Crea el repositorio de riesgos, el caso de uso y el controlador, y define las rutas para crear, obtener, actualizar y eliminar riesgos.
 func SetupRiskRouter(r *gin.Engine) {
-	riskRepo := repository.NewRiskRepository(database.Client.Database("pip").Collection("risks"))
+	riskRepo := repository.NewRiskRepository(database.Client.Database(config.DBName).Collection("risks"))
 	riskUseCase := usecase.NewRiskUseCase(riskRepo)
 	riskController := controller.NewRiskController(riskUseCase)
 

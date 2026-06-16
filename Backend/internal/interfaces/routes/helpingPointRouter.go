@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/SebaVCH/hdcProject/internal/config"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -14,9 +15,9 @@ import (
 // Crea el repositorio de puntos de ayuda, el caso de uso y el controlador, y define las rutas para crear, obtener, actualizar y eliminar puntos de ayuda.
 func SetupHelpingPointRouter(r *gin.Engine) {
 	helpPointRepo := repository.NewHelpPointRepository(
-		database.Client.Database("pip").Collection("helping_points"),
-		database.Client.Database("pip").Collection("people_helped"),
-		database.Client.Database("pip").Collection("personas"),
+		database.Client.Database(config.DBName).Collection("helping_points"),
+		database.Client.Database(config.DBName).Collection("people_helped"),
+		database.Client.Database(config.DBName).Collection("personas"),
 	)
 	helpPointUseCase := usecase.NewHelpingPointUseCase(helpPointRepo)
 	helpPointController := controller.NewHelpPointController(helpPointUseCase)

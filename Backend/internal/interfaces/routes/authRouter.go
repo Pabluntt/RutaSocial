@@ -6,6 +6,7 @@ package routes
 import (
 	"time"
 
+	"github.com/SebaVCH/hdcProject/internal/config"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -17,7 +18,7 @@ import (
 // SetupAuthRouter configura las rutas de autenticación en el router de Gin.
 // Crea el repositorio de autenticación, el caso de uso y el controlador, y define las rutas para registro e inicio de sesión.
 func SetupAuthRouter(r *gin.Engine) {
-	authRepo := repository.NewAuthRepository(database.Client.Database("pip").Collection("usuarios"))
+	authRepo := repository.NewAuthRepository(database.Client.Database(config.DBName).Collection("usuarios"))
 	authUseCase := usecase.NewAuthUseCase(authRepo)
 	authController := controller.NewAuthController(authUseCase)
 

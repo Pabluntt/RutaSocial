@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/SebaVCH/hdcProject/internal/config"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -10,7 +11,7 @@ import (
 )
 
 func SetupAlojamientoRouter(r *gin.Engine) {
-	alojamientoRepo := repository.NewAlojamientoRepository(database.Client.Database("pip").Collection("alojamientos"))
+	alojamientoRepo := repository.NewAlojamientoRepository(database.Client.Database(config.DBName).Collection("alojamientos"))
 	alojamientoUseCase := usecase.NewAlojamientoUseCase(alojamientoRepo)
 	alojamientoController := controller.NewAlojamientoController(alojamientoUseCase)
 
