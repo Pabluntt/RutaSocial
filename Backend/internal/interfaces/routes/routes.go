@@ -36,6 +36,7 @@ func SetupRouter() *gin.Engine {
 	SetupExportDataRouter(r)
 	SetupInstitutionRouter(r)
 	SetupAlojamientoRouter(r)
+	SetupPersonaRouter(r)
 	SetupWeatherRouter(r)
 	return r
 }

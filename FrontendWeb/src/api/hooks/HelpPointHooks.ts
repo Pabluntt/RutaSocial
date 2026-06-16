@@ -28,3 +28,10 @@ export function useDeleteHelpPoint() {
         mutationFn : (helpPointID : string) => (HelpPointService.DeleteHelpPoint(helpPointID))
     })
 }
+
+export function useLinkPersonaToHelpPoint() {
+    return useMutation({
+        mutationFn : ({ helpPointID, personaID }: { helpPointID: string; personaID: string }) =>
+            HelpPointService.LinkPersonaToHelpPoint(helpPointID, personaID)
+    })
+}

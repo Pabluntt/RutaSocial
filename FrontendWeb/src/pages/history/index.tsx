@@ -3,7 +3,7 @@ import CustomDrawer from "../../component/CustomDrawer";
 import DrawerList from "../../component/DrawerList";
 import Mapa from "../../component/Map/Mapa";
 import { Position } from "../../utils/getCurrentLocation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ListHistory from "./ListHistory";
 import useSessionStore from "../../stores/useSessionStore";
 import HandlerLocationHistory from "./handlerLocationHistory";
@@ -43,6 +43,7 @@ export default function RouteHistory() {
 
     const [ onlyUser, setOnlyUser ] = useState(false)
     const [ showHeatmap, setShowHeatmap ] = useState(false)
+    const [ heatmapTimeRange, setHeatmapTimeRange ] = useState<string>('none')
     const [ routes, setRoutes ] = useState<Route[]>([])
 
     const userID = useProfile().data?.id
@@ -108,6 +109,19 @@ export default function RouteHistory() {
 
     }, [opFecha, routes])
 
+    const heatmapHelpPoints = useMemo(() => {
+        if (heatmapTimeRange === 'none') return helpPoints
+        const now = new Date()
+        const cutoff = new Date(now)
+        if (heatmapTimeRange === '1m') cutoff.setMonth(cutoff.getMonth() - 1)
+        else if (heatmapTimeRange === '6m') cutoff.setMonth(cutoff.getMonth() - 6)
+        else if (heatmapTimeRange === '1y') cutoff.setFullYear(cutoff.getFullYear() - 1)
+        return helpPoints.map(hp => ({
+            ...hp,
+            disabled: hp.dateRegister < cutoff
+        }))
+    }, [helpPoints, heatmapTimeRange])
+
     const theme = useTheme()
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'))
     
@@ -126,7 +140,7 @@ export default function RouteHistory() {
             <div className={`flex grow justify-between ${(computerDevice ? 'flex-row-reverse' : 'flex-col')}`}>
                 <Mapa
                     stateCurrentLocation={[currentLocation, setCurrentLocation]}
-                    helpPoints={helpPoints}
+                    helpPoints={showHeatmap ? heatmapHelpPoints : helpPoints}
                     risks={[]}
                     enableTraceLine
                     showHeatmap={showHeatmap}
@@ -142,6 +156,7 @@ export default function RouteHistory() {
                         stateRoutes={[mapRoutes, setMapRoutes]} 
                         stateHelpPoints={[helpPoints, setHelpPoints]}
                         stateShowHeatmap={[showHeatmap, setShowHeatmap]}
+                        stateHeatmapTimeRange={[heatmapTimeRange, setHeatmapTimeRange]}
                     />
                 </Paper>
             </div>

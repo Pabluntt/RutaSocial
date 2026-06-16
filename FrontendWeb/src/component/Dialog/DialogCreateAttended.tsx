@@ -8,7 +8,7 @@ import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import ReplayIcon from '@mui/icons-material/Replay';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import AddIcon from '@mui/icons-material/Add';
-import { Alert, CircularProgress, IconButton, TextField, Typography, Zoom, Chip, Paper, Divider, useTheme, useMediaQuery } from '@mui/material';
+import { Alert, CircularProgress, IconButton, TextField, Typography, Zoom, Chip, Paper, Divider, useTheme, useMediaQuery, List, ListItemButton, ListItemText, ListItemAvatar, Avatar, InputAdornment } from '@mui/material';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import getCurrentLocation, { Position } from '../../utils/getCurrentLocation';
 import useSessionStore from '../../stores/useSessionStore';
@@ -18,6 +18,9 @@ import { useCreateHelpPoint, useHelpPoints } from '../../api/hooks/HelpPointHook
 import { TUserRegister } from '../../pages/home';
 import { useProfile } from '../../api/hooks/UserHooks';
 import { HelpedPerson } from '../../api/models/HelpPoint';
+import { PersonaService } from '../../api/services/PersonaService';
+import { Persona } from '../../api/models/Persona';
+import SearchIcon from '@mui/icons-material/Search';
 
 const SIN_ESPECIFICAR = 'Sin especificar';
 
@@ -38,6 +41,7 @@ type PersonDraft = {
     name: string
     rut: string
     age: string
+    personaID?: string
 };
 
 export type DialogCreateAttendedProps = { 
@@ -84,6 +88,53 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
     const [ createButtonDisable, setCreateButtonDisable ] = useState(true)
     const [ error, setError ] = useState<string | undefined>()
     const [ comment, setComment ] = useState('')
+    const [ searchOpen, setSearchOpen ] = useState(false)
+    const [ searchQuery, setSearchQuery ] = useState('')
+    const [ searchResults, setSearchResults ] = useState<Persona[]>([])
+    const [ searchTargetPersonId, setSearchTargetPersonId ] = useState<string | null>(null)
+
+    const searchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+
+    const handleSearchInput = (query: string) => {
+        setSearchQuery(query)
+        if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
+        if (query.length < 2) {
+            setSearchResults([])
+            return
+        }
+        searchTimerRef.current = setTimeout(async () => {
+            try {
+                const results = await PersonaService.Search(query)
+                setSearchResults(results)
+            } catch {
+                setSearchResults([])
+            }
+        }, 300)
+    }
+
+    const handleOpenSearch = (personId: string) => {
+        setSearchTargetPersonId(personId)
+        setSearchQuery('')
+        setSearchResults([])
+        setSearchOpen(true)
+    }
+
+    const handleSelectPersona = (persona: Persona) => {
+        if (!searchTargetPersonId) return
+        setPeople(prev => prev.map(p =>
+            p.id === searchTargetPersonId
+                ? {
+                    ...p,
+                    name: persona.nombre,
+                    rut: persona.rut || '',
+                    age: persona.edad > 0 ? String(persona.edad) : '',
+                    personaID: persona.id,
+                }
+                : p
+        ))
+        setSearchOpen(false)
+        setSearchTargetPersonId(null)
+    }
 
     const { mutate, isError, isSuccess, isPending, isIdle, reset } = useCreateHelpPoint()
     const { refetch } = useHelpPoints()
@@ -196,6 +247,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                 name: person.name.trim(),
                 rut: normalizeRut(person.rut),
                 age: person.age.trim(),
+                personaID: person.personaID,
             }))
 
         if(validPeople.length === 0) {
@@ -217,6 +269,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                 rut: person.rut,
                 age: person.age.length > 0 ? Number(person.age) : -1,
                 gender: SIN_ESPECIFICAR,
+                personaID: person.personaID,
             })) as HelpedPerson[],
             peopleHelped: validPeople[0]
                 ? {
@@ -224,6 +277,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                     rut: validPeople[0].rut,
                     age: validPeople[0].age.length > 0 ? Number(validPeople[0].age) : -1,
                     gender: SIN_ESPECIFICAR,
+                    personaID: validPeople[0].personaID,
                 }
                 : undefined,
             authorID: authorID as string,
@@ -242,6 +296,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
     }, [isSuccess])
 
     return (
+        <>
         <BootstrapDialog 
             fullScreen={fullScreen}
             fullWidth
@@ -325,6 +380,26 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                                                 value={person.age}
                                                 slotProps={{ inputLabel: { shrink: true } }}
                                             />
+                                        </div>
+                                        <div className='mt-2'>
+                                            <Button
+                                                size="small"
+                                                variant="text"
+                                                startIcon={<SearchIcon />}
+                                                onClick={() => handleOpenSearch(person.id)}
+                                                sx={{ borderRadius: '8px', textTransform: 'none', fontSize: 12 }}
+                                            >
+                                                {person.personaID ? 'Cambiar persona existente' : 'Buscar persona existente'}
+                                            </Button>
+                                            {person.personaID && (
+                                                <Chip
+                                                    label="Vinculada"
+                                                    size="small"
+                                                    color="success"
+                                                    variant="outlined"
+                                                    sx={{ ml: 1, fontSize: 11 }}
+                                                />
+                                            )}
                                         </div>
                                     </Paper>
                                 ))}
@@ -415,5 +490,54 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                 }
             </DialogActions>
         </BootstrapDialog>
+
+            <Dialog open={searchOpen} onClose={() => setSearchOpen(false)} fullWidth maxWidth="sm">
+                <DialogTitle sx={{ fontWeight: 600, fontSize: '1rem' }}>Buscar persona existente</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        fullWidth
+                        size="small"
+                        autoFocus
+                        placeholder="Escribe nombre o RUT..."
+                        value={searchQuery}
+                        onChange={(e) => handleSearchInput(e.target.value)}
+                        slotProps={{
+                            input: {
+                                startAdornment: (
+                                    <InputAdornment position="start"><SearchIcon /></InputAdornment>
+                                )
+                            }
+                        }}
+                        sx={{ mb: 2 }}
+                    />
+                    {searchResults.length > 0 ? (
+                        <List>
+                            {searchResults.map(persona => (
+                                <ListItemButton
+                                    key={persona.id}
+                                    onClick={() => handleSelectPersona(persona)}
+                                    sx={{ borderRadius: '8px' }}
+                                >
+                                    <ListItemAvatar>
+                                        <Avatar>{persona.nombre.charAt(0)}</Avatar>
+                                    </ListItemAvatar>
+                                    <ListItemText
+                                        primary={persona.nombre}
+                                        secondary={`RUT: ${persona.rut || 'Sin RUT'} | Edad: ${persona.edad > 0 ? persona.edad : 'Sin especificar'}`}
+                                    />
+                                </ListItemButton>
+                            ))}
+                        </List>
+                    ) : searchQuery.length >= 2 ? (
+                        <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>Sin resultados</Typography>
+                    ) : (
+                        <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>Escribe al menos 2 caracteres para buscar</Typography>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button variant="outlined" onClick={() => setSearchOpen(false)} sx={{ borderRadius: '8px', textTransform: 'none' }}>Cancelar</Button>
+                </DialogActions>
+            </Dialog>
+        </>
     )    
 };

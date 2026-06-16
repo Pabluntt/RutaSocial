@@ -16,6 +16,7 @@ func SetupHelpingPointRouter(r *gin.Engine) {
 	helpPointRepo := repository.NewHelpPointRepository(
 		database.Client.Database("pip").Collection("helping_points"),
 		database.Client.Database("pip").Collection("people_helped"),
+		database.Client.Database("pip").Collection("personas"),
 	)
 	helpPointUseCase := usecase.NewHelpingPointUseCase(helpPointRepo)
 	helpPointController := controller.NewHelpPointController(helpPointUseCase)
@@ -25,5 +26,6 @@ func SetupHelpingPointRouter(r *gin.Engine) {
 	protected.POST("", helpPointController.CreateHelpingPoint)
 	protected.GET("", helpPointController.GetAllPoints)
 	protected.PUT("/:id", helpPointController.UpdateHelpingPoint)
+	protected.POST("/:helpPointId/link-persona/:personaId", helpPointController.LinkPersonaToHelpPoint)
 	protected.DELETE("/:id", helpPointController.DeleteHelpingPoint)
 }

@@ -17,6 +17,7 @@ type HelpingPointUseCase interface {
 	CreateHelpingPoint(c *gin.Context)
 	UpdateHelpingPoint(c *gin.Context)
 	DeleteHelpingPoint(c *gin.Context)
+	LinkPersonaToHelpPoint(c *gin.Context)
 }
 
 // helpingPointUseCase implementa la interfaz HelpingPointUseCase.
@@ -126,6 +127,33 @@ func (h helpingPointUseCase) UpdateHelpingPoint(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": updatedHelpingPoint})
+}
+
+// LinkPersonaToHelpPoint maneja la solicitud para vincular una persona existente a un punto de ayuda.
+func (h helpingPointUseCase) LinkPersonaToHelpPoint(c *gin.Context) {
+	helpPointID := c.Param("helpPointId")
+	personaID := c.Param("personaId")
+	if helpPointID == "" || personaID == "" {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "IDs no proporcionados"})
+		return
+	}
+
+	claims, _ := c.Get("user")
+	userClaims := claims.(jwt.MapClaims)
+	userID := userClaims["user_id"].(string)
+
+	if err := h.helpingPointRepository.FindByIDAndUserID(helpPointID, userID); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.helpingPointRepository.LinkPersonaToHelpPoint(helpPointID, personaID)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al vincular persona"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "Persona vinculada correctamente"})
 }
 
 // DeleteHelpingPoint maneja la solicitud para eliminar un punto de ayuda.

@@ -6,6 +6,7 @@ export type TPeopleHelpedBackend = {
     name: string
     rut?: string
     date?: Date
+    persona_id?: string
 }
 
 export type THelpPointBackend = {
@@ -16,6 +17,7 @@ export type THelpPointBackend = {
     comment?: string
     people?: TPeopleHelpedBackend[]
     people_helped?: TPeopleHelpedBackend
+    persona_ids?: string[]
     author_id: string
 }
 
@@ -44,7 +46,11 @@ export function MapHelpedPersonFromBackend(data: Partial<TPeopleHelpedBackend>):
 
 export function MapHelpPointFromBackend(data: Partial<THelpPointBackend>): HelpPoint {
     const peopleFromBackend = data.people?.length ? data.people : data.people_helped ? [data.people_helped] : []
-    const mappedPeople = peopleFromBackend.map((person) => MapHelpedPersonFromBackend(person))
+    const personaIDs = data.persona_ids || []
+    const mappedPeople = peopleFromBackend.map((person, index) => ({
+        ...MapHelpedPersonFromBackend(person),
+        personaID: personaIDs[index],
+    }))
 
     const point: Partial<HelpPoint> = {
         id: data._id,
@@ -55,6 +61,7 @@ export function MapHelpPointFromBackend(data: Partial<THelpPointBackend>): HelpP
         comment: data.comment ?? '',
         people: mappedPeople,
         peopleHelped: mappedPeople[0],
+        personaID: personaIDs[0],
         disabled: false 
     }
 
@@ -77,6 +84,10 @@ export function MapHelpPointToCreateRequest(
             ? [data.peopleHelped]
             : []
 
+    const personaIDs = people
+        .map(p => p.personaID)
+        .filter((id): id is string => !!id)
+
     return {
         route_id: data.routeID,
         coords: data.coords,
@@ -93,6 +104,7 @@ export function MapHelpPointToCreateRequest(
             name: people[0].name,
             rut: people[0].rut
         } : undefined,
+        persona_ids: personaIDs.length > 0 ? personaIDs : undefined,
         author_id: data.authorID,
     }
 }
@@ -105,6 +117,10 @@ export function MapHelpPointToUpdateRequest(
         : data.peopleHelped
             ? [data.peopleHelped]
             : []
+
+    const personaIDs = people
+        .map(p => p.personaID)
+        .filter((id): id is string => !!id)
 
     return {
         _id: data.id,
@@ -124,6 +140,7 @@ export function MapHelpPointToUpdateRequest(
             rut: people[0].rut,
             date: new Date()
         } : undefined,
+        persona_ids: personaIDs.length > 0 ? personaIDs : undefined,
         author_id: data.authorID,
     }
 }

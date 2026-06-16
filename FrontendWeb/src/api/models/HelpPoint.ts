@@ -4,6 +4,7 @@ export type HelpedPerson = {
     gender : string 
     name : string 
     rut?: string
+    personaID?: string
 }
 
 
@@ -16,5 +17,6 @@ export interface HelpPoint {
     comment : string
     people : HelpedPerson[]
     peopleHelped? : HelpedPerson
+    personaID? : string
     disabled : boolean
 } 

@@ -73,6 +73,11 @@ func (h *helpPointController) UpdateHelpingPoint(c *gin.Context) {
 	h.helpPointUseCase.UpdateHelpingPoint(c)
 }
 
+// LinkPersonaToHelpPoint maneja la solicitud para vincular una persona a un punto de ayuda.
+func (h *helpPointController) LinkPersonaToHelpPoint(c *gin.Context) {
+	h.helpPointUseCase.LinkPersonaToHelpPoint(c)
+}
+
 // DeleteHelpingPoint maneja la solicitud para eliminar un punto de ayuda.
 // @Summary Eliminar punto de ayuda
 // @Description Elimina un punto de ayuda del sistema. Los usuarios solo pueden eliminar sus propios puntos de ayuda. Requiere autenticación.

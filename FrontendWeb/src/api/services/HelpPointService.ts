@@ -30,4 +30,9 @@ export class HelpPointService {
         const { data } = await axiosInstance.delete(`/${this.RESOURCE_NAME}/${helpPointID}`)
         return data?.message
     }
+
+    static async LinkPersonaToHelpPoint( helpPointID : string, personaID : string ) : Promise<string> {
+        const { data } = await axiosInstance.post(`/${this.RESOURCE_NAME}/${helpPointID}/link-persona/${personaID}`)
+        return data?.message
+    }
 }

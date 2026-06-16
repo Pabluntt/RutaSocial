@@ -15,6 +15,7 @@ import Schedule from './pages/schedule'
 import { ZoomProvider } from './context/ZoomContext'
 import RouteHistory from './pages/history'
 import PeopleHelped from './pages/people-helped'
+import PersonaProfile from './pages/people-helped/PersonaProfile'
 import { HelpPointUpdateProvider } from './context/HelpPointUpdateContext'
 import { AuthProvider } from './context/AuthContext'
 import { RiskUpdateProvider } from './context/RiskUpdateContext'
@@ -76,6 +77,7 @@ function App() {
                       } 
                     />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/personas-ayudadas`} element={<PeopleHelped />} />
+                    <Route path={`${import.meta.env.VITE_BASE_URL}/personas-ayudadas/:id`} element={<PersonaProfile />} />
                     <Route path='*' element={ <NotFound />} />
                 </Routes>
             </ThemeProvider>
