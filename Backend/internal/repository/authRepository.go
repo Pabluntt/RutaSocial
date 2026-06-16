@@ -37,7 +37,9 @@ func NewAuthRepository(userCollection *mongo.Collection) AuthRepository {
 // Busca al usuario por su correo electrónico, verifica la contraseña y genera un token JWT si las credenciales son válidas.
 func (a *authRepository) Login(email, password string) (string, error) {
 	var user domain.Usuario
-	err := a.UserCollection.FindOne(context.TODO(), bson.M{"email": email}).Decode(&user)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	err := a.UserCollection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
 	if err != nil {
 		return "", errors.New("error al iniciar sesión")
 	}
@@ -57,8 +59,10 @@ func (a *authRepository) Login(email, password string) (string, error) {
 // Register maneja la solicitud de registro de un nuevo usuario.
 // Verifica si el usuario ya existe, hashea la contraseña, inserta al usuario en la base de datos y envía un correo de registro con dicha contraseña.
 func (a *authRepository) Register(user domain.Usuario) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
 
-	existing := a.UserCollection.FindOne(context.TODO(), bson.M{"email": user.Email})
+	existing := a.UserCollection.FindOne(ctx, bson.M{"email": user.Email})
 	if existing.Err() == nil {
 		return "", errors.New("el usuario ya existe")
 	}
@@ -74,7 +78,7 @@ func (a *authRepository) Register(user domain.Usuario) (string, error) {
 	user.ListRoutes = []domain.Route{}
 	user.DateRegister = time.Now()
 
-	res, err := a.UserCollection.Database().Collection("usuarios").InsertOne(context.TODO(), user)
+	res, err := a.UserCollection.Database().Collection("usuarios").InsertOne(ctx, user)
 	if err != nil {
 		return "", err
 	}

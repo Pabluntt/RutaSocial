@@ -4,6 +4,8 @@
 package routes
 
 import (
+	"time"
+
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -20,7 +22,7 @@ func SetupAuthRouter(r *gin.Engine) {
 	authController := controller.NewAuthController(authUseCase)
 
 	r.POST("/register", authController.Register)
-	r.POST("/login", authController.Login)
+	r.POST("/login", middleware.RateLimitMiddleware(5, time.Minute), authController.Login)
 	protected := r.Group("/")
 	protected.Use(middleware.AuthMiddleware())
 }

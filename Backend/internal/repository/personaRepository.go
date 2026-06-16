@@ -32,14 +32,16 @@ func NewPersonaRepository(collection *mongo.Collection) PersonaRepository {
 }
 
 func (r *personaRepository) GetAll() ([]domain.Persona, error) {
-	cursor, err := r.collection.Find(context.Background(), bson.M{})
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cursor, err := r.collection.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(context.Background())
+	defer cursor.Close(ctx)
 
 	var personas []domain.Persona
-	for cursor.Next(context.Background()) {
+	for cursor.Next(ctx) {
 		var p domain.Persona
 		if err := cursor.Decode(&p); err != nil {
 			return nil, err
@@ -50,13 +52,15 @@ func (r *personaRepository) GetAll() ([]domain.Persona, error) {
 }
 
 func (r *personaRepository) GetByID(id string) (domain.Persona, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return domain.Persona{}, errors.New("ID de persona inválido")
 	}
 
 	var p domain.Persona
-	err = r.collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&p)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&p)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return domain.Persona{}, errors.New("Persona no encontrada")
@@ -67,8 +71,10 @@ func (r *personaRepository) GetByID(id string) (domain.Persona, error) {
 }
 
 func (r *personaRepository) GetByRut(rut string) (domain.Persona, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	var p domain.Persona
-	err := r.collection.FindOne(context.Background(), bson.M{"rut": rut}).Decode(&p)
+	err := r.collection.FindOne(ctx, bson.M{"rut": rut}).Decode(&p)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return domain.Persona{}, nil
@@ -79,20 +85,22 @@ func (r *personaRepository) GetByRut(rut string) (domain.Persona, error) {
 }
 
 func (r *personaRepository) Search(query string) ([]domain.Persona, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	filter := bson.M{
 		"$or": []bson.M{
 			{"nombre": bson.M{"$regex": query, "$options": "i"}},
 			{"rut": bson.M{"$regex": query, "$options": "i"}},
 		},
 	}
-	cursor, err := r.collection.Find(context.Background(), filter)
+	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(context.Background())
+	defer cursor.Close(ctx)
 
 	var personas []domain.Persona
-	for cursor.Next(context.Background()) {
+	for cursor.Next(ctx) {
 		var p domain.Persona
 		if err := cursor.Decode(&p); err != nil {
 			return nil, err
@@ -103,6 +111,8 @@ func (r *personaRepository) Search(query string) ([]domain.Persona, error) {
 }
 
 func (r *personaRepository) Create(persona domain.Persona) (domain.Persona, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	persona.ID = bson.NewObjectID()
 	persona.FechaCreacion = time.Now()
 	persona.FechaActualizacion = time.Now()
@@ -112,7 +122,7 @@ func (r *personaRepository) Create(persona domain.Persona) (domain.Persona, erro
 	if persona.InfoMedica == nil {
 		persona.InfoMedica = []domain.AntecedenteEntry{}
 	}
-	_, err := r.collection.InsertOne(context.Background(), persona)
+	_, err := r.collection.InsertOne(ctx, persona)
 	if err != nil {
 		return domain.Persona{}, err
 	}
@@ -120,6 +130,8 @@ func (r *personaRepository) Create(persona domain.Persona) (domain.Persona, erro
 }
 
 func (r *personaRepository) Update(id string, data map[string]interface{}) (domain.Persona, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return domain.Persona{}, errors.New("ID de persona inválido")
@@ -127,13 +139,13 @@ func (r *personaRepository) Update(id string, data map[string]interface{}) (doma
 
 	data["fecha_actualizacion"] = time.Now()
 	update := bson.M{"$set": data}
-	_, err = r.collection.UpdateOne(context.Background(), bson.M{"_id": objID}, update)
+	_, err = r.collection.UpdateOne(ctx, bson.M{"_id": objID}, update)
 	if err != nil {
 		return domain.Persona{}, err
 	}
 
 	var p domain.Persona
-	err = r.collection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&p)
+	err = r.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&p)
 	if err != nil {
 		return domain.Persona{}, err
 	}
@@ -141,15 +153,19 @@ func (r *personaRepository) Update(id string, data map[string]interface{}) (doma
 }
 
 func (r *personaRepository) Delete(id string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return errors.New("ID de persona inválido")
 	}
-	_, err = r.collection.DeleteOne(context.Background(), bson.M{"_id": objID})
+	_, err = r.collection.DeleteOne(ctx, bson.M{"_id": objID})
 	return err
 }
 
 func (r *personaRepository) addEntry(personaID string, field string, entry domain.AntecedenteEntry) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	objID, err := bson.ObjectIDFromHex(personaID)
 	if err != nil {
 		return errors.New("ID de persona inválido")
@@ -159,7 +175,7 @@ func (r *personaRepository) addEntry(personaID string, field string, entry domai
 	entry.Fecha = time.Now()
 
 	_, err = r.collection.UpdateOne(
-		context.Background(),
+		ctx,
 		bson.M{"_id": objID},
 		bson.M{"$push": bson.M{field: entry}, "$set": bson.M{"fecha_actualizacion": time.Now()}},
 	)
@@ -167,6 +183,8 @@ func (r *personaRepository) addEntry(personaID string, field string, entry domai
 }
 
 func (r *personaRepository) deleteEntry(personaID string, field string, entryID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	objID, err := bson.ObjectIDFromHex(personaID)
 	if err != nil {
 		return errors.New("ID de persona inválido")
@@ -177,7 +195,7 @@ func (r *personaRepository) deleteEntry(personaID string, field string, entryID 
 	}
 
 	_, err = r.collection.UpdateOne(
-		context.Background(),
+		ctx,
 		bson.M{"_id": objID},
 		bson.M{"$pull": bson.M{field: bson.M{"_id": entryObjID}}, "$set": bson.M{"fecha_actualizacion": time.Now()}},
 	)

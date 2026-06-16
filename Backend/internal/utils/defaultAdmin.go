@@ -7,12 +7,16 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"log"
 	"os"
+	"time"
 )
 
 func CreateDefaultAdmin(userCollection *mongo.Collection) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	adminEmail := os.Getenv("ADMIN_EMAIL")
 	var admin domain.Usuario
-	err := userCollection.FindOne(context.Background(), bson.M{"email": adminEmail}).Decode(&admin)
+	err := userCollection.FindOne(ctx, bson.M{"email": adminEmail}).Decode(&admin)
 	if err == nil {
 		log.Printf("Admin por defecto ya existe con el email: %s", adminEmail)
 		return nil
@@ -32,7 +36,7 @@ func CreateDefaultAdmin(userCollection *mongo.Collection) error {
 		InstitutionID: bson.NilObjectID,
 	}
 
-	_, err = userCollection.InsertOne(context.Background(), admin)
+	_, err = userCollection.InsertOne(ctx, admin)
 	if err != nil {
 		log.Printf("Error al crear el admin por defecto: %v", err)
 		return err

@@ -48,7 +48,7 @@ func (uc *personaUseCase) GetByID(c *gin.Context) {
 
 	persona, err := uc.repo.GetByID(id)
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.IndentedJSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": persona})
@@ -148,9 +148,9 @@ func (uc *personaUseCase) Delete(c *gin.Context) {
 		return
 	}
 
-	err := uc.repo.Delete(id)
+		err := uc.repo.Delete(id)
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.IndentedJSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Persona eliminada correctamente"})

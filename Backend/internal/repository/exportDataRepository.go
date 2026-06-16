@@ -30,14 +30,16 @@ func NewExportDataRepository(collection *mongo.Collection) ExportDataRepository 
 // GetPeopleHelpedData obtiene los datos de personas ayudadas de la base de datos.
 // Retorna un slice de personas ayudadas o un error si ocurre algún problema.
 func (ed *exportDataRepository) GetPeopleHelpedData() ([]domain.PersonaAyudada, error) {
-	cursor, err := ed.PeopleHelpedCollection.Find(context.Background(), bson.M{})
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cursor, err := ed.PeopleHelpedCollection.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(context.Background())
+	defer cursor.Close(ctx)
 
 	var peopleHelped []domain.PersonaAyudada
-	for cursor.Next(context.Background()) {
+	for cursor.Next(ctx) {
 		var person domain.PersonaAyudada
 		if err := cursor.Decode(&person); err != nil {
 			return nil, err

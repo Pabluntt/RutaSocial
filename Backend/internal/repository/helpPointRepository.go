@@ -46,6 +46,8 @@ func NewHelpPointRepository(helpPointCollection *mongo.Collection, peopleHelpedC
 // Tambien guarda una copia de cada persona en la coleccion people_helped para mantener compatibilidad.
 // Crea o vincula personas en la coleccion personas segun corresponda.
 func (h *helpPointRepository) CreateHelpingPoint(helpPoint domain.PuntoAyuda, userID string) (domain.PuntoAyuda, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
 	helpPoint.ID = bson.NewObjectID()
 	helpPoint.DateRegister = time.Now()
 	helpPoint.AuthorID, _ = bson.ObjectIDFromHex(userID)
@@ -60,7 +62,7 @@ func (h *helpPointRepository) CreateHelpingPoint(helpPoint domain.PuntoAyuda, us
 	for _, personHelped := range helpPoint.People {
 		personHelped.DateRegister = time.Now()
 		personHelped.ID = bson.NewObjectID()
-		_, err := h.PeopleHelpedCollections.InsertOne(context.Background(), personHelped)
+		_, err := h.PeopleHelpedCollections.InsertOne(ctx, personHelped)
 		if err != nil {
 			return domain.PuntoAyuda{}, err
 		}
@@ -68,7 +70,7 @@ func (h *helpPointRepository) CreateHelpingPoint(helpPoint domain.PuntoAyuda, us
 		var personaID bson.ObjectID
 		if personHelped.Rut != "" {
 			var existing domain.Persona
-			err = h.PersonaCollection.FindOne(context.Background(), bson.M{"rut": personHelped.Rut}).Decode(&existing)
+			err = h.PersonaCollection.FindOne(ctx, bson.M{"rut": personHelped.Rut}).Decode(&existing)
 			if err == nil {
 				personaID = existing.ID
 			} else if err == mongo.ErrNoDocuments {
@@ -82,7 +84,7 @@ func (h *helpPointRepository) CreateHelpingPoint(helpPoint domain.PuntoAyuda, us
 					InfoMedica:    []domain.AntecedenteEntry{},
 					FechaCreacion: time.Now(),
 				}
-				_, err = h.PersonaCollection.InsertOne(context.Background(), newPersona)
+				_, err = h.PersonaCollection.InsertOne(ctx, newPersona)
 				if err == nil {
 					personaID = newPersona.ID
 				}
@@ -98,7 +100,7 @@ func (h *helpPointRepository) CreateHelpingPoint(helpPoint domain.PuntoAyuda, us
 				InfoMedica:    []domain.AntecedenteEntry{},
 				FechaCreacion: time.Now(),
 			}
-			_, err := h.PersonaCollection.InsertOne(context.Background(), newPersona)
+			_, err := h.PersonaCollection.InsertOne(ctx, newPersona)
 			if err == nil {
 				personaID = newPersona.ID
 			}
@@ -110,7 +112,7 @@ func (h *helpPointRepository) CreateHelpingPoint(helpPoint domain.PuntoAyuda, us
 	}
 	helpPoint.PersonaIDs = personaIDs
 
-	_, err := h.HelpPointCollection.InsertOne(context.Background(), helpPoint)
+	_, err := h.HelpPointCollection.InsertOne(ctx, helpPoint)
 	if err != nil {
 		return domain.PuntoAyuda{}, err
 	}
@@ -121,6 +123,8 @@ func (h *helpPointRepository) CreateHelpingPoint(helpPoint domain.PuntoAyuda, us
 // UpdateHelpingPoint actualiza un punto de ayuda en la base de datos.
 // Recibe un mapa de datos a actualizar, verifica el ID del punto de ayuda y actualiza los campos correspondientes.
 func (h *helpPointRepository) UpdateHelpingPoint(data map[string]interface{}) (domain.PuntoAyuda, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	idStr, ok := data["_id"].(string)
 	if !ok {
 		return domain.PuntoAyuda{}, errors.New("ID de punto de ayuda no proporcionado o inválido")
@@ -131,14 +135,24 @@ func (h *helpPointRepository) UpdateHelpingPoint(data map[string]interface{}) (d
 	}
 	delete(data, "_id")
 
-	update := bson.M{"$set": data}
-	_, err = h.HelpPointCollection.UpdateOne(context.Background(), bson.M{"_id": objID}, update)
+	allowedFields := map[string]bool{
+		"comment": true, "people": true, "coords": true,
+	}
+	filtered := make(map[string]interface{})
+	for k, v := range data {
+		if allowedFields[k] {
+			filtered[k] = v
+		}
+	}
+
+	update := bson.M{"$set": filtered}
+	_, err = h.HelpPointCollection.UpdateOne(ctx, bson.M{"_id": objID}, update)
 	if err != nil {
 		return domain.PuntoAyuda{}, err
 	}
 
 	var updatedHelpPoint domain.PuntoAyuda
-	err = h.HelpPointCollection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&updatedHelpPoint)
+	err = h.HelpPointCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&updatedHelpPoint)
 	if err != nil {
 		return domain.PuntoAyuda{}, err
 	}
@@ -148,24 +162,28 @@ func (h *helpPointRepository) UpdateHelpingPoint(data map[string]interface{}) (d
 // DeleteHelpingPoint elimina un punto de ayuda por su ID.
 // Convierte el ID de cadena a ObjectID y elimina el documento correspondiente de la colección.
 func (h *helpPointRepository) DeleteHelpingPoint(id string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return errors.New("ID de punto de ayuda inválido")
 	}
-	_, err = h.HelpPointCollection.DeleteOne(context.Background(), bson.M{"_id": objID})
+	_, err = h.HelpPointCollection.DeleteOne(ctx, bson.M{"_id": objID})
 	return err
 }
 
 // GetAllPoints obtiene todos los puntos de ayuda de la base de datos.
 func (h *helpPointRepository) GetAllPoints() ([]domain.PuntoAyuda, error) {
-	cursor, err := h.HelpPointCollection.Find(context.Background(), bson.M{})
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cursor, err := h.HelpPointCollection.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(context.Background())
+	defer cursor.Close(ctx)
 
 	var helpPoints []domain.PuntoAyuda
-	for cursor.Next(context.Background()) {
+	for cursor.Next(ctx) {
 		var helpPoint domain.PuntoAyuda
 		if err := cursor.Decode(&helpPoint); err != nil {
 			return nil, err
@@ -177,6 +195,8 @@ func (h *helpPointRepository) GetAllPoints() ([]domain.PuntoAyuda, error) {
 
 // LinkPersonaToHelpPoint agrega un ID de persona a la lista persona_ids de un punto de ayuda.
 func (h *helpPointRepository) LinkPersonaToHelpPoint(helpPointID string, personaID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	hpObjID, err := bson.ObjectIDFromHex(helpPointID)
 	if err != nil {
 		return errors.New("ID de punto de ayuda inválido")
@@ -187,7 +207,7 @@ func (h *helpPointRepository) LinkPersonaToHelpPoint(helpPointID string, persona
 	}
 
 	_, err = h.HelpPointCollection.UpdateOne(
-		context.Background(),
+		ctx,
 		bson.M{"_id": hpObjID},
 		bson.M{"$addToSet": bson.M{"persona_ids": pObjID}},
 	)
@@ -197,6 +217,8 @@ func (h *helpPointRepository) LinkPersonaToHelpPoint(helpPointID string, persona
 // FindByIDAndUserID busca un punto de ayuda por su ID y el ID del usuario.
 // Convierte el ID de cadena a ObjectID y verifica si el punto de ayuda pertenece al usuario especificado.
 func (h *helpPointRepository) FindByIDAndUserID(id string, userID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return errors.New("ID de punto de ayuda inválido")
@@ -208,7 +230,7 @@ func (h *helpPointRepository) FindByIDAndUserID(id string, userID string) error 
 
 	var puntoAyuda domain.PuntoAyuda
 	filter := bson.M{"_id": objID, "author_id": userObjID}
-	err = h.HelpPointCollection.FindOne(context.Background(), filter).Decode(&puntoAyuda)
+	err = h.HelpPointCollection.FindOne(ctx, filter).Decode(&puntoAyuda)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return errors.New("Punto no encontrado o no autorizado")

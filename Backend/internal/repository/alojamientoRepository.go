@@ -27,14 +27,16 @@ func NewAlojamientoRepository(alojamientoCollection *mongo.Collection) Alojamien
 }
 
 func (r *alojamientoRepository) GetAlojamientos() ([]domain.Alojamiento, error) {
-	cursor, err := r.AlojamientoCollection.Find(context.Background(), bson.M{})
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cursor, err := r.AlojamientoCollection.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(context.Background())
+	defer cursor.Close(ctx)
 
 	var alojamientos []domain.Alojamiento
-	for cursor.Next(context.Background()) {
+	for cursor.Next(ctx) {
 		var alojamiento domain.Alojamiento
 		if err := cursor.Decode(&alojamiento); err != nil {
 			return nil, err
@@ -45,22 +47,28 @@ func (r *alojamientoRepository) GetAlojamientos() ([]domain.Alojamiento, error) 
 }
 
 func (r *alojamientoRepository) CreateAlojamiento(alojamiento domain.Alojamiento) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	alojamiento.ID = bson.NewObjectID()
 	alojamiento.DateRegister = time.Now()
-	_, err := r.AlojamientoCollection.InsertOne(context.Background(), alojamiento)
+	_, err := r.AlojamientoCollection.InsertOne(ctx, alojamiento)
 	return err
 }
 
 func (r *alojamientoRepository) DeleteAlojamiento(id string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return errors.New("ID de alojamiento inválido")
 	}
-	_, err = r.AlojamientoCollection.DeleteOne(context.Background(), bson.M{"_id": objID})
+	_, err = r.AlojamientoCollection.DeleteOne(ctx, bson.M{"_id": objID})
 	return err
 }
 
 func (r *alojamientoRepository) UpdateAlojamiento(updateData map[string]interface{}) (domain.Alojamiento, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	idStr, ok := updateData["_id"].(string)
 	if !ok {
 		return domain.Alojamiento{}, errors.New("ID de alojamiento no proporcionado o inválido")
@@ -71,14 +79,24 @@ func (r *alojamientoRepository) UpdateAlojamiento(updateData map[string]interfac
 	}
 	delete(updateData, "_id")
 
-	update := bson.M{"$set": updateData}
-	_, err = r.AlojamientoCollection.UpdateOne(context.Background(), bson.M{"_id": objID}, update)
+	allowedFields := map[string]bool{
+		"name": true, "cupos": true, "coords": true,
+	}
+	filtered := make(map[string]interface{})
+	for k, v := range updateData {
+		if allowedFields[k] {
+			filtered[k] = v
+		}
+	}
+
+	update := bson.M{"$set": filtered}
+	_, err = r.AlojamientoCollection.UpdateOne(ctx, bson.M{"_id": objID}, update)
 	if err != nil {
 		return domain.Alojamiento{}, err
 	}
 
 	var updatedAlojamiento domain.Alojamiento
-	err = r.AlojamientoCollection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&updatedAlojamiento)
+	err = r.AlojamientoCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&updatedAlojamiento)
 	if err != nil {
 		return domain.Alojamiento{}, err
 	}

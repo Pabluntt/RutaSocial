@@ -42,7 +42,7 @@ func (u userUseCase) GetUserByID(c *gin.Context) {
 	id := c.Param("id")
 	user, err := u.userRepository.GetUserByID(id)
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Usuario no encontrado"})
+		c.IndentedJSON(http.StatusNotFound, gin.H{"error": "Usuario no encontrado"})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": user})

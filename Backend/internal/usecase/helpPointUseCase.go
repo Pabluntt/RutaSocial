@@ -170,7 +170,7 @@ func (h helpingPointUseCase) DeleteHelpingPoint(c *gin.Context) {
 	userID := userClaims["user_id"].(string)
 
 	if err := h.helpingPointRepository.FindByIDAndUserID(helpingPointID, userID); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err})
+		c.IndentedJSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 

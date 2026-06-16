@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"log"
 	"os"
 	"strings"
 )
@@ -12,9 +11,7 @@ import (
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
-		log.Printf("[CORS DEBUG] Received %s request from origin: %s, Path: %s", c.Request.Method, origin, c.Request.URL.Path)
 		
-		// Permitir todos los orígenes configurados más localhost
 		allowedOrigins := []string{
 			"http://localhost:3000",
 			"http://localhost:5173",
@@ -24,7 +21,6 @@ func CORSMiddleware() gin.HandlerFunc {
 			"http://127.0.0.1:5174",
 		}
 		
-		// Agregar orígenes desde variables de entorno
 		frontendsEnv := os.Getenv("FRONTEND_URL")
 		if frontendsEnv != "" {
 			origins := strings.Fields(frontendsEnv)
@@ -37,7 +33,6 @@ func CORSMiddleware() gin.HandlerFunc {
 			allowedOrigins = append(allowedOrigins, origins...)
 		}
 		
-		// Verificar si el origen está permitido
 		isAllowed := false
 		for _, allowed := range allowedOrigins {
 			if allowed == "*" || allowed == origin {
@@ -46,22 +41,13 @@ func CORSMiddleware() gin.HandlerFunc {
 			}
 		}
 		
-		log.Printf("[CORS DEBUG] isAllowed: %v, Allowed origins: %v", isAllowed, allowedOrigins)
-		
-		// Siempre establecer headers CORS para solicitudes desde orígenes permitidos
 		if isAllowed && origin != "" {
 			c.Header("Access-Control-Allow-Origin", origin)
-			log.Printf("[CORS DEBUG] Set Access-Control-Allow-Origin: %s", origin)
 		} else if isAllowed {
 			c.Header("Access-Control-Allow-Origin", "*")
-			log.Printf("[CORS DEBUG] Set Access-Control-Allow-Origin: *")
 		} else {
-			// Para desarrollo, permitir localhost incluso si no está en la lista
 			if origin != "" && (strings.Contains(origin, "localhost") || strings.Contains(origin, "127.0.0.1")) {
 				c.Header("Access-Control-Allow-Origin", origin)
-				log.Printf("[CORS DEBUG] Set Access-Control-Allow-Origin (development): %s", origin)
-			} else {
-				log.Printf("[CORS DEBUG] Origin %s is NOT allowed", origin)
 			}
 		}
 		
@@ -70,8 +56,10 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Header("Access-Control-Expose-Headers", "Content-Length, Content-Type")
 		c.Header("Access-Control-Allow-Credentials", "true")
 		c.Header("Access-Control-Max-Age", "86400")
+		c.Header("X-Content-Type-Options", "nosniff")
+		c.Header("X-Frame-Options", "DENY")
+		c.Header("X-XSS-Protection", "0")
 		
-		// Manejar peticiones OPTIONS
 		if c.Request.Method == "OPTIONS" {
 			c.JSON(204, nil)
 			return

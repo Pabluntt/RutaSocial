@@ -37,14 +37,16 @@ func NewUserRepository(userCollection *mongo.Collection) UserRepository {
 // GetAllUsers obtiene todos los usuarios de la base de datos.
 // Retorna un slice de usuarios o un error si ocurre algún problema.
 func (u *userRepository) GetAllUsers() ([]domain.Usuario, error) {
-	cursor, err := u.UserCollection.Find(context.Background(), bson.M{})
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	cursor, err := u.UserCollection.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(context.Background())
+	defer cursor.Close(ctx)
 
 	var users []domain.Usuario
-	if err := cursor.All(context.Background(), &users); err != nil {
+	if err := cursor.All(ctx, &users); err != nil {
 		return nil, err
 	}
 	return users, nil
@@ -54,12 +56,14 @@ func (u *userRepository) GetAllUsers() ([]domain.Usuario, error) {
 // Recibe el ID como string, lo convierte a ObjectID y busca en la colección.
 func (u *userRepository) GetPublicInfoByID(id string) (map[string]string, error) {
 	var user domain.Usuario
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return map[string]string{"name": ""}, err
 	}
 
-	err = u.UserCollection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&user)
+	err = u.UserCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&user)
 	if err != nil {
 		return map[string]string{"name": ""}, err
 	}
@@ -70,12 +74,14 @@ func (u *userRepository) GetPublicInfoByID(id string) (map[string]string, error)
 // Recibe el ID como string, lo convierte a ObjectID y busca en la colección.
 func (u *userRepository) GetUserByID(id string) (domain.Usuario, error) {
 	var user domain.Usuario
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return domain.Usuario{}, err
 	}
 
-	err = u.UserCollection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&user)
+	err = u.UserCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&user)
 	if err != nil {
 		return domain.Usuario{}, err
 	}
@@ -91,10 +97,18 @@ func (u *userRepository) GetUserProfile(userID string) (domain.Usuario, error) {
 // UpdateUserInfo actualiza la información de un usuario.
 // Recibe el ID del usuario y un mapa con los datos a actualizar.
 func (u *userRepository) UpdateUserInfo(userID bson.ObjectID, userData map[string]interface{}) (domain.Usuario, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	var currentUser domain.Usuario
-	err := u.UserCollection.FindOne(context.Background(), bson.M{"_id": userID}).Decode(&currentUser)
+	err := u.UserCollection.FindOne(ctx, bson.M{"_id": userID}).Decode(&currentUser)
 	if err != nil {
 		return domain.Usuario{}, errors.New("usuario no encontrado")
+	}
+
+	allowedFields := map[string]bool{
+		"name": true, "phone": true,
+		"newPassword": true, "currentPassword": true, "confirmNewPassword": true,
 	}
 
 	filteredData := make(map[string]interface{})
@@ -134,6 +148,13 @@ func (u *userRepository) UpdateUserInfo(userID bson.ObjectID, userData map[strin
 		filteredData["password"] = hashedPassword
 	}
 
+	// Filtrar solo campos permitidos
+	for k := range userData {
+		if !allowedFields[k] {
+			delete(userData, k)
+		}
+	}
+
 	if len(filteredData) == 0 {
 		return domain.Usuario{}, errors.New("no se proporcionaron campos válidos para actualizar")
 	}
@@ -141,13 +162,13 @@ func (u *userRepository) UpdateUserInfo(userID bson.ObjectID, userData map[strin
 	filter := bson.M{"_id": userID}
 	update := bson.M{"$set": filteredData}
 
-	_, err = u.UserCollection.UpdateOne(context.Background(), filter, update)
+	_, err = u.UserCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return domain.Usuario{}, err
 	}
 
 	var updatedUser domain.Usuario
-	err = u.UserCollection.FindOne(context.Background(), filter).Decode(&updatedUser)
+	err = u.UserCollection.FindOne(ctx, filter).Decode(&updatedUser)
 	if err != nil {
 		return domain.Usuario{}, err
 	}
@@ -158,7 +179,10 @@ func (u *userRepository) UpdateUserInfo(userID bson.ObjectID, userData map[strin
 // CreateUserByAdmin crea un nuevo usuario desde el panel de administración.
 // Verifica si el correo ya existe, hashea la contraseña y guarda el usuario.
 func (u *userRepository) CreateUserByAdmin(user domain.Usuario) (domain.Usuario, error) {
-	existing := u.UserCollection.FindOne(context.Background(), bson.M{"email": user.Email})
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	existing := u.UserCollection.FindOne(ctx, bson.M{"email": user.Email})
 	if existing.Err() == nil {
 		return domain.Usuario{}, errors.New("el usuario ya existe")
 	}
@@ -173,7 +197,7 @@ func (u *userRepository) CreateUserByAdmin(user domain.Usuario) (domain.Usuario,
 	user.ListRoutes = []domain.Route{}
 	user.DateRegister = time.Now()
 
-	res, err := u.UserCollection.Database().Collection("usuarios").InsertOne(context.Background(), user)
+	res, err := u.UserCollection.Database().Collection("usuarios").InsertOne(ctx, user)
 	if err != nil {
 		return domain.Usuario{}, err
 	}
@@ -189,12 +213,15 @@ func (u *userRepository) CreateUserByAdmin(user domain.Usuario) (domain.Usuario,
 // DeleteUserByID elimina un usuario por su ID.
 // Recibe el ID como string, lo convierte a ObjectID y lo elimina de la base de datos.
 func (u *userRepository) DeleteUserByID(id string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return errors.New("ID de usuario inválido")
 	}
 
-	result, err := u.UserCollection.DeleteOne(context.Background(), bson.M{"_id": objID})
+	result, err := u.UserCollection.DeleteOne(ctx, bson.M{"_id": objID})
 	if err != nil {
 		return err
 	}
