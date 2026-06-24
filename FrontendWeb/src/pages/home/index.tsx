@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { format } from 'date-fns';
 import L from "leaflet";
 import DrawerList from "../../component/DrawerList";
 import CustomDrawer from "../../component/CustomDrawer";
-import { Backdrop, Paper, Typography, useMediaQuery, useTheme, Fab, Tooltip } from "@mui/material";
+import { Backdrop, Paper, Typography, useMediaQuery, useTheme, Fab, Tooltip, Switch, FormControlLabel, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import MensajesFijados from "../../component/MensajesFijados";
 import DialogCreateRoute from "../../component/Dialog/DialogCreateRoute";
 import useSessionStore from "../../stores/useSessionStore";
@@ -20,6 +21,7 @@ import SpeedDialCreateRoute from "../../component/Button/SpeedDialCreateRoute";
 import DialogJoinRoute from "../../component/Dialog/DialogJoinRoute";
 import DialogCreateAlojamiento from "../../component/Dialog/DialogCreateAlojamiento";
 import HotelIcon from '@mui/icons-material/Hotel';
+import WhatshotIcon from '@mui/icons-material/Whatshot';
 import { Marker, Popup } from 'react-leaflet'
 import { useAuth } from "../../context/AuthContext";
 import Sidebar from "../../component/Sidebar";
@@ -32,6 +34,7 @@ import { useHelpPoints } from "../../api/hooks/HelpPointHooks";
 import { useAlojamientos, useCreateAlojamiento, useUpdateAlojamiento } from "../../api/hooks/AlojamientoHooks";
 import { useProfile } from "../../api/hooks/UserHooks";
 import type { AlojamientoData } from "../../component/Dialog/DialogCreateAlojamiento";
+import { filterHelpPointsByTimeRange, HeatmapTimeRange } from "../../utils/heatmapUtils";
 
 const houseIcon = L.divIcon({
     className: '',
@@ -142,6 +145,23 @@ export default function Home() {
     const updateAlojamientoMut = useUpdateAlojamiento()
     const profileQuery = useProfile()
 
+    const [ showHeatmap, setShowHeatmap ] = useState(false)
+    const [ heatmapTimeRange, setHeatmapTimeRange ] = useState<HeatmapTimeRange>('none')
+    const [ heatmapCustomStart, setHeatmapCustomStart ] = useState<Date | null>(null)
+    const [ heatmapCustomEnd, setHeatmapCustomEnd ] = useState<Date | null>(null)
+
+    const heatmapFilteredPoints = useMemo(() =>
+        filterHelpPointsByTimeRange(helpPoints, heatmapTimeRange, heatmapCustomStart, heatmapCustomEnd),
+        [helpPoints, heatmapTimeRange, heatmapCustomStart, heatmapCustomEnd]
+    )
+
+    const markerHelpPoints = useMemo(() => {
+        if (routeStatus && routeId) {
+            return helpPoints.filter(hp => hp.routeID === routeId)
+        }
+        return []
+    }, [helpPoints, routeStatus, routeId])
+
     const alojamientos: AlojamientoData[] = alojamientosQuery.data
         ? alojamientosQuery.data.map((a: { _id: string; coords: number[]; name: string; cupos: number }) => ({
             id: a._id,
@@ -171,15 +191,9 @@ export default function Home() {
             setRisks(riskQuery.data)
         }
         if(helpPointQuery.data) {
-            // Si hay una ruta activa, filtrar solo los puntos de esa ruta
-            if(routeStatus && routeId) {
-                const filteredPoints = helpPointQuery.data.filter(hp => hp.routeID === routeId)
-                setHelpPoints(filteredPoints)
-            } else {
-                setHelpPoints(helpPointQuery.data)
-            }
+            setHelpPoints(helpPointQuery.data)
         }
-    }, [riskQuery.data, helpPointQuery.data, routeStatus, routeId])
+    }, [riskQuery.data, helpPointQuery.data])
 
     useEffect(() => {
         console.log("ROL DEL USUARIO: ", role)
@@ -207,8 +221,9 @@ export default function Home() {
             <div className={`relative flex grow flex-col justify-between`}>
                 <Mapa
                     stateCurrentLocation={[currentLocation, setCurrentLocation]}
-                    helpPoints={helpPoints}
+                    helpPoints={showHeatmap ? heatmapFilteredPoints : markerHelpPoints}
                     risks={risks}
+                    showHeatmap={showHeatmap}
                 >
                     {alojamientos.map((a, i) => (
                         <Marker key={a.id ?? i} icon={i % 3 === 0 ? churchIcon : houseIcon} position={[a.coords[0], a.coords[1]]}>
@@ -244,6 +259,67 @@ export default function Home() {
                     />
                 </Mapa>
                 <ButtonCurrentLocation stateShowLocation={[ showLocation, setShowLocation ]} stateCurrentLocation={[ currentLocation, setCurrentLocation ]} stateErrorGeolocation={[errorGeolocation, setErrorGeolocation]}/>
+
+                <Paper
+                    elevation={4}
+                    sx={{
+                        position: 'absolute',
+                        top: 16,
+                        right: computerDevice ? 16 : 8,
+                        zIndex: 1000,
+                        p: 1.5,
+                        borderRadius: 2,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 1,
+                        bgcolor: 'rgba(255,255,255,0.95)',
+                    }}
+                >
+                    <FormControlLabel
+                        control={<Switch size="small" checked={showHeatmap} onChange={(e) => {
+                            setShowHeatmap(e.target.checked)
+                            if (!e.target.checked) setHeatmapTimeRange('none')
+                        }} />}
+                        label={<Typography variant="body2" sx={{ fontSize: 13, fontWeight: 500 }}>Mapa de calor</Typography>}
+                        labelPlacement="start"
+                        sx={{ m: 0 }}
+                    />
+                    {showHeatmap && (
+                        <div className="flex flex-col gap-1.5">
+                            <ToggleButtonGroup
+                                value={heatmapTimeRange}
+                                exclusive
+                                onChange={(_, value) => {
+                                    if (value !== null) setHeatmapTimeRange(value)
+                                }}
+                                size="small"
+                                fullWidth
+                            >
+                                <ToggleButton value="1w" sx={{ textTransform: 'none', fontSize: 11, py: 0.5 }}>Semana</ToggleButton>
+                                <ToggleButton value="1m" sx={{ textTransform: 'none', fontSize: 11, py: 0.5 }}>Mes</ToggleButton>
+                                <ToggleButton value="1y" sx={{ textTransform: 'none', fontSize: 11, py: 0.5 }}>Año</ToggleButton>
+                                <ToggleButton value="custom" sx={{ textTransform: 'none', fontSize: 11, py: 0.5 }}>Personalizado</ToggleButton>
+                            </ToggleButtonGroup>
+                            {heatmapTimeRange === 'custom' && (
+                                <div className="flex gap-1 items-center">
+                                    <input
+                                        type="date"
+                                        className="w-full rounded border border-gray-300 px-1.5 py-1 text-xs"
+                                        value={heatmapCustomStart ? format(heatmapCustomStart, 'yyyy-MM-dd') : ''}
+                                        onChange={(e) => setHeatmapCustomStart(e.target.value ? new Date(e.target.value + 'T00:00:00') : null)}
+                                    />
+                                    <Typography variant="caption" sx={{ fontSize: 10 }}>a</Typography>
+                                    <input
+                                        type="date"
+                                        className="w-full rounded border border-gray-300 px-1.5 py-1 text-xs"
+                                        value={heatmapCustomEnd ? format(heatmapCustomEnd, 'yyyy-MM-dd') : ''}
+                                        onChange={(e) => setHeatmapCustomEnd(e.target.value ? new Date(e.target.value + 'T00:00:00') : null)}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </Paper>
 
                 { !onSelectLocationMap ?
                     <>

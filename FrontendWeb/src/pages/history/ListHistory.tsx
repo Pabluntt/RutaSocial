@@ -3,6 +3,8 @@ import ListDateItem from "./ListDateItem";
 import ComboBox from "../../component/Button/ComboBox";
 import { Route } from "../../api/models/Route";
 import { HelpPoint } from "../../api/models/HelpPoint";
+import { format } from 'date-fns';
+import { HeatmapTimeRange } from "../../utils/heatmapUtils";
 
 type ListHistoryProps = {
     stateOnlyUser : [ boolean, React.Dispatch<React.SetStateAction<boolean>>]
@@ -12,16 +14,20 @@ type ListHistoryProps = {
     stateLocation : [ number[], React.Dispatch<React.SetStateAction<number[]>> ] 
     stateOPFecha : [ string, React.Dispatch<React.SetStateAction<string>> ]
     stateShowHeatmap : [boolean, React.Dispatch<React.SetStateAction<boolean>> ]
-    stateHeatmapTimeRange : [ string, React.Dispatch<React.SetStateAction<string>> ]
+    stateHeatmapTimeRange : [ HeatmapTimeRange, React.Dispatch<React.SetStateAction<HeatmapTimeRange>> ]
+    stateHeatmapCustomStart : [ Date | null, React.Dispatch<React.SetStateAction<Date | null>> ]
+    stateHeatmapCustomEnd : [ Date | null, React.Dispatch<React.SetStateAction<Date | null>> ]
 }
 
-export default function ListHistory({ stateRoutes, stateHelpPoints, stateShowLocation, stateLocation, stateOPFecha, stateOnlyUser, stateShowHeatmap, stateHeatmapTimeRange } : ListHistoryProps) {
+export default function ListHistory({ stateRoutes, stateHelpPoints, stateShowLocation, stateLocation, stateOPFecha, stateOnlyUser, stateShowHeatmap, stateHeatmapTimeRange, stateHeatmapCustomStart, stateHeatmapCustomEnd } : ListHistoryProps) {
 
     const [ routes,  ] = stateRoutes
     const [ opFecha, setOPFecha ] = stateOPFecha
     const [ onlyUser, setOnlyUser ] = stateOnlyUser
     const [ heatMap, setHeatMap ] = stateShowHeatmap;
     const [ heatmapRange, setHeatmapRange ] = stateHeatmapTimeRange;
+    const [ heatmapStart, setHeatmapStart ] = stateHeatmapCustomStart;
+    const [ heatmapEnd, setHeatmapEnd ] = stateHeatmapCustomEnd;
 
     return (
         <List 
@@ -64,19 +70,39 @@ export default function ListHistory({ stateRoutes, stateHelpPoints, stateShowLoc
                                     labelPlacement="end"
                                 />
                                 {heatMap && (
-                                    <ToggleButtonGroup
-                                        value={heatmapRange}
-                                        exclusive
-                                        onChange={(_, value) => {
-                                            if (value !== null) setHeatmapRange(value)
-                                        }}
-                                        size="small"
-                                        fullWidth
-                                    >
-                                        <ToggleButton value="1m" sx={{ textTransform: 'none', fontSize: 12 }}>Último mes</ToggleButton>
-                                        <ToggleButton value="6m" sx={{ textTransform: 'none', fontSize: 12 }}>6 meses</ToggleButton>
-                                        <ToggleButton value="1y" sx={{ textTransform: 'none', fontSize: 12 }}>Último año</ToggleButton>
-                                    </ToggleButtonGroup>
+                                    <div className="flex flex-col gap-1.5">
+                                        <ToggleButtonGroup
+                                            value={heatmapRange}
+                                            exclusive
+                                            onChange={(_, value) => {
+                                                if (value !== null) setHeatmapRange(value)
+                                            }}
+                                            size="small"
+                                            fullWidth
+                                        >
+                                            <ToggleButton value="1w" sx={{ textTransform: 'none', fontSize: 12 }}>Semana</ToggleButton>
+                                            <ToggleButton value="1m" sx={{ textTransform: 'none', fontSize: 12 }}>Mes</ToggleButton>
+                                            <ToggleButton value="1y" sx={{ textTransform: 'none', fontSize: 12 }}>Año</ToggleButton>
+                                            <ToggleButton value="custom" sx={{ textTransform: 'none', fontSize: 12 }}>Personalizado</ToggleButton>
+                                        </ToggleButtonGroup>
+                                        {heatmapRange === 'custom' && (
+                                            <div className="flex gap-1 items-center">
+                                                <input
+                                                    type="date"
+                                                    className="w-full rounded border border-gray-300 px-1.5 py-1 text-xs"
+                                                    value={heatmapStart ? format(heatmapStart, 'yyyy-MM-dd') : ''}
+                                                    onChange={(e) => setHeatmapStart(e.target.value ? new Date(e.target.value + 'T00:00:00') : null)}
+                                                />
+                                                <Typography variant="caption" sx={{ fontSize: 10 }}>a</Typography>
+                                                <input
+                                                    type="date"
+                                                    className="w-full rounded border border-gray-300 px-1.5 py-1 text-xs"
+                                                    value={heatmapEnd ? format(heatmapEnd, 'yyyy-MM-dd') : ''}
+                                                    onChange={(e) => setHeatmapEnd(e.target.value ? new Date(e.target.value + 'T00:00:00') : null)}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         </FormControl>

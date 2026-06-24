@@ -10,6 +10,7 @@ import { HelpPoint } from "../../api/models/HelpPoint";
 import { Risk } from "../../api/models/Risk";
 import { es } from "date-fns/locale";
 import { RiskStatus } from "../../Enums/RiskStatus";
+import { getPeopleCount } from "../../utils/heatmapUtils";
 import 'leaflet.heat'
 
 var redIcon = new L.Icon({
@@ -50,15 +51,19 @@ function HeatmapLayer({ helpPoints, showHeatmap }: { helpPoints: HelpPoint[], sh
         }
 
         if (showHeatmap && helpPoints.length > 0) {
-            const heatData = helpPoints
-                .filter(hp => !hp.disabled)
-                .map(hp => [hp.coords[0], hp.coords[1], 1]);
+            const active = helpPoints.filter(hp => !hp.disabled)
+            const heatData = active.map(hp => {
+                const count = getPeopleCount(hp)
+                return [hp.coords[0], hp.coords[1], Math.max(count, 0.5)] as [number, number, number]
+            });
+
+            const maxIntensity = Math.max(...heatData.map(d => d[2]), 1)
 
             const heat = (L as any).heatLayer(heatData, {
                 radius: 25,
                 blur: 15,
                 maxZoom: 17,
-                max: 1.0,
+                max: maxIntensity,
                 gradient: {
                     0.1: 'blue',
                     0.2: 'cyan',

@@ -18,6 +18,7 @@ import { useProfile } from "../../api/hooks/UserHooks";
 import { useRoutes, useRoutesByUser } from "../../api/hooks/RouteHooks";
 import { useHelpPoints } from "../../api/hooks/HelpPointHooks";
 import { RouteStatus } from "../../Enums/RouteStatus";
+import { filterHelpPointsByTimeRange, HeatmapTimeRange } from "../../utils/heatmapUtils";
 
 
 function getFormatDate(a : Date, opt : string) {
@@ -43,7 +44,9 @@ export default function RouteHistory() {
 
     const [ onlyUser, setOnlyUser ] = useState(false)
     const [ showHeatmap, setShowHeatmap ] = useState(false)
-    const [ heatmapTimeRange, setHeatmapTimeRange ] = useState<string>('none')
+    const [ heatmapTimeRange, setHeatmapTimeRange ] = useState<HeatmapTimeRange>('none')
+    const [ heatmapCustomStart, setHeatmapCustomStart ] = useState<Date | null>(null)
+    const [ heatmapCustomEnd, setHeatmapCustomEnd ] = useState<Date | null>(null)
     const [ routes, setRoutes ] = useState<Route[]>([])
 
     const userID = useProfile().data?.id
@@ -109,18 +112,10 @@ export default function RouteHistory() {
 
     }, [opFecha, routes])
 
-    const heatmapHelpPoints = useMemo(() => {
-        if (heatmapTimeRange === 'none') return helpPoints
-        const now = new Date()
-        const cutoff = new Date(now)
-        if (heatmapTimeRange === '1m') cutoff.setMonth(cutoff.getMonth() - 1)
-        else if (heatmapTimeRange === '6m') cutoff.setMonth(cutoff.getMonth() - 6)
-        else if (heatmapTimeRange === '1y') cutoff.setFullYear(cutoff.getFullYear() - 1)
-        return helpPoints.map(hp => ({
-            ...hp,
-            disabled: hp.dateRegister < cutoff
-        }))
-    }, [helpPoints, heatmapTimeRange])
+    const heatmapHelpPoints = useMemo(() =>
+        filterHelpPointsByTimeRange(helpPoints, heatmapTimeRange, heatmapCustomStart, heatmapCustomEnd),
+        [helpPoints, heatmapTimeRange, heatmapCustomStart, heatmapCustomEnd]
+    )
 
     const theme = useTheme()
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'))
@@ -157,6 +152,8 @@ export default function RouteHistory() {
                         stateHelpPoints={[helpPoints, setHelpPoints]}
                         stateShowHeatmap={[showHeatmap, setShowHeatmap]}
                         stateHeatmapTimeRange={[heatmapTimeRange, setHeatmapTimeRange]}
+                        stateHeatmapCustomStart={[heatmapCustomStart, setHeatmapCustomStart]}
+                        stateHeatmapCustomEnd={[heatmapCustomEnd, setHeatmapCustomEnd]}
                     />
                 </Paper>
             </div>
