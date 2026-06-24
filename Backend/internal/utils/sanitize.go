@@ -16,7 +16,7 @@ func IsValidEmail(email string) bool {
 // IsValidString verifica si una cadena de texto es válida, esta función es utilizada para validar nombres (de personas e instituciones), descripciones y otros campos de texto.
 // La expresión regular utilizada permite letras, números, espacios, guiones, guiones bajos, puntos, comas, arrobas y acentos en letras.
 func IsValidString(str string) bool {
-	re := regexp.MustCompile(`^[a-zA-Z0-9\s\-\_\.\,\@\:\áéíóúÁÉÍÓÚñÑ\(\)\!\?\¿\¡]+$`)
+	re := regexp.MustCompile(`^[a-zA-Z0-9\s\-_.,@:áéíóúÁÉÍÓÚñÑ()!?¿¡]+$`)
 	return re.MatchString(str)
 }
 

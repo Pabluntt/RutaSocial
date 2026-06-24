@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import useSessionStore from "../stores/useSessionStore";
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import HistoryIcon from '@mui/icons-material/History';
-import EventIcon from '@mui/icons-material/Event';  
 import GroupIcon from '@mui/icons-material/Group';
 import LogoutIcon from '@mui/icons-material/Logout';
 import HomeIcon from '@mui/icons-material/Home';
+import MapIcon from '@mui/icons-material/Map';
 import { useState } from "react";
 import DialogSendNotice from "./Dialog/DialogSendNotice";
 import CampaignIcon from '@mui/icons-material/Campaign';
@@ -74,8 +74,8 @@ export default function DrawerList() {
             </Button>
             <Button fullWidth onClick={onClickSchedule} color='info' sx={btnSx}>
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
-                    <EventIcon />
-                    <Typography>Agendar</Typography>
+                    <MapIcon />
+                    <Typography>Mapa</Typography>
                 </div>
             </Button>
             <Button fullWidth onClick={onClickHistory} color='info' sx={btnSx}>
