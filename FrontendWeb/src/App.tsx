@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Profile from './pages/profile'
 import Usuarios from './pages/admin/usuarios/Usuarios'
 import UserDetail from './pages/admin/usuarios/UserDetail'
+import AdminRoutes from './pages/admin/routes/AdminRoutes'
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { interceptorResponse } from './api/services/axiosInstance'
@@ -72,6 +73,7 @@ function App() {
                     />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/admin/usuarios`} element={<Usuarios />} />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/admin/usuarios/:id`} element={<UserDetail />} />
+                    <Route path={`${import.meta.env.VITE_BASE_URL}/admin/rutas`} element={<AdminRoutes />} />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/historial`} element={
                       <HelpPointUpdateProvider>
                         <RouteHistory />

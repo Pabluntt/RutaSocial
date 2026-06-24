@@ -100,12 +100,12 @@ export default function UserDetail() {
                     <p className="flex text-2xl text-center font-semibold p-3 items-center">Detalle Usuario</p>
                 </div>
             }
-            <div className="flex w-full h-full flex-col gap-4 p-5 bg-gray-100 overflow-y-auto">
-                <div className="flex items-center gap-3">
-                    <IconButton onClick={() => navigate('/admin/usuarios')} size="small">
+            <div className="flex w-full h-full flex-col gap-4 p-3 sm:p-5 bg-gray-100 overflow-y-auto">
+                <div className="flex items-center gap-2">
+                    <IconButton onClick={() => navigate(`${import.meta.env.VITE_BASE_URL}/admin/usuarios`)} size="small">
                         <ArrowBackIcon />
                     </IconButton>
-                    <Typography variant="h5">Detalle del Usuario</Typography>
+                    <Typography variant={computerDevice ? "h5" : "h6"}>Detalle del Usuario</Typography>
                 </div>
 
                 {alert && (
@@ -113,8 +113,8 @@ export default function UserDetail() {
                 )}
 
                 {/* User Info Card */}
-                <Paper sx={{ p: 3, mb: 2 }}>
-                    <div className="flex items-center justify-between mb-4">
+                <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 2 }}>
+                    <div className={"flex mb-4 " + (computerDevice ? 'flex-row items-center justify-between' : 'flex-col gap-3')}>
                         <div className="flex items-center gap-3">
                             <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56, fontSize: 24 }}>
                                 {user.name?.charAt(0)?.toUpperCase()}
@@ -127,15 +127,15 @@ export default function UserDetail() {
                         <div className="flex gap-2">
                             {editing ? (
                                 <>
-                                    <Button variant="contained" color="success" startIcon={<SaveIcon />} onClick={handleSave} loading={adminUpdateUser.isPending}>
+                                    <Button variant="contained" color="success" startIcon={<SaveIcon />} onClick={handleSave} loading={adminUpdateUser.isPending} size={computerDevice ? "medium" : "small"}>
                                         Guardar
                                     </Button>
-                                    <Button variant="outlined" color="error" startIcon={<CancelIcon />} onClick={handleCancel}>
+                                    <Button variant="outlined" color="error" startIcon={<CancelIcon />} onClick={handleCancel} size={computerDevice ? "medium" : "small"}>
                                         Cancelar
                                     </Button>
                                 </>
                             ) : (
-                                <Button variant="outlined" startIcon={<EditIcon />} onClick={() => setEditing(true)}>
+                                <Button variant="outlined" startIcon={<EditIcon />} onClick={() => setEditing(true)} size={computerDevice ? "medium" : "small"} fullWidth={!computerDevice}>
                                     Editar
                                 </Button>
                             )}

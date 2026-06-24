@@ -31,6 +31,10 @@ export class RouteService {
         return MapRouteFromBackend( data?.message as TRouteBackend)
     }
 
+    static async DeleteRoute( routeId : string ) : Promise<void> {
+        await axiosInstance.delete(`/${this.RESOURCE_NAME}/${routeId}`)
+    }
+
     static async GetRoutesByUserId( userId : string) : Promise<Route[]>{
         const routes = await RouteService.FindAllRoute()
         return routes.reduce<Route[]>((call : Route[], route) => {

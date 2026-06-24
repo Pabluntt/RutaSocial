@@ -1,5 +1,6 @@
 import { IconButton, Divider, Tooltip } from "@mui/material";
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import RouteIcon from '@mui/icons-material/Route';
 import { useNavigate } from "react-router-dom";
 import HomeIcon from '@mui/icons-material/Home';
 import { useState } from "react";
@@ -47,6 +48,10 @@ export default function Sidebar() {
         navigate(`${import.meta.env.VITE_BASE_URL}/admin/usuarios`)
     }
 
+    const onClickRoutes = () => {
+        navigate(`${import.meta.env.VITE_BASE_URL}/admin/rutas`)
+    }
+
     const onClickSchedule = () => {
         navigate(`${import.meta.env.VITE_BASE_URL}/mapa`)
     }
@@ -72,12 +77,18 @@ export default function Sidebar() {
                 <Tooltip title="Enviar aviso"><IconButton onClick={handleClickOpen} sx={{ ...hoverStyles }}><CampaignIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
                 <Tooltip title="Personas Ayudadas"><IconButton onClick={onClickPeopleHelped} sx={{ ...hoverStyles }}><GroupAddIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
                 { role === Role.admin  ?
-
-                    <Tooltip title="Gestionar Usuarios">
-                        <IconButton onClick={onClickUsers}  sx={{ ...hoverStyles }}>
-                            <PeopleAltIcon htmlColor='#374151' fontSize='large'/>
-                        </IconButton>
-                    </Tooltip>
+                    <>
+                        <Tooltip title="Gestionar Usuarios">
+                            <IconButton onClick={onClickUsers}  sx={{ ...hoverStyles }}>
+                                <PeopleAltIcon htmlColor='#374151' fontSize='large'/>
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Gestionar Rutas">
+                            <IconButton onClick={onClickRoutes}  sx={{ ...hoverStyles }}>
+                                <RouteIcon htmlColor='#374151' fontSize='large'/>
+                            </IconButton>
+                        </Tooltip>
+                    </>
                     :
                     <>
                     </>
