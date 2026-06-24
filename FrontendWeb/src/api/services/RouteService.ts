@@ -55,4 +55,19 @@ export class RouteService {
         const { data } = await axiosInstance.patch(`/${this.RESOURCE_NAME}/${routeId}`)
         return data?.message
     }
+
+    static async DownloadRouteReport( routeId : string, routeTitle : string ) : Promise<void> {
+        const response = await axiosInstance.get(`/${this.RESOURCE_NAME}/${routeId}/report`, {
+            responseType: 'blob'
+        })
+        const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `informe_ruta_${routeTitle}.xlsx`
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        window.URL.revokeObjectURL(url)
+    }
 }

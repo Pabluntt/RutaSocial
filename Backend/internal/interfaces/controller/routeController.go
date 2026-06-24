@@ -180,3 +180,19 @@ func (r *routeController) LeaveRoute(c *gin.Context) {
 func (r *routeController) GetMyParticipation(c *gin.Context) {
 	r.routeUseCase.GetMyParticipation(c)
 }
+
+// ExportReport maneja la solicitud para exportar un informe de ruta en Excel.
+// @Summary Exportar informe de ruta
+// @Description Genera y descarga un archivo Excel con el informe de una ruta, incluyendo sus puntos de ayuda y personas ayudadas. Requiere autenticación.
+// @Tags Rutas
+// @Accept json
+// @Produce application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+// @Security BearerAuth
+// @Param id path string true "ID de la ruta"
+// @Success 200 {file} file "Archivo Excel generado exitosamente"
+// @Failure 400 {object} domain.ErrorResponse "Error al generar el informe"
+// @Failure 401 {object} domain.ErrorResponse "No autorizado"
+// @Router /route/{id}/report [get]
+func (r *routeController) ExportReport(c *gin.Context) {
+	r.routeUseCase.ExportReport(c)
+}

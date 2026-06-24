@@ -29,4 +29,5 @@ func SetupRouteRouter(r *gin.Engine) {
 	protected.POST("/join/:code", routeController.JoinRoute)
 	protected.POST("/leave/:id", routeController.LeaveRoute)
 	protected.GET("/participation/:id", routeController.GetMyParticipation)
+	protected.GET("/:id/report", routeController.ExportReport)
 }

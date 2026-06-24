@@ -1,11 +1,13 @@
 package usecase
 
 import (
+	"fmt"
 	"github.com/SebaVCH/hdcProject/internal/domain"
 	"github.com/SebaVCH/hdcProject/internal/repository"
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/xuri/excelize/v2"
 	"net/http"
 )
 
@@ -21,6 +23,7 @@ type RouteUseCase interface {
 	JoinRoute(c *gin.Context)
 	LeaveRoute(c *gin.Context)
 	GetMyParticipation(c *gin.Context)
+	ExportReport(c *gin.Context)
 }
 
 // routeUseCase implementa la interfaz RouteUseCase.
@@ -229,4 +232,86 @@ func (r routeUseCase) GetMyParticipation(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": participation})
+}
+
+// ExportReport genera un informe en Excel de una ruta con sus puntos de ayuda y personas ayudadas.
+func (r routeUseCase) ExportReport(c *gin.Context) {
+	routeID := c.Param("id")
+	if routeID == "" {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "ID de ruta no proporcionado"})
+		return
+	}
+
+	route, err := r.routeRepository.FindByID(routeID)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Ruta no encontrada"})
+		return
+	}
+
+	helpPoints, err := r.routeRepository.GetHelpPointsByRouteID(routeID)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener puntos de ayuda"})
+		return
+	}
+
+	f := excelize.NewFile()
+	sheetName := "Informe de Ruta"
+	f.SetSheetName("Sheet1", sheetName)
+
+	// Encabezado de la ruta
+	f.SetCellValue(sheetName, "A1", "INFORME DE RUTA")
+	f.SetCellValue(sheetName, "A2", "Título")
+	f.SetCellValue(sheetName, "B2", route.Title)
+	f.SetCellValue(sheetName, "A3", "Descripción")
+	f.SetCellValue(sheetName, "B3", route.Description)
+	f.SetCellValue(sheetName, "A4", "Estado")
+	f.SetCellValue(sheetName, "B4", route.Status)
+	f.SetCellValue(sheetName, "A5", "Fecha de creación")
+	f.SetCellValue(sheetName, "B5", route.DateCreated.Format("2006-01-02 15:04:05"))
+	f.SetCellValue(sheetName, "A6", "Fecha de finalización")
+	if !route.DateFinished.IsZero() {
+		f.SetCellValue(sheetName, "B6", route.DateFinished.Format("2006-01-02 15:04:05"))
+	} else {
+		f.SetCellValue(sheetName, "B6", "No finalizada")
+	}
+	f.SetCellValue(sheetName, "A7", "Código de invitación")
+	f.SetCellValue(sheetName, "B7", route.InviteCode)
+
+	// Tabla de puntos de ayuda
+	row := 9
+	f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), "PUNTOS DE AYUDA")
+	row++
+	f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), "N°")
+	f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), "Coordenadas")
+	f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), "Fecha")
+	f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), "Comentario")
+	f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), "Personas Ayudadas")
+
+	hpStart := row
+	for i, hp := range helpPoints {
+		row = hpStart + 1 + i
+		f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), i+1)
+		if len(hp.Coords) >= 2 {
+			f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), fmt.Sprintf("%f, %f", hp.Coords[0], hp.Coords[1]))
+		}
+		f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), hp.DateRegister.Format("2006-01-02 15:04:05"))
+		f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), hp.Comment)
+
+		peopleStr := ""
+		for j, p := range hp.People {
+			if j > 0 {
+				peopleStr += "; "
+			}
+			peopleStr += fmt.Sprintf("%s (Edad: %d, Género: %s)", p.Name, p.Age, p.Gender)
+		}
+		f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), peopleStr)
+	}
+
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	filename := fmt.Sprintf("informe_ruta_%s.xlsx", route.Title)
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	c.Header("Content-Transfer-Encoding", "binary")
+	if err := f.Write(c.Writer); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Error al generar el informe"})
+	}
 }
