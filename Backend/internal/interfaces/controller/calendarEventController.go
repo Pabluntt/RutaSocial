@@ -72,6 +72,22 @@ func (ce *calendarEventController) DeleteCalendarEvent(c *gin.Context) {
 	ce.calendarEventUseCase.DeleteCalendarEvent(c)
 }
 
+// GetUserCalendarEvents maneja la solicitud para obtener todos los eventos de calendario de un usuario (admin).
+// @Summary Obtener eventos de calendario de un usuario
+// @Description Obtiene todos los eventos de calendario de un usuario específico. Requiere autenticación y rol de administrador.
+// @Tags Eventos de Calendario
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "ID del usuario"
+// @Success 200 {array} domain.EventoCalendario "Eventos del usuario obtenidos exitosamente"
+// @Failure 400 {object} domain.ErrorResponse "Error al obtener eventos del usuario"
+// @Failure 401 {object} domain.ErrorResponse "No autorizado"
+// @Router /calendar-event/user/{id} [get]
+func (ce *calendarEventController) GetUserCalendarEvents(c *gin.Context) {
+	ce.calendarEventUseCase.GetUserCalendarEvents(c)
+}
+
 // UpdateCalendarEvent maneja la solicitud para actualizar un evento de calendario.
 // @Summary Actualizar evento de calendario
 // @Description Actualiza los datos de un evento de calendario existente. Los usuarios pueden actualizar solo sus propios eventos, los administradores pueden actualizar cualquier evento. Requiere autenticación.

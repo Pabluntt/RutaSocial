@@ -30,4 +30,5 @@ func SetupRouteRouter(r *gin.Engine) {
 	protected.POST("/leave/:id", routeController.LeaveRoute)
 	protected.GET("/participation/:id", routeController.GetMyParticipation)
 	protected.GET("/:id/report", routeController.ExportReport)
+	protected.GET("/user/:id", middleware.RoleMiddleware("admin"), routeController.GetUserRoutes)
 }

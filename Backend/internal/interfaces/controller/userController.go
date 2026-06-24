@@ -118,6 +118,24 @@ func (u *userController) GetPublicInfoByID(c *gin.Context) {
 	u.userUseCase.GetPublicInfoByID(c)
 }
 
+// UpdateUserByAdmin maneja la solicitud para actualizar un usuario desde el panel admin.
+// @Summary Actualizar usuario (admin)
+// @Description Actualiza los datos de un usuario desde el panel de administración. Requiere autenticación y rol de administrador.
+// @Tags Usuarios
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "ID del usuario"
+// @Param user body object true "Datos actualizados del usuario"
+// @Success 200 {object} domain.Usuario "Usuario actualizado exitosamente"
+// @Failure 400 {object} domain.ErrorResponse "Error al actualizar usuario"
+// @Failure 401 {object} domain.ErrorResponse "No autorizado"
+// @Failure 401 {object} domain.ErrorResponse "Token inválido"
+// @Router /user/{id} [put]
+func (u *userController) UpdateUserByAdmin(c *gin.Context) {
+	u.userUseCase.UpdateUserByAdmin(c)
+}
+
 // CreateUserByAdmin maneja la solicitud para crear un usuario desde el panel admin.
 // @Summary Crear usuario (admin)
 // @Description Crea un nuevo usuario desde el panel de administración. Requiere autenticación y rol de administrador.

@@ -24,6 +24,7 @@ type RouteUseCase interface {
 	LeaveRoute(c *gin.Context)
 	GetMyParticipation(c *gin.Context)
 	ExportReport(c *gin.Context)
+	GetUserRoutes(c *gin.Context)
 }
 
 // routeUseCase implementa la interfaz RouteUseCase.
@@ -232,6 +233,23 @@ func (r routeUseCase) GetMyParticipation(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": participation})
+}
+
+// GetUserRoutes maneja la solicitud para obtener todas las rutas de un usuario (admin).
+func (r routeUseCase) GetUserRoutes(c *gin.Context) {
+	userID := c.Param("id")
+	if userID == "" {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "ID de usuario no proporcionado"})
+		return
+	}
+
+	routes, err := r.routeRepository.GetRoutesByUserID(userID)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener rutas del usuario"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": routes})
 }
 
 // ExportReport genera un informe en Excel de una ruta con sus puntos de ayuda y personas ayudadas.

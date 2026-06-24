@@ -16,6 +16,7 @@ type CalendarEventUseCase interface {
 	CreateCalendarEvent(c *gin.Context)
 	DeleteCalendarEvent(c *gin.Context)
 	UpdateCalendarEvent(c *gin.Context)
+	GetUserCalendarEvents(c *gin.Context)
 }
 
 // calendarEventUseCase implementa la interfaz CalendarEventUseCase.
@@ -40,6 +41,23 @@ func (ce calendarEventUseCase) GetAllCalendarEvents(c *gin.Context) {
 		return
 	}
 	c.IndentedJSON(http.StatusOK, events)
+}
+
+// GetUserCalendarEvents maneja la solicitud para obtener todos los eventos de calendario de un usuario (admin).
+func (ce calendarEventUseCase) GetUserCalendarEvents(c *gin.Context) {
+	userID := c.Param("id")
+	if userID == "" {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "ID de usuario no proporcionado"})
+		return
+	}
+
+	events, err := ce.calendarRepository.GetCalendarEventsByUserID(userID)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener eventos del usuario"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": events})
 }
 
 // CreateCalendarEvent maneja la solicitud para crear un nuevo evento de calendario.

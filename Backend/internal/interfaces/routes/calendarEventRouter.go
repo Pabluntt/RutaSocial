@@ -23,4 +23,5 @@ func SetupCalendarEventRouter(r *gin.Engine) {
 	protected.GET("", calendarEventController.GetAllCalendarEvents)
 	protected.PUT("/:id", calendarEventController.UpdateCalendarEvent)
 	protected.DELETE("/:id", calendarEventController.DeleteCalendarEvent)
+	protected.GET("/user/:id", middleware.RoleMiddleware("admin"), calendarEventController.GetUserCalendarEvents)
 }

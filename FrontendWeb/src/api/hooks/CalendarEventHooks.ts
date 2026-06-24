@@ -14,6 +14,14 @@ export function useCalendarEvents() {
     })
 }
 
+export function useUserCalendarEvents(userId: string, enabled?: boolean) {
+    return useQuery({
+        queryKey: ['userCalendarEvents', userId],
+        queryFn: () => CalendarService.GetUserCalendarEvents(userId),
+        enabled: !!userId && enabled !== false,
+    })
+}
+
 export function useCreateCalendarEvent() {
     return useMutation({
         mutationFn : ( event : Omit<CalendarEvent, 'id' | 'authorName' | 'colorInstitution'>) => CalendarService.AddEvent(MapCalendarEventToCreateRequest(event)),

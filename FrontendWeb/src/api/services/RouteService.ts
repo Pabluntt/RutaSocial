@@ -56,6 +56,14 @@ export class RouteService {
         return data?.message
     }
 
+    static async GetAdminUserRoutes(userId: string): Promise<Route[]> {
+        const { data } = await axiosInstance.get(`/route/user/${userId}`)
+        if (data?.message === null) return []
+        return (data?.message as TRouteBackend[]).map((route) =>
+            MapRouteFromBackend(route)
+        )
+    }
+
     static async DownloadRouteReport( routeId : string, routeTitle : string ) : Promise<void> {
         const response = await axiosInstance.get(`/${this.RESOURCE_NAME}/${routeId}/report`, {
             responseType: 'blob'

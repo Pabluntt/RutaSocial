@@ -59,6 +59,11 @@ export class UserService {
         return data?.message as TParticipationRespone
     }
 
+    static async AdminUpdateUser(id: string, data: Partial<Pick<IUser, 'name' | 'phone' | 'email' | 'role' | 'institutionID'>>): Promise<IUser> {
+        const { data: response } = await axiosInstance.put(`/user/${id}`, data)
+        return MapUserFromBackend(response?.message as TUserBackend)
+    }
+
     static async DeleteUser(id : string) : Promise<void> {
         await axiosInstance.delete(`/user/${id}`)
     }

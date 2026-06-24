@@ -19,6 +19,7 @@ type UserUseCase interface {
 	GetAllUsers(c *gin.Context)
 	GetPublicInfoByID(c *gin.Context)
 	CreateUserByAdmin(c *gin.Context)
+	UpdateUserByAdmin(c *gin.Context)
 	DeleteUser(c *gin.Context)
 }
 
@@ -197,6 +198,61 @@ func (u userUseCase) CreateUserByAdmin(c *gin.Context) {
 
 	createdUser.Password = ""
 	c.IndentedJSON(http.StatusCreated, gin.H{"message": createdUser})
+}
+
+// UpdateUserByAdmin maneja la solicitud para que un administrador actualice un usuario.
+// Valida los datos permitidos y actualiza el usuario en la base de datos.
+func (u userUseCase) UpdateUserByAdmin(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "ID de usuario no proporcionado"})
+		return
+	}
+
+	var updateData map[string]interface{}
+	if err := c.ShouldBindJSON(&updateData); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
+		return
+	}
+
+	if name, ok := updateData["name"].(string); ok && name != "" {
+		if !utils.IsValidString(name) {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "El nombre contiene caracteres inválidos"})
+			return
+		}
+	}
+
+	if phone, ok := updateData["phone"].(string); ok && phone != "" {
+		if !utils.IsValidPhone(phone) {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Teléfono inválido"})
+			return
+		}
+	}
+
+	if email, ok := updateData["email"].(string); ok && email != "" {
+		if !utils.IsValidEmail(email) {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "El correo electrónico no es válido"})
+			return
+		}
+	}
+
+	if role, ok := updateData["role"].(string); ok && role != "" {
+		if role != "admin" && role != "voluntario" {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "El rol debe ser 'admin' o 'voluntario'"})
+			return
+		}
+	}
+
+	updateData["_id"] = id
+
+	updatedUser, err := u.userRepository.UpdateUserByAdmin(updateData)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	updatedUser.Sanitize()
+	c.IndentedJSON(http.StatusOK, gin.H{"message": updatedUser})
 }
 
 // DeleteUser maneja la solicitud para eliminar un usuario por su ID.

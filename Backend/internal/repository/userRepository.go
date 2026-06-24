@@ -19,6 +19,7 @@ type UserRepository interface {
 	GetAllUsers() ([]domain.Usuario, error)
 	GetPublicInfoByID(id string) (map[string]string, error)
 	CreateUserByAdmin(user domain.Usuario) (domain.Usuario, error)
+	UpdateUserByAdmin(updateData map[string]interface{}) (domain.Usuario, error)
 	DeleteUserByID(id string) error
 }
 
@@ -208,6 +209,66 @@ func (u *userRepository) CreateUserByAdmin(user domain.Usuario) (domain.Usuario,
 	}
 
 	return user, nil
+}
+
+// UpdateUserByAdmin actualiza un usuario desde el panel de administración.
+// Recibe un mapa con los datos a actualizar y el ID del usuario.
+func (u *userRepository) UpdateUserByAdmin(updateData map[string]interface{}) (domain.Usuario, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	idStr, ok := updateData["_id"].(string)
+	if !ok || idStr == "" {
+		return domain.Usuario{}, errors.New("ID de usuario no proporcionado")
+	}
+	delete(updateData, "_id")
+
+	objID, err := bson.ObjectIDFromHex(idStr)
+	if err != nil {
+		return domain.Usuario{}, errors.New("ID de usuario inválido")
+	}
+
+	var currentUser domain.Usuario
+	err = u.UserCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&currentUser)
+	if err != nil {
+		return domain.Usuario{}, errors.New("usuario no encontrado")
+	}
+
+	if email, ok := updateData["email"].(string); ok && email != "" {
+		existing := u.UserCollection.FindOne(ctx, bson.M{"email": email, "_id": bson.M{"$ne": objID}})
+		if existing.Err() == nil {
+			return domain.Usuario{}, errors.New("el correo electrónico ya está en uso")
+		}
+	}
+
+	allowedFields := map[string]bool{
+		"name": true, "phone": true, "email": true, "role": true, "institutionID": true,
+	}
+	filtered := make(map[string]interface{})
+	for k, v := range updateData {
+		if allowedFields[k] {
+			if strVal, ok := v.(string); ok && strVal != "" {
+				filtered[k] = strVal
+			}
+		}
+	}
+
+	if len(filtered) == 0 {
+		return domain.Usuario{}, errors.New("no se proporcionaron campos válidos para actualizar")
+	}
+
+	_, err = u.UserCollection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": filtered})
+	if err != nil {
+		return domain.Usuario{}, err
+	}
+
+	var updatedUser domain.Usuario
+	err = u.UserCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&updatedUser)
+	if err != nil {
+		return domain.Usuario{}, err
+	}
+
+	return updatedUser, nil
 }
 
 // DeleteUserByID elimina un usuario por su ID.

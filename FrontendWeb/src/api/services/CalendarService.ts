@@ -31,4 +31,12 @@ export class CalendarService {
         return data?.message
     }
 
+    static async GetUserCalendarEvents(userId: string): Promise<CalendarEvent[]> {
+        const { data } = await axiosInstance.get(`/${this.RESOURCE_NAME}/user/${userId}`)
+        if (data?.message === null) return []
+        return await Promise.all((data?.message as TCalendarEventBackend[]).map(async (event) =>
+            await MapCalendarEventFromBackend(event)
+        ))
+    }
+
 } 

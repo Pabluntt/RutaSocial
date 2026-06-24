@@ -181,6 +181,22 @@ func (r *routeController) GetMyParticipation(c *gin.Context) {
 	r.routeUseCase.GetMyParticipation(c)
 }
 
+// GetUserRoutes maneja la solicitud para obtener todas las rutas de un usuario (admin).
+// @Summary Obtener rutas de un usuario
+// @Description Obtiene todas las rutas donde un usuario es líder o miembro del equipo. Requiere autenticación y rol de administrador.
+// @Tags Rutas
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "ID del usuario"
+// @Success 200 {array} domain.Route "Rutas del usuario obtenidas exitosamente"
+// @Failure 400 {object} domain.ErrorResponse "Error al obtener rutas del usuario"
+// @Failure 401 {object} domain.ErrorResponse "No autorizado"
+// @Router /user/{id}/routes [get]
+func (r *routeController) GetUserRoutes(c *gin.Context) {
+	r.routeUseCase.GetUserRoutes(c)
+}
+
 // ExportReport maneja la solicitud para exportar un informe de ruta en Excel.
 // @Summary Exportar informe de ruta
 // @Description Genera y descarga un archivo Excel con el informe de una ruta, incluyendo sus puntos de ayuda y personas ayudadas. Requiere autenticación.

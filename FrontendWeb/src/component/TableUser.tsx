@@ -1,13 +1,14 @@
-import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, Divider, Checkbox, alpha, Box, IconButton, TableSortLabel, Toolbar, Tooltip, Typography, useMediaQuery, useTheme, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, Button as MuiButton, TextField, Alert } from "@mui/material";
+import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, Divider, Checkbox, alpha, Box, IconButton, TableSortLabel, Toolbar, Tooltip, Typography, useMediaQuery, useTheme, Alert } from "@mui/material";
 import { visuallyHidden } from '@mui/utils';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Order, getComparator } from "../utils/utilsSort";
 import { IUser } from "../api/models/User";
 import { useInstitution } from "../api/hooks/InstitutionHooks";
 import { Institution } from "../api/models/Institution";
-import { useDeleteUser, useUpdateUser } from "../api/hooks/UserHooks";
+import { useDeleteUser } from "../api/hooks/UserHooks";
+import { useNavigate } from "react-router-dom";
 
 type SortableUserKeys = keyof Omit<IUser, 'listRoutes' | 'dateRegister' | 'completedRoutes'>;
 
@@ -176,19 +177,16 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
 
 export default function TableUser({ users, setUsers, prefixSearch, institutions, setInstitutions, isAdmin = false } : { users : IUser[], setUsers : (newUsers : IUser[]) => void, prefixSearch : string, institutions : Institution[], setInstitutions : (instutions : Institution[]) => void, isAdmin?: boolean }) {
   
+  const navigate = useNavigate()
   const [order, setOrder] = React.useState<Order>('asc');
   const [orderBy, setOrderBy] = React.useState<SortableUserKeys>('email');
   const [selected, setSelected] = React.useState<readonly string[]>([]);
-  const [editingUser, setEditingUser] = useState<IUser | null>(null);
-  const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [editFormData, setEditFormData] = useState<Partial<IUser>>({});
   const [alertMessage, setAlertMessage] = useState('');
   const [alertSeverity, setAlertSeverity] = useState<'success' | 'error'>('success');
   const [showAlert, setShowAlert] = useState(false);
   const theme = useTheme();
   const computerDevice = useMediaQuery(theme.breakpoints.up('sm'));
-  const { mutate: deleteUserMutate, isPending: isDeleting } = useDeleteUser();
-  const { mutate: updateUserMutate, isPending: isUpdating } = useUpdateUser();
+  const { mutate: deleteUserMutate } = useDeleteUser();
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
     property: SortableUserKeys,
@@ -241,9 +239,7 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
   }
 
   const handleEditClick = (user: IUser) => {
-    setEditingUser(user);
-    setEditFormData(user);
-    setOpenEditDialog(true);
+    navigate(`${import.meta.env.VITE_BASE_URL}/admin/usuarios/${user.id}`)
   };
 
   const handleDeleteClick = (user: IUser) => {
@@ -258,41 +254,6 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
         },
         onError: (error) => {
           setAlertMessage('Error al eliminar usuario');
-          setAlertSeverity('error');
-          setShowAlert(true);
-          setTimeout(() => setShowAlert(false), 3000);
-        }
-      });
-    }
-  };
-
-  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditFormData({
-      ...editFormData,
-      [name]: value,
-    });
-  };
-
-  const handleSaveEdit = () => {
-    if (editingUser) {
-      updateUserMutate(editFormData, {
-        onSuccess: () => {
-          setUsers(
-            users.map((user) =>
-              user.id === editingUser.id ? { ...user, ...editFormData } : user
-            )
-          );
-          setOpenEditDialog(false);
-          setEditingUser(null);
-          setEditFormData({});
-          setAlertMessage('Usuario actualizado exitosamente');
-          setAlertSeverity('success');
-          setShowAlert(true);
-          setTimeout(() => setShowAlert(false), 3000);
-        },
-        onError: () => {
-          setAlertMessage('Error al actualizar usuario');
           setAlertSeverity('error');
           setShowAlert(true);
           setTimeout(() => setShowAlert(false), 3000);
@@ -422,45 +383,6 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
         </TableContainer>
       </Paper>
 
-      {/* Dialog de edición de usuario */}
-      {isAdmin && (
-        <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>Editar Usuario</DialogTitle>
-          <DialogContent sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              label="Nombre"
-              name="name"
-              value={editFormData.name || ''}
-              onChange={handleEditFormChange}
-              fullWidth
-              variant="outlined"
-            />
-            <TextField
-              label="Email"
-              name="email"
-              value={editFormData.email || ''}
-              onChange={handleEditFormChange}
-              fullWidth
-              variant="outlined"
-              disabled
-            />
-            <TextField
-              label="Teléfono"
-              name="phone"
-              value={editFormData.phone || ''}
-              onChange={handleEditFormChange}
-              fullWidth
-              variant="outlined"
-            />
-          </DialogContent>
-          <DialogActions>
-            <MuiButton onClick={() => setOpenEditDialog(false)}>Cancelar</MuiButton>
-            <MuiButton onClick={handleSaveEdit} variant="contained">
-              Guardar
-            </MuiButton>
-          </DialogActions>
-        </Dialog>
-      )}
     </Box>
   );
 }

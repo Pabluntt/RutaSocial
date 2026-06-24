@@ -17,6 +17,7 @@ type CalendarEventRepository interface {
 	DeleteCalendarEvent(id string) error
 	UpdateCalendarEvent(updateData map[string]interface{}) (domain.EventoCalendario, error)
 	FindByIDAndUserID(id string, userID string) error
+	GetCalendarEventsByUserID(userID string) ([]domain.EventoCalendario, error)
 }
 
 // calendarEventRepository implementa la interfaz CalendarEventRepository.
@@ -31,6 +32,28 @@ func NewCalendarEventRepository(calendarEventCollection *mongo.Collection) Calen
 	return &calendarEventRepository{
 		CalendarEventCollection: calendarEventCollection,
 	}
+}
+
+// GetCalendarEventsByUserID obtiene todos los eventos de calendario de un usuario por su ID.
+func (c calendarEventRepository) GetCalendarEventsByUserID(userID string) ([]domain.EventoCalendario, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	userObjID, err := bson.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, errors.New("ID de usuario inválido")
+	}
+
+	cursor, err := c.CalendarEventCollection.Find(ctx, bson.M{"author_id": userObjID})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var events []domain.EventoCalendario
+	if err := cursor.All(ctx, &events); err != nil {
+		return nil, err
+	}
+	return events, nil
 }
 
 // GetAllCalendarEvents obtiene todos los eventos de calendario de la base de datos.

@@ -42,6 +42,14 @@ export function useRoutesByUser(userId ?: string, enabled ?: boolean) {
     })
 }
 
+export function useAdminUserRoutes(userId: string, enabled?: boolean) {
+    return useQuery({
+        queryKey: ['adminUserRoutes', userId],
+        queryFn: () => RouteService.GetAdminUserRoutes(userId),
+        enabled: !!userId && enabled !== false,
+    })
+}
+
 export function useJoinRoute() {
     return useMutation({
         mutationFn : (inviteCode : string) => (RouteService.JoinRoute(inviteCode)) 

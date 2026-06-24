@@ -80,6 +80,13 @@ export function useUserParticipation( id: string) {
     })
 }
 
+export function useAdminUpdateUser() {
+    return useMutation({
+        mutationFn: ({ id, data }: { id: string; data: Partial<Pick<IUser, 'name' | 'phone' | 'email' | 'role' | 'institutionID'>> }) =>
+            UserService.AdminUpdateUser(id, data),
+    })
+}
+
 export function useDeleteUser() {
     return useMutation({
         mutationFn: (id: string) => (UserService.DeleteUser(id)),

@@ -24,6 +24,7 @@ type RouteRepository interface {
 	LeaveRoute(routeId string, userID string) error
 	GetMyParticipation(userID string) (map[string]int, error)
 	GetHelpPointsByRouteID(routeID string) ([]domain.PuntoAyuda, error)
+	GetRoutesByUserID(userID string) ([]domain.Route, error)
 }
 
 // routeRepository implementa la interfaz RouteRepository.
@@ -254,6 +255,35 @@ func (r *routeRepository) LeaveRoute(routeId string, userID string) error {
 	}
 
 	return nil
+}
+
+// GetRoutesByUserID obtiene todas las rutas asociadas a un usuario (como líder o miembro del equipo).
+// Recibe el ID del usuario como string y retorna un slice de rutas.
+func (r *routeRepository) GetRoutesByUserID(userID string) ([]domain.Route, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	userObjID, err := bson.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, errors.New("ID de usuario inválido")
+	}
+
+	filter := bson.M{
+		"$or": []bson.M{
+			{"route_leader": userObjID},
+			{"team": userObjID},
+		},
+	}
+	cursor, err := r.RouteCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var routes []domain.Route
+	if err := cursor.All(ctx, &routes); err != nil {
+		return nil, err
+	}
+	return routes, nil
 }
 
 // GetHelpPointsByRouteID obtiene todos los puntos de ayuda asociados a una ruta.
