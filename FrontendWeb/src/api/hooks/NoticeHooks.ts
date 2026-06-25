@@ -44,6 +44,12 @@ export function useDeleteNotice(_id : string) {
     })
 }
 
+export function useDismissNotice() {
+    return useMutation({
+        mutationFn: (id: string) => (NoticeService.DismissNotice(id))
+    })
+}
+
 export function useUpdateNotice() {
     return useMutation({
         mutationFn: (body : Notice) => (NoticeService.UpdateNotice(MapNoticeToUpdateRequest(body))),

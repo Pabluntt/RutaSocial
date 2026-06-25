@@ -141,3 +141,21 @@ func (n *notificationController) GetReadNotifications(c *gin.Context) {
 func (n *notificationController) MarkNotificationAsRead(c *gin.Context) {
 	n.notificationUseCase.MarkNotificationAsRead(c)
 }
+
+// DismissNotification maneja la solicitud para ocultar una notificación de la vista del usuario.
+// @Summary Ocultar notificación
+// @Description Oculta una notificación específica de la vista del usuario autenticado. Requiere autenticación.
+// @Tags Notificaciones
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "ID de la notificación"
+// @Success 200 {object} domain.SuccessResponse "Notificación ocultada correctamente"
+// @Failure 400 {object} domain.ErrorResponse "ID de notificación no proporcionado"
+// @Failure 400 {object} domain.ErrorResponse "Error al ocultar notificación"
+// @Failure 401 {object} domain.ErrorResponse "No autorizado"
+// @Failure 401 {object} domain.ErrorResponse "Token inválido"
+// @Router /notification/dismiss/{id} [put]
+func (n *notificationController) DismissNotification(c *gin.Context) {
+	n.notificationUseCase.DismissNotification(c)
+}

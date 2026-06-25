@@ -19,6 +19,7 @@ type NotificationUseCase interface {
 	GetUnreadNotifications(c *gin.Context)
 	GetReadNotifications(c *gin.Context)
 	MarkNotificationAsRead(c *gin.Context)
+	DismissNotification(c *gin.Context)
 }
 
 // notificationUseCase implementa la interfaz NotificationUseCase.
@@ -65,6 +66,18 @@ func (n notificationUseCase) DeleteNotification(c *gin.Context) {
 	if notificationID == "" {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "ID de aviso no proporcionado"})
 		return
+	}
+
+	claims, _ := c.Get("user")
+	userClaims := claims.(jwt.MapClaims)
+	userID := userClaims["user_id"].(string)
+	userRole := userClaims["user_role"].(string)
+
+	if userRole != "admin" {
+		if err := n.notificationRepository.FindByIDAndUserID(notificationID, userID); err != nil {
+			c.IndentedJSON(http.StatusForbidden, gin.H{"error": "No tienes permiso para eliminar este aviso"})
+			return
+		}
 	}
 
 	err := n.notificationRepository.DeleteNotification(notificationID)
@@ -173,4 +186,26 @@ func (n notificationUseCase) MarkNotificationAsRead(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Aviso marcado como leído correctamente"})
+}
+
+// DismissNotification maneja la solicitud para ocultar una notificación de la vista del usuario.
+// Verifica que el ID de la notificación sea válido y marca la relación como dismissed=true.
+func (n notificationUseCase) DismissNotification(c *gin.Context) {
+	notificationID := c.Param("id")
+	if notificationID == "" {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "ID de aviso no proporcionado"})
+		return
+	}
+
+	claims, _ := c.Get("user")
+	userClaims := claims.(jwt.MapClaims)
+	userID := userClaims["user_id"].(string)
+
+	err := n.notificationRepository.DismissNotification(notificationID, userID)
+	if err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "Error al ocultar aviso"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": "Aviso ocultado correctamente"})
 }

@@ -21,6 +21,7 @@ type NotificationRepository interface {
 	GetUnreadNotifications(userID string) ([]domain.Aviso, error)
 	GetReadNotifications(userID string) ([]domain.Aviso, error)
 	MarkNotificationAsRead(notificationID string, userID string) error
+	DismissNotification(notificationID string, userID string) error
 }
 
 // notificationRepository implementa la interfaz NotificationRepository.
@@ -71,6 +72,7 @@ func (n *notificationRepository) CreateNotification(notification domain.Aviso) e
 			PersonID:       user.ID,
 			Read:           false,
 			ReadAt:         time.Time{},
+			Dismissed:      false,
 		}
 		_, _ = n.NotificationPersonRelationCollection.InsertOne(ctx, relation)
 
@@ -189,7 +191,7 @@ func (n *notificationRepository) GetUnreadNotifications(userID string) ([]domain
 
 	cursor, err := n.NotificationPersonRelationCollection.Find(
 		ctx,
-		bson.M{"person_id": userObjID, "read": false},
+		bson.M{"person_id": userObjID, "read": false, "dismissed": false},
 	)
 	if err != nil {
 		return nil, err
@@ -231,7 +233,7 @@ func (n *notificationRepository) GetReadNotifications(userID string) ([]domain.A
 
 	cursor, err := n.NotificationPersonRelationCollection.Find(
 		ctx,
-		bson.M{"person_id": userObjID, "read": true},
+		bson.M{"person_id": userObjID, "read": true, "dismissed": false},
 	)
 	if err != nil {
 		return nil, err
@@ -283,6 +285,33 @@ func (n *notificationRepository) MarkNotificationAsRead(notificationID string, u
 		"$set": bson.M{
 			"read":    true,
 			"read_at": time.Now(),
+		},
+	}
+	_, err = n.NotificationPersonRelationCollection.UpdateOne(ctx, filter, update)
+	return err
+}
+
+// DismissNotification oculta una notificación para un usuario específico (solo de su vista).
+// Recibe el ID de la notificación y el ID del usuario, marca dismissed=true en la relación.
+func (n *notificationRepository) DismissNotification(notificationID string, userID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	notifObjID, err := bson.ObjectIDFromHex(notificationID)
+	if err != nil {
+		return errors.New("ID de notificación inválido")
+	}
+	userObjID, err := bson.ObjectIDFromHex(userID)
+	if err != nil {
+		return errors.New("ID de usuario inválido")
+	}
+
+	filter := bson.M{
+		"notification_id": notifObjID,
+		"person_id":       userObjID,
+	}
+	update := bson.M{
+		"$set": bson.M{
+			"dismissed": true,
 		},
 	}
 	_, err = n.NotificationPersonRelationCollection.UpdateOne(ctx, filter, update)

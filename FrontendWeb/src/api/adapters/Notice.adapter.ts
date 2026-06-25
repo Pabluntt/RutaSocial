@@ -15,7 +15,8 @@ export async function MapNoticeFromBackend(data: TNoticeBackend): Promise<Notice
 
     let authorName = 'Usuario Eliminado'
     try {
-        authorName = (await UserService.FindUserById(data.author_id as string)).name
+        const info = await UserService.GetPublicInfoByID(data.author_id as string)
+        authorName = info.name
     } catch(e) {
         console.log(e)
     }

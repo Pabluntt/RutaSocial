@@ -1,25 +1,26 @@
-import { ListItem, ListItemText, Typography } from "@mui/material";
+import { IconButton, ListItem, ListItemText, Typography } from "@mui/material";
 import { useState } from "react";
 import { formatRelative } from "date-fns";
 import { es } from "date-fns/locale";
+import CloseIcon from '@mui/icons-material/Close';
 import { Notice } from "../api/models/Notice";
 
-
-
-
-
-export default function Mensaje({ value, index } : { value : Notice, index : number }) {
+export default function Mensaje({ value, index, onDismiss } : { value : Notice, index : number, onDismiss?: (id: string) => void }) {
 
   const MAX_LENGTH = 100
   const [ msg, setMsg ] = useState(value.description as string)
   const [ isTruncated, setIsTruncated ] = useState(msg.length > MAX_LENGTH)
   const [ toggleIsShowingMore, setIsShowingMore ] = useState(false)
-  
-  
-
 
   return (
-    <ListItem key={index}>
+    <ListItem
+      key={index}
+      secondaryAction={
+        <IconButton edge="end" size="small" onClick={() => onDismiss?.(value.id)}>
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      }
+    >
       <ListItemText
         disableTypography
         primary={
@@ -41,7 +42,7 @@ export default function Mensaje({ value, index } : { value : Notice, index : num
                     </Typography>
                 </div>
         }
-      
+
         secondary={
               <div className="p-4 pb-0 text-justify">
                   <Typography
@@ -49,22 +50,22 @@ export default function Mensaje({ value, index } : { value : Notice, index : num
                       variant='body1'
                       sx={{ color : 'text.primary', display : 'inline' }}
                   >
-                      { isTruncated && !toggleIsShowingMore ? 
-                          msg.slice(0, MAX_LENGTH) + '... ' 
+                      { isTruncated && !toggleIsShowingMore ?
+                          msg.slice(0, MAX_LENGTH) + '... '
                           :
                           msg + ' '
                       }
-                  </Typography>   
-                  { isTruncated ? 
+                  </Typography>
+                  { isTruncated ?
                     <button className="text-green-700 underline cursor-pointer" onClick={() => setIsShowingMore(prev => !prev)} >
-                      { toggleIsShowingMore ? 'Ver menos' : 'Ver más' }  
-                    </button>  
+                      { toggleIsShowingMore ? 'Ver menos' : 'Ver mas' }
+                    </button>
                     :
                     <></>
                   }
-              </div>      
+              </div>
         }
       />
     </ListItem>
-  )    
+  )
 };

@@ -1,9 +1,9 @@
 import { Button, Typography, useTheme, useMediaQuery } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import useSessionStore from "../stores/useSessionStore";
+import { useAuth } from "../context/AuthContext";
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import HistoryIcon from '@mui/icons-material/History';
-import GroupIcon from '@mui/icons-material/Group';
 import LogoutIcon from '@mui/icons-material/Logout';
 import HomeIcon from '@mui/icons-material/Home';
 import MapIcon from '@mui/icons-material/Map';
@@ -11,6 +11,9 @@ import { useState } from "react";
 import DialogSendNotice from "./Dialog/DialogSendNotice";
 import CampaignIcon from '@mui/icons-material/Campaign';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import RouteIcon from '@mui/icons-material/Route';
+import { Role } from "../Enums/Role";
 
 
 export default function DrawerList() {
@@ -20,6 +23,7 @@ export default function DrawerList() {
     const btnSx = isMobile ? { py: 1.5, minHeight: 52 } : { py: 0.5, minHeight: 40 };
     const navigate = useNavigate()
     const { clearSession } = useSessionStore()
+    const { role } = useAuth()
     const [ openDialogNotice, setOpenDialogNotice ] = useState(false)
 
     const onClickProfile = () => {
@@ -28,6 +32,10 @@ export default function DrawerList() {
 
     const onClickUsuarios = () => {
         navigate(`${import.meta.env.VITE_BASE_URL}/admin/usuarios`)
+    }
+
+    const onClickRutas = () => {
+        navigate(`${import.meta.env.VITE_BASE_URL}/admin/rutas`)
     }
 
     const onClickCerrarSesion = () => {
@@ -84,12 +92,22 @@ export default function DrawerList() {
                     <Typography>Historial</Typography>
                 </div>
             </Button>
-            <Button fullWidth onClick={onClickUsuarios} color='info' sx={btnSx}>
-                <div className="flex w-full justify-start px-2 gap-5 items-center">
-                    <GroupIcon/>
-                    <Typography>Usuarios</Typography>
-                </div>
-            </Button>
+            { role === Role.admin && (
+                <>
+                    <Button fullWidth onClick={onClickUsuarios} color='info' sx={btnSx}>
+                        <div className="flex w-full justify-start px-2 gap-5 items-center">
+                            <PeopleAltIcon/>
+                            <Typography>Gestionar Usuarios</Typography>
+                        </div>
+                    </Button>
+                    <Button fullWidth onClick={onClickRutas} color='info' sx={btnSx}>
+                        <div className="flex w-full justify-start px-2 gap-5 items-center">
+                            <RouteIcon/>
+                            <Typography>Gestionar Rutas</Typography>
+                        </div>
+                    </Button>
+                </>
+            )}
             <Button fullWidth onClick={onClickSendNotice} color="info" sx={btnSx}>
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
                     <CampaignIcon/>

@@ -57,4 +57,9 @@ export class NoticeService {
         return await MapNoticeFromBackend(data?.message as TNoticeBackend)
     } 
 
+    static async DismissNotice( _id : string ) : Promise<string> {
+        const { data } = await axiosInstance.put(`/${NoticeService.RESOURCE_NAME}/dismiss/${_id}`)
+        return data?.message
+    }
+
 }

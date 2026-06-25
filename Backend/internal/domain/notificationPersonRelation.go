@@ -14,4 +14,5 @@ type NotificationPersonRelation struct {
 	PersonID       bson.ObjectID `bson:"person_id" json:"person_id"`
 	ReadAt         time.Time     `bson:"read_at" json:"read_at"`
 	Read           bool          `bson:"read" json:"read"`
+	Dismissed      bool          `bson:"dismissed" json:"dismissed"`
 }

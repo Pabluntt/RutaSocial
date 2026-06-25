@@ -4,10 +4,9 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Checkbox, FormControlLabel, Typography, useTheme, useMediaQuery } from '@mui/material';
+import { Typography, useTheme, useMediaQuery } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useCreateNotice, useNoticesMap } from '../../api/hooks/NoticeHooks';
-import { Notice } from '../../api/models/Notice';
 import { useProfile } from '../../api/hooks/UserHooks';
 import InputDescription from '../Input/InputDescription';
 import CloseDialogButton from '../Button/CloseDialogButton';
@@ -26,12 +25,7 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
 
     const theme = useTheme();
     const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
-    const [ notice, setNotice ] = useState<Omit<Notice, 'id' | 'createdAt' | 'authorName'>>({
-        description : '',
-        authorID : '',
-        sendEmail : false
-    })
-
+    const [ description, setDescription ] = useState('')
     const [ noticeError, setNoticeError ] = useState({
         description: '',
         authorID: '',
@@ -44,11 +38,11 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
 
     const onChangeTextField = (e : React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         e.preventDefault()
-        setNotice({ ...notice, description : e.target.value})
+        setDescription(e.target.value)
     }
 
     const clearStates = () => {
-        setNotice({description: '', authorID: '', sendEmail : false})
+        setDescription('')
         setNoticeError({description: '', authorID: ''})
     }
 
@@ -58,7 +52,7 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
     }
 
     const validateForm = () => {
-        if(notice.description === '') {
+        if(description === '') {
             setNoticeError({...noticeError, description: 'Escribe un mensaje para enviar la notificación'})
             return false
         }
@@ -70,8 +64,8 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
     }
 
     const onPostNotice = () => {
-        if(!validateForm()) return 
-        mutate({...notice, authorID: authorID as string})
+        if(!validateForm()) return
+        mutate({ description, authorID: authorID as string, sendEmail: false })
         setTimeout(() => {
             handleClose()
         }, 600)
@@ -106,14 +100,11 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
                         size="small"
                         placeholder="Escribe el mensaje"
                         type={"text"}
-                        value={notice.description}
+                        value={description}
                         onChange={onChangeTextField}
                         error={noticeError.description !== ''}
                         helperText={noticeError.description}
                     />
-                    <div className='flex justify-start'>
-                        <FormControlLabel label="Enviar por Email" control={<Checkbox  checked={notice.sendEmail} onChange={(e) => {setNotice({...notice, sendEmail: e.target.checked})}}/>}/>
-                    </div>
                     <Typography color='error'>
                         {noticeError.authorID}
                     </Typography>

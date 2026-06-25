@@ -5,7 +5,8 @@ import useSessionStore from "../stores/useSessionStore";
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
 import Mensaje from "./Mensaje";
-import { useMarkNotices, useNoticesMap } from "../api/hooks/NoticeHooks";
+import { useMarkNotices, useNoticesMap, useDismissNotice } from "../api/hooks/NoticeHooks";
+import { useProfile } from "../api/hooks/UserHooks";
 
 import getCurrentLocation from "../utils/getCurrentLocation";
 import { useWeather } from "../api/hooks/WeatherHooks";
@@ -33,7 +34,16 @@ export default function MensajesFijados() {
             .catch(() => {})
     }, [])
 
-    const mutationMarkNotice = useMarkNotices() 
+    const profile = useProfile()
+    const currentUserId = profile.data?.id
+    const mutationMarkNotice = useMarkNotices()
+    const dismissNoticeMut = useDismissNotice()
+
+    const onDismissNotice = (id: string) => {
+        dismissNoticeMut.mutate(id, {
+            onSuccess: () => refetch()
+        })
+    }
 
     const onClearNotices = () => {
         if(!data?.unread || data?.unread.length === 0) return 
@@ -186,7 +196,7 @@ export default function MensajesFijados() {
                                 {  
                                     data.unread.map((value, index) => (
                                     <div key={index} className="w-full">
-                                        <Mensaje value={value} index={index} />
+                                        <Mensaje value={value} index={index} onDismiss={onDismissNotice} />
                                     </div>
                                     ))
                                 }
@@ -201,7 +211,7 @@ export default function MensajesFijados() {
                                 { data.read.length !== 0 ?
                                     data.read.map((value, index) => (
                                     <div key={index} className="w-full">
-                                        <Mensaje value={value} index={index} />
+                                        <Mensaje value={value} index={index} onDismiss={onDismissNotice} />
                                     </div>
                                     ))
                                     :

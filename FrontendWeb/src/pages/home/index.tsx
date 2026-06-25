@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import L from "leaflet";
 import DrawerList from "../../component/DrawerList";
 import CustomDrawer from "../../component/CustomDrawer";
-import { Backdrop, Paper, Typography, useMediaQuery, useTheme, Fab, Tooltip, Switch, FormControlLabel, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Backdrop, Paper, Typography, useMediaQuery, useTheme, Fab, Tooltip, Switch, FormControlLabel, ToggleButton, ToggleButtonGroup, Divider } from "@mui/material";
 import MensajesFijados from "../../component/MensajesFijados";
 import DialogCreateRoute from "../../component/Dialog/DialogCreateRoute";
 import useSessionStore from "../../stores/useSessionStore";
@@ -150,9 +150,19 @@ export default function Home() {
     const [ heatmapCustomStart, setHeatmapCustomStart ] = useState<Date | null>(null)
     const [ heatmapCustomEnd, setHeatmapCustomEnd ] = useState<Date | null>(null)
 
+    const [ showSavedPoints, setShowSavedPoints ] = useState(false)
+    const [ savedPointsTimeRange, setSavedPointsTimeRange ] = useState<HeatmapTimeRange>('none')
+    const [ savedPointsCustomStart, setSavedPointsCustomStart ] = useState<Date | null>(null)
+    const [ savedPointsCustomEnd, setSavedPointsCustomEnd ] = useState<Date | null>(null)
+
     const heatmapFilteredPoints = useMemo(() =>
         filterHelpPointsByTimeRange(helpPoints, heatmapTimeRange, heatmapCustomStart, heatmapCustomEnd),
         [helpPoints, heatmapTimeRange, heatmapCustomStart, heatmapCustomEnd]
+    )
+
+    const savedPointsFiltered = useMemo(() =>
+        filterHelpPointsByTimeRange(helpPoints, savedPointsTimeRange, savedPointsCustomStart, savedPointsCustomEnd),
+        [helpPoints, savedPointsTimeRange, savedPointsCustomStart, savedPointsCustomEnd]
     )
 
     const markerHelpPoints = useMemo(() => {
@@ -161,6 +171,12 @@ export default function Home() {
         }
         return []
     }, [helpPoints, routeStatus, routeId])
+
+    const displayHelpPoints = useMemo(() => {
+        if (showHeatmap) return heatmapFilteredPoints
+        if (showSavedPoints) return savedPointsFiltered
+        return markerHelpPoints
+    }, [showHeatmap, heatmapFilteredPoints, showSavedPoints, savedPointsFiltered, markerHelpPoints])
 
     const alojamientos: AlojamientoData[] = alojamientosQuery.data
         ? alojamientosQuery.data.map((a: { _id: string; coords: number[]; name: string; cupos: number }) => ({
@@ -221,7 +237,7 @@ export default function Home() {
             <div className={`relative flex grow flex-col justify-between`}>
                 <Mapa
                     stateCurrentLocation={[currentLocation, setCurrentLocation]}
-                    helpPoints={showHeatmap ? heatmapFilteredPoints : markerHelpPoints}
+                    helpPoints={displayHelpPoints}
                     risks={risks}
                     showHeatmap={showHeatmap}
                 >
@@ -264,7 +280,7 @@ export default function Home() {
                     elevation={4}
                     sx={{
                         position: 'absolute',
-                        top: 16,
+                        top: computerDevice ? (routeStatus ? 124 : 92) : (routeStatus ? 92 : 84),
                         right: computerDevice ? 16 : 8,
                         zIndex: 1000,
                         p: 1.5,
@@ -314,6 +330,52 @@ export default function Home() {
                                         className="w-full rounded border border-gray-300 px-1.5 py-1 text-xs"
                                         value={heatmapCustomEnd ? format(heatmapCustomEnd, 'yyyy-MM-dd') : ''}
                                         onChange={(e) => setHeatmapCustomEnd(e.target.value ? new Date(e.target.value + 'T00:00:00') : null)}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    <Divider sx={{ my: 0.5 }} />
+                    <FormControlLabel
+                        control={<Switch size="small" checked={showSavedPoints} onChange={(e) => {
+                            setShowSavedPoints(e.target.checked)
+                            if (!e.target.checked) setSavedPointsTimeRange('none')
+                            if (e.target.checked) setShowHeatmap(false)
+                        }} />}
+                        label={<Typography variant="body2" sx={{ fontSize: 13, fontWeight: 500 }}>Puntos guardados</Typography>}
+                        labelPlacement="start"
+                        sx={{ m: 0 }}
+                    />
+                    {showSavedPoints && (
+                        <div className="flex flex-col gap-1.5">
+                            <ToggleButtonGroup
+                                value={savedPointsTimeRange}
+                                exclusive
+                                onChange={(_, value) => {
+                                    if (value !== null) setSavedPointsTimeRange(value)
+                                }}
+                                size="small"
+                                fullWidth
+                            >
+                                <ToggleButton value="1w" sx={{ textTransform: 'none', fontSize: 11, py: 0.5 }}>Semana</ToggleButton>
+                                <ToggleButton value="1m" sx={{ textTransform: 'none', fontSize: 11, py: 0.5 }}>Mes</ToggleButton>
+                                <ToggleButton value="1y" sx={{ textTransform: 'none', fontSize: 11, py: 0.5 }}>Año</ToggleButton>
+                                <ToggleButton value="custom" sx={{ textTransform: 'none', fontSize: 11, py: 0.5 }}>Personalizado</ToggleButton>
+                            </ToggleButtonGroup>
+                            {savedPointsTimeRange === 'custom' && (
+                                <div className="flex gap-1 items-center">
+                                    <input
+                                        type="date"
+                                        className="w-full rounded border border-gray-300 px-1.5 py-1 text-xs"
+                                        value={savedPointsCustomStart ? format(savedPointsCustomStart, 'yyyy-MM-dd') : ''}
+                                        onChange={(e) => setSavedPointsCustomStart(e.target.value ? new Date(e.target.value + 'T00:00:00') : null)}
+                                    />
+                                    <Typography variant="caption" sx={{ fontSize: 10 }}>a</Typography>
+                                    <input
+                                        type="date"
+                                        className="w-full rounded border border-gray-300 px-1.5 py-1 text-xs"
+                                        value={savedPointsCustomEnd ? format(savedPointsCustomEnd, 'yyyy-MM-dd') : ''}
+                                        onChange={(e) => setSavedPointsCustomEnd(e.target.value ? new Date(e.target.value + 'T00:00:00') : null)}
                                     />
                                 </div>
                             )}
