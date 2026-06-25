@@ -32,14 +32,16 @@ type RouteRepository interface {
 type routeRepository struct {
 	RouteCollection     *mongo.Collection
 	HelpPointCollection *mongo.Collection
+	PersonaCollection   *mongo.Collection
 }
 
 // NewRouteRepository crea una nueva instancia de routeRepository.
 // Recibe colecciones de rutas y puntos de ayuda y retorna una instancia de RouteRepository.
-func NewRouteRepository(routeCollection *mongo.Collection, helpPointCollection *mongo.Collection) RouteRepository {
+func NewRouteRepository(routeCollection *mongo.Collection, helpPointCollection *mongo.Collection, personaCollection *mongo.Collection) RouteRepository {
 	return &routeRepository{
 		RouteCollection:     routeCollection,
 		HelpPointCollection: helpPointCollection,
+		PersonaCollection:   personaCollection,
 	}
 }
 
@@ -288,6 +290,7 @@ func (r *routeRepository) GetRoutesByUserID(userID string) ([]domain.Route, erro
 
 // GetHelpPointsByRouteID obtiene todos los puntos de ayuda asociados a una ruta.
 // Recibe el ID de la ruta como string y retorna un slice de PuntoAyuda.
+// Si un punto tiene persona_ids pero no people, busca las personas en la coleccion personas.
 func (r *routeRepository) GetHelpPointsByRouteID(routeID string) ([]domain.PuntoAyuda, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -305,6 +308,30 @@ func (r *routeRepository) GetHelpPointsByRouteID(routeID string) ([]domain.Punto
 	var helpPoints []domain.PuntoAyuda
 	if err := cursor.All(ctx, &helpPoints); err != nil {
 		return nil, err
+	}
+
+	for i, hp := range helpPoints {
+		if len(hp.People) == 0 && len(hp.PersonaIDs) > 0 {
+			var personas []domain.Persona
+			filter := bson.M{"_id": bson.M{"$in": hp.PersonaIDs}}
+			pCursor, err := r.PersonaCollection.Find(ctx, filter)
+			if err != nil {
+				continue
+			}
+			if err := pCursor.All(ctx, &personas); err != nil {
+				pCursor.Close(ctx)
+				continue
+			}
+			pCursor.Close(ctx)
+			for _, persona := range personas {
+				helpPoints[i].People = append(helpPoints[i].People, domain.PersonaAyudada{
+					Name:   persona.Nombre,
+					Age:    persona.Edad,
+					Gender: persona.Genero,
+					Rut:    persona.Rut,
+				})
+			}
+		}
 	}
 	return helpPoints, nil
 }

@@ -273,56 +273,153 @@ func (r routeUseCase) ExportReport(c *gin.Context) {
 	}
 
 	f := excelize.NewFile()
+
+	titleStyle, _ := f.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Bold: true, Size: 16, Color: "FFFFFF"},
+		Fill:      excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"2F5496"}},
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+	})
+	headerStyle, _ := f.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Bold: true, Size: 11, Color: "FFFFFF"},
+		Fill:      excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"4472C4"}},
+		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
+		Border: []excelize.Border{
+			{Type: "left", Color: "FFFFFF", Style: 1},
+			{Type: "right", Color: "FFFFFF", Style: 1},
+			{Type: "top", Color: "FFFFFF", Style: 1},
+			{Type: "bottom", Color: "FFFFFF", Style: 1},
+		},
+	})
+	labelStyle, _ := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{Bold: true, Size: 11},
+		Fill: excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"D6E4F0"}},
+		Border: []excelize.Border{
+			{Type: "left", Color: "999999", Style: 1},
+			{Type: "right", Color: "999999", Style: 1},
+			{Type: "top", Color: "999999", Style: 1},
+			{Type: "bottom", Color: "999999", Style: 1},
+		},
+	})
+	valueStyle, _ := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{Size: 11},
+		Border: []excelize.Border{
+			{Type: "left", Color: "999999", Style: 1},
+			{Type: "right", Color: "999999", Style: 1},
+			{Type: "top", Color: "999999", Style: 1},
+			{Type: "bottom", Color: "999999", Style: 1},
+		},
+	})
+	dataStyle, _ := f.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Size: 10},
+		Alignment: &excelize.Alignment{Vertical: "center"},
+		Border: []excelize.Border{
+			{Type: "left", Color: "CCCCCC", Style: 1},
+			{Type: "right", Color: "CCCCCC", Style: 1},
+			{Type: "top", Color: "CCCCCC", Style: 1},
+			{Type: "bottom", Color: "CCCCCC", Style: 1},
+		},
+	})
+	sectionStyle, _ := f.NewStyle(&excelize.Style{
+		Font:      &excelize.Font{Bold: true, Size: 13, Color: "2F5496"},
+		Alignment: &excelize.Alignment{Vertical: "center"},
+	})
+
 	sheetName := "Informe de Ruta"
 	f.SetSheetName("Sheet1", sheetName)
 
-	// Encabezado de la ruta
+	f.SetColWidth(sheetName, "A", "A", 25)
+	f.SetColWidth(sheetName, "B", "B", 10)
+	f.SetColWidth(sheetName, "C", "C", 12)
+	f.SetColWidth(sheetName, "D", "D", 40)
+	f.SetColWidth(sheetName, "E", "E", 14)
+	f.SetColWidth(sheetName, "F", "F", 22)
+
+	f.MergeCell(sheetName, "A1", "F1")
 	f.SetCellValue(sheetName, "A1", "INFORME DE RUTA")
-	f.SetCellValue(sheetName, "A2", "Título")
-	f.SetCellValue(sheetName, "B2", route.Title)
-	f.SetCellValue(sheetName, "A3", "Descripción")
-	f.SetCellValue(sheetName, "B3", route.Description)
-	f.SetCellValue(sheetName, "A4", "Estado")
-	f.SetCellValue(sheetName, "B4", route.Status)
-	f.SetCellValue(sheetName, "A5", "Fecha de creación")
-	f.SetCellValue(sheetName, "B5", route.DateCreated.Format("2006-01-02 15:04:05"))
-	f.SetCellValue(sheetName, "A6", "Fecha de finalización")
-	if !route.DateFinished.IsZero() {
-		f.SetCellValue(sheetName, "B6", route.DateFinished.Format("2006-01-02 15:04:05"))
-	} else {
-		f.SetCellValue(sheetName, "B6", "No finalizada")
+	f.SetCellStyle(sheetName, "A1", "F1", titleStyle)
+	f.SetRowHeight(sheetName, 1, 45)
+
+	f.SetCellValue(sheetName, "A3", "Información de la Ruta")
+	f.SetCellStyle(sheetName, "A3", "F3", sectionStyle)
+
+	infoData := []struct {
+		label string
+		value string
+	}{
+		{"Título", route.Title},
+		{"Descripción", route.Description},
+		{"Estado", route.Status},
+		{"Fecha de creación", route.DateCreated.Format("2006-01-02 15:04:05")},
+		{"Fecha de finalización", func() string {
+			if !route.DateFinished.IsZero() {
+				return route.DateFinished.Format("2006-01-02 15:04:05")
+			}
+			return "No finalizada"
+		}()},
+		{"Código de invitación", route.InviteCode},
 	}
-	f.SetCellValue(sheetName, "A7", "Código de invitación")
-	f.SetCellValue(sheetName, "B7", route.InviteCode)
 
-	// Tabla de puntos de ayuda
-	row := 9
-	f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), "PUNTOS DE AYUDA")
-	row++
-	f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), "N°")
-	f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), "Coordenadas")
-	f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), "Fecha")
-	f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), "Comentario")
-	f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), "Personas Ayudadas")
+	for i, info := range infoData {
+		row := 4 + i
+		f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), info.label)
+		f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("A%d", row), labelStyle)
+		f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), info.value)
+		f.SetCellStyle(sheetName, fmt.Sprintf("B%d", row), fmt.Sprintf("F%d", row), valueStyle)
+	}
 
-	hpStart := row
+	personStart := 12
+	f.SetCellValue(sheetName, fmt.Sprintf("A%d", personStart), "Personas Ayudadas")
+	f.SetCellStyle(sheetName, fmt.Sprintf("A%d", personStart), fmt.Sprintf("F%d", personStart), sectionStyle)
+
+	personHeader := personStart + 1
+	personCols := []string{"A", "B", "C", "D", "E", "F"}
+	personHeaders := []string{"Nombre", "Edad", "Género", "Descripción", "Punto N°", "Fecha del Punto"}
+	for i, h := range personHeaders {
+		f.SetCellValue(sheetName, fmt.Sprintf("%s%d", personCols[i], personHeader), h)
+	}
+	f.SetCellStyle(sheetName, fmt.Sprintf("A%d", personHeader), fmt.Sprintf("F%d", personHeader), headerStyle)
+	f.SetRowHeight(sheetName, personHeader, 22)
+
+	currentRow := personHeader
+	for pi, hp := range helpPoints {
+		people := hp.People
+		if len(people) == 0 && hp.PeopleHelped.Name != "" {
+			people = []domain.PersonaAyudada{hp.PeopleHelped}
+		}
+		for _, p := range people {
+			currentRow++
+			f.SetCellValue(sheetName, fmt.Sprintf("A%d", currentRow), p.Name)
+			f.SetCellValue(sheetName, fmt.Sprintf("B%d", currentRow), p.Age)
+			f.SetCellValue(sheetName, fmt.Sprintf("C%d", currentRow), p.Gender)
+			f.SetCellValue(sheetName, fmt.Sprintf("D%d", currentRow), hp.Comment)
+			f.SetCellValue(sheetName, fmt.Sprintf("E%d", currentRow), pi+1)
+			f.SetCellValue(sheetName, fmt.Sprintf("F%d", currentRow), hp.DateRegister.Format("2006-01-02 15:04:05"))
+			f.SetCellStyle(sheetName, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("F%d", currentRow), dataStyle)
+		}
+	}
+
+	pointStart := currentRow + 3
+	f.SetCellValue(sheetName, fmt.Sprintf("A%d", pointStart), "Puntos de Ayuda")
+	f.SetCellStyle(sheetName, fmt.Sprintf("A%d", pointStart), fmt.Sprintf("D%d", pointStart), sectionStyle)
+
+	pointHeader := pointStart + 1
+	pointCols := []string{"A", "B", "C", "D"}
+	pointHeaders := []string{"N°", "Coordenadas", "Fecha", "Comentario"}
+	for i, h := range pointHeaders {
+		f.SetCellValue(sheetName, fmt.Sprintf("%s%d", pointCols[i], pointHeader), h)
+	}
+	f.SetCellStyle(sheetName, fmt.Sprintf("A%d", pointHeader), fmt.Sprintf("D%d", pointHeader), headerStyle)
+	f.SetRowHeight(sheetName, pointHeader, 22)
+
 	for i, hp := range helpPoints {
-		row = hpStart + 1 + i
+		row := pointHeader + 1 + i
 		f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), i+1)
 		if len(hp.Coords) >= 2 {
-			f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), fmt.Sprintf("%f, %f", hp.Coords[0], hp.Coords[1]))
+			f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), fmt.Sprintf("%.6f, %.6f", hp.Coords[0], hp.Coords[1]))
 		}
 		f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), hp.DateRegister.Format("2006-01-02 15:04:05"))
 		f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), hp.Comment)
-
-		peopleStr := ""
-		for j, p := range hp.People {
-			if j > 0 {
-				peopleStr += "; "
-			}
-			peopleStr += fmt.Sprintf("%s (Edad: %d, Género: %s)", p.Name, p.Age, p.Gender)
-		}
-		f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), peopleStr)
+		f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("D%d", row), dataStyle)
 	}
 
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")

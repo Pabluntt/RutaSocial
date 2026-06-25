@@ -14,7 +14,7 @@ import (
 // Crea el repositorio de rutas, el caso de uso y el controlador, y define las rutas para crear, obtener, actualizar y eliminar rutas.
 // También define rutas para unirse a una ruta, finalizar una ruta y obtener la participación del usuario en una ruta.
 func SetupRouteRouter(r *gin.Engine) {
-	routeRepo := repository.NewRouteRepository(database.Client.Database(config.DBName).Collection("route"), database.Client.Database(config.DBName).Collection("helping_points"))
+	routeRepo := repository.NewRouteRepository(database.Client.Database(config.DBName).Collection("route"), database.Client.Database(config.DBName).Collection("helping_points"), database.Client.Database(config.DBName).Collection("personas"))
 	routeUseCase := usecase.NewRouteUseCase(routeRepo)
 	routeController := controller.NewRouteController(routeUseCase)
 
