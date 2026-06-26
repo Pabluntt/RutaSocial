@@ -18,6 +18,7 @@ type Usuario struct {
 	Role            string        `bson:"role" json:"role"`
 	InstitutionID   bson.ObjectID `bson:"institutionID" json:"institutionID"`
 	DateRegister    time.Time     `bson:"date_register" json:"date_register"`
+	IsActive        bool          `bson:"is_active" json:"is_active"`
 }
 
 func (u *Usuario) Sanitize() {

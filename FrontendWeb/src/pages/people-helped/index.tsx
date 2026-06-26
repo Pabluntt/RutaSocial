@@ -92,11 +92,11 @@ export default function PeopleHelped() {
     const isLoading = personasLoading || hpLoading
 
     return (
-        <div className="flex flex-grow h-screen">
+        <div className="flex flex-grow h-screen max-w-full">
             <div className="flex">
                 {computerDevice ? <Sidebar /> : <div className="absolute top-4 z-20 left-2"><CustomDrawer DrawerList={DrawerList} /></div>}
             </div>
-            <div className="flex grow justify-center">
+            <div className="flex grow justify-center max-w-full">
                 <Paper variant="outlined" square className="h-full w-full max-w-3xl shadow-[4px_0_6px_-1px_rgba(0,0,0,0.1)] overflow-y-auto">
                     <div className="p-4">
                         <Typography variant="h5" className="mb-4">Personas Ayudadas</Typography>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Divider, Typography, Paper, IconButton, Popover, ListItem, CircularProgress, ListItemText, Tooltip, Badge, useMediaQuery, useTheme } from "@mui/material";
+import { Divider, Typography, Paper, IconButton, Popover, ListItem, CircularProgress, Tooltip, Badge, useMediaQuery, useTheme } from "@mui/material";
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
 import useSessionStore from "../stores/useSessionStore";
 import NotificationsIcon from '@mui/icons-material/Notifications';
@@ -163,7 +163,7 @@ export default function MensajesFijados() {
                 </div>
                 {effectiveWeather && effectiveWeather.forecast.length > 0 &&
                     <>
-                        <ListItem sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: 1, bgcolor: '#FFF8E1', py: 1.5 }}>
+                        <div className="flex flex-col items-start gap-1 py-3 px-4" style={{ backgroundColor: '#FFF8E1' }}>
                             <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#f57f17' }}>
                                 Pronóstico del clima{isMockMode ? ' (MOCK)' : ''}
                             </Typography>
@@ -175,7 +175,7 @@ export default function MensajesFijados() {
                                         {formatHours(event.hoursFromNow)}: {event.description}
                                     </Typography>
                                 ))}
-                        </ListItem>
+                        </div>
                         <Divider />
                     </>
                 }
@@ -191,7 +191,7 @@ export default function MensajesFijados() {
                     
                     <div>
                         { data.unread.length !== 0 ? 
-                            <ListItem sx={{ display : 'flex', flexDirection : 'column', alignItems : 'start', gap: 2, bgcolor: '#E3F2FD', py: 2 }}>
+                            <div className="flex flex-col items-start gap-2 py-3 px-4" style={{ backgroundColor: '#E3F2FD' }}>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#1565c0' }}>Avisos nuevos</Typography>
                                 {  
                                     data.unread.map((value, index) => (
@@ -200,33 +200,25 @@ export default function MensajesFijados() {
                                     </div>
                                     ))
                                 }
-                            </ListItem>
+                            </div>
                             :
                             <></>
                         }
                         <Divider />
-                        <ListItem sx={{ bgcolor: '#FAFAFA', py: 2 }}>
-                            <div className="w-full">
-                                <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#616161', mb: 1 }}>Avisos antiguos</Typography>
-                                { data.read.length !== 0 ?
-                                    data.read.map((value, index) => (
-                                    <div key={index} className="w-full">
-                                        <Mensaje value={value} index={index} onDismiss={onDismissNotice} />
-                                    </div>
-                                    ))
-                                    :
-                                    <ListItem>
-                                        <ListItemText
-                                            primary = {
-                                                <Typography variant="caption" color="gray" sx={{ fontStyle: 'italic' }}>
-                                                    Sin notificaciones antiguas
-                                                </Typography>
-                                            }
-                                        />
-                                    </ListItem>
-                                }
-                            </div>
-                        </ListItem>     
+                        <div className="w-full py-3 px-4" style={{ backgroundColor: '#FAFAFA' }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#616161', mb: 1 }}>Avisos antiguos</Typography>
+                            { data.read.length !== 0 ?
+                                data.read.map((value, index) => (
+                                <div key={index} className="w-full">
+                                    <Mensaje value={value} index={index} onDismiss={onDismissNotice} />
+                                </div>
+                                ))
+                                :
+                                <Typography variant="caption" color="gray" sx={{ fontStyle: 'italic', display: 'block', py: 2 }}>
+                                    Sin notificaciones antiguas
+                                </Typography>
+                            }
+                        </div>
                     </div>
             
                     :

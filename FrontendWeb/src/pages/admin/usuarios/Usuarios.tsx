@@ -103,7 +103,7 @@ export default function Usuarios() {
                 </div>
 
             }
-            <div className="flex w-full h-full flex-col justify-start gap-10 p-5 bg-gray-100">
+            <div className="flex w-full h-full flex-col justify-start gap-5 sm:gap-10 p-3 sm:p-5 bg-gray-100 max-w-full">
                 { computerDevice ? 
                     <div>
                         <Typography variant="h5">Gestión de Usuarios</Typography>
@@ -111,8 +111,8 @@ export default function Usuarios() {
                     :
                     <></>
                 }
-                <div className="flex flex-col gap-5 min-w-11/12">
-                    <div className={"flex gap-5 " + (computerDevice ? "flex-row " : "flex-col" )}>
+                <div className="flex flex-col gap-5 w-full">
+                    <div className={"flex gap-3 sm:gap-5 " + (computerDevice ? "flex-row " : "flex-col" )}>
                         <Paper
                             component="form"
                             className={"px-0.5 py-1 flex items-center " + (computerDevice ? 'w-100' : 'grow')}
@@ -128,19 +128,21 @@ export default function Usuarios() {
                                 <SearchIcon />
                             </IconButton>
                         </Paper>
-                        <Button size="small" variant="contained" onClick={()=>{setOpen(true)}}>
-                            Agregar Usuario
-                        </Button>
-                        {role === Role.admin && (
-                            <Button size="small" variant="contained" onClick={() => {setOpenAddInstitution(true)}}>
-                                Agregar Institución    
-                            </Button> 
-                        )}
-                        <Tooltip title={'exportar datos'}>
-                            <Button color='info' variant="contained" onClick={handleExport}>
-                                <FileDownloadIcon fontSize="large" />
-                            </Button>    
-                        </Tooltip>
+                        <div className={"flex gap-2 " + (computerDevice ? '' : 'flex-wrap')}>
+                            <Button size="small" variant="contained" onClick={()=>{setOpen(true)}}>
+                                Agregar Usuario
+                            </Button>
+                            {role === Role.admin && (
+                                <Button size="small" variant="contained" onClick={() => {setOpenAddInstitution(true)}}>
+                                    Agregar Institución    
+                                </Button> 
+                            )}
+                            <Tooltip title={'exportar datos'}>
+                                <Button color='info' variant="contained" onClick={handleExport}>
+                                    <FileDownloadIcon fontSize="large" />
+                                </Button>    
+                            </Tooltip>
+                        </div>
                     </div>
                     { isPending || isInstitutionPending ? 
                         <div className="flex items-center justify-center h-96">

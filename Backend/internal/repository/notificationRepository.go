@@ -44,6 +44,7 @@ func NewNotificationRepository(notificationsCollection, usersCollection, notific
 
 // CreateNotification crea una nueva notificación en la base de datos.
 // Asigna un ID y una fecha de creación a la notificación, inserta la notificación en la colección y envía correos electrónicos a los usuarios si es necesario.
+// Si SendToAll es false (por defecto), solo notifica a usuarios activos de la misma institución que el autor.
 func (n *notificationRepository) CreateNotification(notification domain.Aviso) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -54,7 +55,33 @@ func (n *notificationRepository) CreateNotification(notification domain.Aviso) e
 		return err
 	}
 
-	cursor, err := n.UserCollection.Find(ctx, bson.M{})
+	var userFilter bson.M
+	if !notification.SendToAll {
+		var author domain.Usuario
+		err := n.UserCollection.FindOne(ctx, bson.M{"_id": notification.AuthorID}).Decode(&author)
+		if err != nil {
+			return err
+		}
+		userFilter = bson.M{
+			"institutionID": author.InstitutionID,
+			"$or": []bson.M{
+				{"is_active": true},
+				{"is_active": bson.M{"$exists": false}},
+			},
+		}
+		if author.InstitutionID.IsZero() {
+			userFilter = bson.M{
+				"$or": []bson.M{
+					{"is_active": true},
+					{"is_active": bson.M{"$exists": false}},
+				},
+			}
+		}
+	} else {
+		userFilter = bson.M{}
+	}
+
+	cursor, err := n.UserCollection.Find(ctx, userFilter)
 	if err != nil {
 		return err
 	}
@@ -113,7 +140,7 @@ func (n *notificationRepository) UpdateNotification(data map[string]interface{})
 	delete(data, "_id")
 
 	allowedFields := map[string]bool{
-		"description": true, "send_email": true,
+		"description": true, "send_email": true, "send_to_all": true,
 	}
 	filtered := make(map[string]interface{})
 	for k, v := range data {

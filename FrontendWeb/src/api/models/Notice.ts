@@ -7,4 +7,5 @@ export interface Notice {
     description : string 
     createdAt : Date
     sendEmail : boolean
+    sendToAll : boolean
 }

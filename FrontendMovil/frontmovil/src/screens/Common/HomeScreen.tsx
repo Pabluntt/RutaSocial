@@ -263,6 +263,7 @@ export default function HomeScreen({ navigation }: Props) {
         description: alertText,
         author_id: userId,
         send_email: false,
+        send_to_all: false,
       }, {
         headers: { Authorization: `Bearer ${token}` },
       });

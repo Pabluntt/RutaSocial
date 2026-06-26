@@ -283,12 +283,13 @@ export default function Home() {
                         top: computerDevice ? (routeStatus ? 124 : 92) : (routeStatus ? 92 : 84),
                         right: computerDevice ? 16 : 8,
                         zIndex: 1000,
-                        p: 1.5,
+                        p: computerDevice ? 1.5 : 1,
                         borderRadius: 2,
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: 1,
+                        gap: computerDevice ? 1 : 0.5,
                         bgcolor: 'rgba(255,255,255,0.95)',
+                        maxWidth: computerDevice ? 'none' : 'calc(100vw - 16px)',
                     }}
                 >
                     <FormControlLabel
@@ -311,10 +312,10 @@ export default function Home() {
                                 size="small"
                                 fullWidth
                             >
-                                <ToggleButton value="1w" sx={{ textTransform: 'none', fontSize: 11, py: 0.5 }}>Semana</ToggleButton>
-                                <ToggleButton value="1m" sx={{ textTransform: 'none', fontSize: 11, py: 0.5 }}>Mes</ToggleButton>
-                                <ToggleButton value="1y" sx={{ textTransform: 'none', fontSize: 11, py: 0.5 }}>Año</ToggleButton>
-                                <ToggleButton value="custom" sx={{ textTransform: 'none', fontSize: 11, py: 0.5 }}>Personalizado</ToggleButton>
+                                <ToggleButton value="1w" sx={{ textTransform: 'none', fontSize: computerDevice ? 11 : 10, py: 0.3, px: computerDevice ? 1 : 0.5 }}>Semana</ToggleButton>
+                                <ToggleButton value="1m" sx={{ textTransform: 'none', fontSize: computerDevice ? 11 : 10, py: 0.3, px: computerDevice ? 1 : 0.5 }}>Mes</ToggleButton>
+                                <ToggleButton value="1y" sx={{ textTransform: 'none', fontSize: computerDevice ? 11 : 10, py: 0.3, px: computerDevice ? 1 : 0.5 }}>Año</ToggleButton>
+                                <ToggleButton value="custom" sx={{ textTransform: 'none', fontSize: computerDevice ? 11 : 10, py: 0.3, px: computerDevice ? 1 : 0.5 }}>Personalizado</ToggleButton>
                             </ToggleButtonGroup>
                             {heatmapTimeRange === 'custom' && (
                                 <div className="flex gap-1 items-center">
@@ -357,10 +358,10 @@ export default function Home() {
                                 size="small"
                                 fullWidth
                             >
-                                <ToggleButton value="1w" sx={{ textTransform: 'none', fontSize: 11, py: 0.5 }}>Semana</ToggleButton>
-                                <ToggleButton value="1m" sx={{ textTransform: 'none', fontSize: 11, py: 0.5 }}>Mes</ToggleButton>
-                                <ToggleButton value="1y" sx={{ textTransform: 'none', fontSize: 11, py: 0.5 }}>Año</ToggleButton>
-                                <ToggleButton value="custom" sx={{ textTransform: 'none', fontSize: 11, py: 0.5 }}>Personalizado</ToggleButton>
+                                <ToggleButton value="1w" sx={{ textTransform: 'none', fontSize: computerDevice ? 11 : 10, py: 0.3, px: computerDevice ? 1 : 0.5 }}>Semana</ToggleButton>
+                                <ToggleButton value="1m" sx={{ textTransform: 'none', fontSize: computerDevice ? 11 : 10, py: 0.3, px: computerDevice ? 1 : 0.5 }}>Mes</ToggleButton>
+                                <ToggleButton value="1y" sx={{ textTransform: 'none', fontSize: computerDevice ? 11 : 10, py: 0.3, px: computerDevice ? 1 : 0.5 }}>Año</ToggleButton>
+                                <ToggleButton value="custom" sx={{ textTransform: 'none', fontSize: computerDevice ? 11 : 10, py: 0.3, px: computerDevice ? 1 : 0.5 }}>Personalizado</ToggleButton>
                             </ToggleButtonGroup>
                             {savedPointsTimeRange === 'custom' && (
                                 <div className="flex gap-1 items-center">
@@ -457,8 +458,8 @@ export default function Home() {
                             left: "50%",
                             transform: "translate(-50%, -50%)",
                             bgcolor: "rgba(30, 30, 30, 0.92)",
-                            px: 3,
-                            py: 2,
+                            px: computerDevice ? 3 : 2,
+                            py: computerDevice ? 2 : 1.5,
                             borderRadius: '14px',
                             zIndex: 1000,
                             display: "flex",
@@ -466,9 +467,11 @@ export default function Home() {
                             gap: 1.5,
                             backdropFilter: 'blur(8px)',
                             border: '1px solid rgba(255,255,255,0.1)',
+                            maxWidth: computerDevice ? 'none' : 'calc(100vw - 32px)',
+                            whiteSpace: 'nowrap',
                         }}
                     >
-                        <Typography color="white" variant="h6" fontWeight={500} fontSize="1rem">
+                        <Typography color="white" variant="h6" fontWeight={500} fontSize={computerDevice ? "1rem" : "0.85rem"}>
                             Selecciona un punto en el mapa
                         </Typography>
                     </Paper>
