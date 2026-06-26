@@ -271,11 +271,11 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
       )}
       <Paper sx={{ width: '100%', mb: 2 }}>
         <EnhancedTableToolbar numSelected={selected.length} onDeleteUsers={onDeleteUsers}/>
-        <TableContainer>
+        <TableContainer sx={{ overflowX: 'auto' }}>
           <Table
-            sx={{ minWidth: 600, tableLayout: 'fixed' }}
+            sx={{ minWidth: computerDevice ? 600 : 'auto', tableLayout: computerDevice ? 'fixed' : 'auto', width: '100%' }}
             aria-labelledby="tableTitle"
-            size={'medium'}
+            size={computerDevice ? 'medium' : 'small'}
             stickyHeader
           >
             <EnhancedTableHead

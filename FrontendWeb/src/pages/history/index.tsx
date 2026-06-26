@@ -133,16 +133,18 @@ export default function RouteHistory() {
             </div>
 
             <div className={`flex grow justify-between ${(computerDevice ? 'flex-row-reverse' : 'flex-col')}`}>
-                <Mapa
-                    stateCurrentLocation={[currentLocation, setCurrentLocation]}
-                    helpPoints={showHeatmap ? heatmapHelpPoints : helpPoints}
-                    risks={[]}
-                    enableTraceLine
-                    showHeatmap={showHeatmap}
-                >
-                    <HandlerLocationHistory stateShowLocation={[showLocation, setShowLocation]} stateLocation={[HPLocation, setHPLocation]} />
-                </Mapa>
-                <Paper variant="outlined" square className={"h-full z-10 " + (computerDevice ? 'w-100 shadow-[4px_0_6px_-1px_rgba(0,0,0,0.1)]' : 'w-full overflow-y-hidden')}>
+                <div className={"flex " + (computerDevice ? 'grow' : 'h-64 min-h-64 order-1')}>
+                    <Mapa
+                        stateCurrentLocation={[currentLocation, setCurrentLocation]}
+                        helpPoints={showHeatmap ? heatmapHelpPoints : helpPoints}
+                        risks={[]}
+                        enableTraceLine
+                        showHeatmap={showHeatmap}
+                    >
+                        <HandlerLocationHistory stateShowLocation={[showLocation, setShowLocation]} stateLocation={[HPLocation, setHPLocation]} />
+                    </Mapa>
+                </div>
+                <Paper variant="outlined" square className={"z-10 overflow-y-auto " + (computerDevice ? 'w-100 shadow-[4px_0_6px_-1px_rgba(0,0,0,0.1)]' : 'w-full max-h-80')}>
                     <ListHistory 
                         stateOnlyUser={[onlyUser, setOnlyUser]}
                         stateOPFecha={[opFecha, setOPFecha]}

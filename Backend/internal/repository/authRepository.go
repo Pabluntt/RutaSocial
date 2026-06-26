@@ -77,6 +77,7 @@ func (a *authRepository) Register(user domain.Usuario) (string, error) {
 	user.CompletedRoutes = 0
 	user.ListRoutes = []domain.Route{}
 	user.DateRegister = time.Now()
+	user.IsActive = true
 
 	res, err := a.UserCollection.Database().Collection("usuarios").InsertOne(ctx, user)
 	if err != nil {

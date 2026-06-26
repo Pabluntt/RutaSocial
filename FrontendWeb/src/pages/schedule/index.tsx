@@ -9,7 +9,7 @@ export default function Schedule() {
     const theme = useTheme();
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'));
     return (
-        <div className="flex h-screen overflow-hidden">
+        <div className="flex h-screen overflow-hidden max-w-full">
             { computerDevice ? 
                 <div className="flex grow z-30 ">
                     <Sidebar />
@@ -20,7 +20,7 @@ export default function Schedule() {
                 </div>
             }
             <div className="flex grow w-full h-full gap-1 items-center justify-center">
-                <div className="grow p-2 sm:p-5 min-h-full w-full">
+                <div className="grow p-2 sm:p-5 min-h-full w-full max-w-full overflow-x-auto">
                     <Calendar />
                 </div>
             </div>

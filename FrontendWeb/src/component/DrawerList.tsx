@@ -20,7 +20,7 @@ export default function DrawerList() {
 
     const theme = useTheme();
     const isMobile = !useMediaQuery(theme.breakpoints.up('sm'));
-    const btnSx = isMobile ? { py: 1.5, minHeight: 52 } : { py: 0.5, minHeight: 40 };
+    const btnSx = isMobile ? { py: 1.2, minHeight: 48 } : { py: 0.5, minHeight: 40 };
     const navigate = useNavigate()
     const { clearSession } = useSessionStore()
     const { role } = useAuth()
@@ -67,10 +67,10 @@ export default function DrawerList() {
     const color = '#28bdc8'
     
     return (
-        <div className={`py-5 gap-4 w-45 flex grow flex-col flex-wrap justify-items-between`}>
+        <div className={`${isMobile ? 'py-3 gap-2' : 'py-5 gap-4'} w-45 flex grow flex-col flex-wrap justify-items-between`}>
             <Button fullWidth onClick={onClickHome} color='info' sx={btnSx}>
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
-                    <HomeIcon  />
+                    <HomeIcon />
                      <Typography>Home</Typography>
                  </div>
             </Button>

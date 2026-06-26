@@ -7,6 +7,7 @@ export type TNoticeBackend = {
     description: string;
     created_at: string;
     send_email: boolean;
+    send_to_all: boolean;
 }
 export type TNoticeCreateRequest = Omit<TNoticeBackend, '_id' | 'created_at'>;
 export type TNoticeUpdateRequest = TNoticeBackend;
@@ -26,6 +27,7 @@ export async function MapNoticeFromBackend(data: TNoticeBackend): Promise<Notice
         description: data.description,
         createdAt: data.created_at ? new Date(data.created_at) : undefined,
         sendEmail: data.send_email,
+        sendToAll: data.send_to_all,
         authorName : authorName
     };
 
@@ -43,7 +45,8 @@ export function MapNoticeToCreateRequest(
     return {
         author_id: data.authorID,
         description: data.description,
-        send_email: data.sendEmail
+        send_email: data.sendEmail,
+        send_to_all: data.sendToAll
     }
 }
 
@@ -55,6 +58,7 @@ export function MapNoticeToUpdateRequest(
         author_id: data.authorID,
         description: data.description,
         created_at: data.createdAt.toISOString(),
-        send_email: data.sendEmail
+        send_email: data.sendEmail,
+        send_to_all: data.sendToAll
     }
 }

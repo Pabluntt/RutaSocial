@@ -4,7 +4,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Typography, useTheme, useMediaQuery } from '@mui/material';
+import { Typography, useTheme, useMediaQuery, Switch, FormControlLabel, Tooltip } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useCreateNotice, useNoticesMap } from '../../api/hooks/NoticeHooks';
 import { useProfile } from '../../api/hooks/UserHooks';
@@ -26,6 +26,7 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
     const theme = useTheme();
     const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ description, setDescription ] = useState('')
+    const [ sendToAll, setSendToAll ] = useState(false)
     const [ noticeError, setNoticeError ] = useState({
         description: '',
         authorID: '',
@@ -43,6 +44,7 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
 
     const clearStates = () => {
         setDescription('')
+        setSendToAll(false)
         setNoticeError({description: '', authorID: ''})
     }
 
@@ -65,7 +67,7 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
 
     const onPostNotice = () => {
         if(!validateForm()) return
-        mutate({ description, authorID: authorID as string, sendEmail: false })
+        mutate({ description, authorID: authorID as string, sendEmail: false, sendToAll })
         setTimeout(() => {
             handleClose()
         }, 600)
@@ -108,6 +110,22 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
                     <Typography color='error'>
                         {noticeError.authorID}
                     </Typography>
+                    <Tooltip title="Activado: el aviso llega a todos los usuarios. Desactivado: solo llega a usuarios activos de tu institución">
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={sendToAll}
+                                    onChange={(e) => setSendToAll(e.target.checked)}
+                                    color="primary"
+                                />
+                            }
+                            label={
+                                <Typography variant="body2">
+                                    {sendToAll ? 'Enviar a todos' : 'Solo a mi institución'}
+                                </Typography>
+                            }
+                        />
+                    </Tooltip>
                 </DialogContent>
                 <DialogActions>
                     <Button variant='contained' onClick={onPostNotice}>

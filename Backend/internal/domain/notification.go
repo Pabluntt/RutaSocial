@@ -14,4 +14,5 @@ type Aviso struct {
 	Description string        `bson:"description" json:"description"`
 	CreatedAt   time.Time     `bson:"created_at" json:"created_at"`
 	SendEmail   bool          `bson:"send_email" json:"send_email"`
+	SendToAll   bool          `bson:"send_to_all" json:"send_to_all"`
 }

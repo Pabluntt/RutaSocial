@@ -160,8 +160,8 @@ export default function AdminRoutes() {
                     <Alert severity="error">Error al cargar rutas</Alert>
                 ) : (
                     <Paper>
-                        <TableContainer>
-                            <Table size="small" stickyHeader>
+                        <TableContainer sx={{ overflowX: 'auto' }}>
+                            <Table size="small" stickyHeader sx={{ minWidth: computerDevice ? 'auto' : 500, width: '100%' }}>
                                 <TableHead>
                                     <TableRow>
                                         <TableCell sx={{ fontWeight: 600 }}>Título</TableCell>

@@ -22,10 +22,10 @@ export default function CustomDrawer({ DrawerList } : {DrawerList: () => JSX.Ele
                 edge="start"
                 color="inherit"
                 aria-label="menu"
-                sx={{ mr:0, ml: 0, p: computerDevice ? 2 : 1}}
+                sx={{ mr:0, ml: 0, p: computerDevice ? 2 : 0.5}}
                 onClick={toggleDrawer(true)}
             >
-                <MenuIcon sx={{ fontSize: 40 }} />
+                <MenuIcon sx={{ fontSize: computerDevice ? 40 : 32 }} />
             </IconButton>          
             <Drawer
                 open={openDrawer}
