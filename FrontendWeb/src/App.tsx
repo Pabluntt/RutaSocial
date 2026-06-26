@@ -23,6 +23,8 @@ import { AuthProvider } from './context/AuthContext'
 import { RiskUpdateProvider } from './context/RiskUpdateContext'
 import NotFound from './component/NotFound'
 import { EventCalendarUpdateProvider } from './context/EventCalendarUpdateContext'
+import HelpButton from './component/HelpButton'
+import TourOverlay from './component/TourOverlay'
 
 const queryClient = new QueryClient()
 
@@ -84,6 +86,8 @@ function App() {
                     <Route path={`${import.meta.env.VITE_BASE_URL}/personas-ayudadas/:id`} element={<PersonaProfile />} />
                     <Route path='*' element={ <NotFound />} />
                 </Routes>
+                <HelpButton />
+                <TourOverlay />
             </ThemeProvider>
           </ZoomProvider>
         </AuthProvider>

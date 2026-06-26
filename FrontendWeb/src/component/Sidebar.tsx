@@ -68,23 +68,23 @@ export default function Sidebar() {
 
     return (
         <div className="flex flex-col shadow-[4px_0_6px_-1px_rgba(0,0,0,0.25)]">
-            <Tooltip title={"Home"}><IconButton  onClick={onClickHome} sx={{ p : 2, ...hoverStyles }}><HomeIcon htmlColor="#374151" sx={{ fontSize: 40 }} /></IconButton></Tooltip>
+            <Tooltip title={"Home"}><IconButton data-tour-id="home" onClick={onClickHome} sx={{ p : 2, ...hoverStyles }}><HomeIcon htmlColor="#374151" sx={{ fontSize: 40 }} /></IconButton></Tooltip>
             <Divider variant="middle"/>
             <div className="flex flex-col py-5 gap-7 justify-start items-center">
-                <Tooltip title="Perfil"><IconButton onClick={onClickProfile} sx={{ ...hoverStyles }}><AccountBoxIcon htmlColor="#374151" fontSize="large"/></IconButton></Tooltip>
-                <Tooltip title="Historial"><IconButton onClick={onClickHistory} sx={{ ...hoverStyles }}><HistoryIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
-                <Tooltip title="Mapa"><IconButton onClick={onClickSchedule} sx={{ ...hoverStyles }}><MapIcon htmlColor="#374151" fontSize="large"/></IconButton></Tooltip>
-                <Tooltip title="Enviar aviso"><IconButton onClick={handleClickOpen} sx={{ ...hoverStyles }}><CampaignIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
-                <Tooltip title="Personas Ayudadas"><IconButton onClick={onClickPeopleHelped} sx={{ ...hoverStyles }}><GroupAddIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
+                <Tooltip title="Perfil"><IconButton data-tour-id="profile" onClick={onClickProfile} sx={{ ...hoverStyles }}><AccountBoxIcon htmlColor="#374151" fontSize="large"/></IconButton></Tooltip>
+                <Tooltip title="Historial"><IconButton data-tour-id="history" onClick={onClickHistory} sx={{ ...hoverStyles }}><HistoryIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
+                <Tooltip title="Mapa"><IconButton data-tour-id="map" onClick={onClickSchedule} sx={{ ...hoverStyles }}><MapIcon htmlColor="#374151" fontSize="large"/></IconButton></Tooltip>
+                <Tooltip title="Enviar aviso"><IconButton data-tour-id="send-notice" onClick={handleClickOpen} sx={{ ...hoverStyles }}><CampaignIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
+                <Tooltip title="Personas Ayudadas"><IconButton data-tour-id="people-helped" onClick={onClickPeopleHelped} sx={{ ...hoverStyles }}><GroupAddIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
                 { role === Role.admin  ?
                     <>
                         <Tooltip title="Gestionar Usuarios">
-                            <IconButton onClick={onClickUsers}  sx={{ ...hoverStyles }}>
+                            <IconButton data-tour-id="admin-users" onClick={onClickUsers}  sx={{ ...hoverStyles }}>
                                 <PeopleAltIcon htmlColor='#374151' fontSize='large'/>
                             </IconButton>
                         </Tooltip>
                         <Tooltip title="Gestionar Rutas">
-                            <IconButton onClick={onClickRoutes}  sx={{ ...hoverStyles }}>
+                            <IconButton data-tour-id="admin-routes" onClick={onClickRoutes}  sx={{ ...hoverStyles }}>
                                 <RouteIcon htmlColor='#374151' fontSize='large'/>
                             </IconButton>
                         </Tooltip>
@@ -95,7 +95,7 @@ export default function Sidebar() {
                 }
             </div>
             <div className="flex flex-col grow justify-end items-center py-4 gap-3">
-                <Tooltip title="Cerrar sesión"><IconButton onClick={onClickCerrarSesion}><LogoutIcon color="error" fontSize="large" /></IconButton></Tooltip>
+                <Tooltip title="Cerrar sesión"><IconButton data-tour-id="logout" onClick={onClickCerrarSesion}><LogoutIcon color="error" fontSize="large" /></IconButton></Tooltip>
                 <Divider variant='middle' className="w-4/5" />
                 <a href="https://www.hogardecristo.cl/" target="_blank" rel="noopener noreferrer"><img src={"https://hcstore.org/wp-content/uploads/2020/01/cropped-hc-192x192.png"} loading="lazy" width={45} height={45}/></a>
             </div>

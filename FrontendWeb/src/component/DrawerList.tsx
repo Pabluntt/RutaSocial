@@ -68,25 +68,25 @@ export default function DrawerList() {
     
     return (
         <div className={`py-5 gap-4 w-45 flex grow flex-col flex-wrap justify-items-between`}>
-            <Button fullWidth onClick={onClickHome} color='info' sx={btnSx}>
+            <Button data-tour-id="home" fullWidth onClick={onClickHome} color='info' sx={btnSx}>
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
                     <HomeIcon  />
                      <Typography>Home</Typography>
                  </div>
             </Button>
-            <Button fullWidth onClick={onClickProfile} color='info' sx={btnSx}>
+            <Button data-tour-id="profile" fullWidth onClick={onClickProfile} color='info' sx={btnSx}>
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
                     <AccountBoxIcon />
                     <Typography>Perfil</Typography>
                 </div>
             </Button>
-            <Button fullWidth onClick={onClickSchedule} color='info' sx={btnSx}>
+            <Button data-tour-id="map" fullWidth onClick={onClickSchedule} color='info' sx={btnSx}>
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
                     <MapIcon />
                     <Typography>Mapa</Typography>
                 </div>
             </Button>
-            <Button fullWidth onClick={onClickHistory} color='info' sx={btnSx}>
+            <Button data-tour-id="history" fullWidth onClick={onClickHistory} color='info' sx={btnSx}>
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
                     <HistoryIcon />
                     <Typography>Historial</Typography>
@@ -94,13 +94,13 @@ export default function DrawerList() {
             </Button>
             { role === Role.admin && (
                 <>
-                    <Button fullWidth onClick={onClickUsuarios} color='info' sx={btnSx}>
+                    <Button data-tour-id="admin-users" fullWidth onClick={onClickUsuarios} color='info' sx={btnSx}>
                         <div className="flex w-full justify-start px-2 gap-5 items-center">
                             <PeopleAltIcon/>
                             <Typography>Gestionar Usuarios</Typography>
                         </div>
                     </Button>
-                    <Button fullWidth onClick={onClickRutas} color='info' sx={btnSx}>
+                    <Button data-tour-id="admin-routes" fullWidth onClick={onClickRutas} color='info' sx={btnSx}>
                         <div className="flex w-full justify-start px-2 gap-5 items-center">
                             <RouteIcon/>
                             <Typography>Gestionar Rutas</Typography>
@@ -108,20 +108,20 @@ export default function DrawerList() {
                     </Button>
                 </>
             )}
-            <Button fullWidth onClick={onClickSendNotice} color="info" sx={btnSx}>
+            <Button data-tour-id="send-notice" fullWidth onClick={onClickSendNotice} color="info" sx={btnSx}>
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
                     <CampaignIcon/>
                     <Typography>Crear Aviso</Typography>
                 </div>
             </Button>
-            <Button fullWidth onClick={onClickPeopleHelped} color='info' sx={btnSx}>
+            <Button data-tour-id="people-helped" fullWidth onClick={onClickPeopleHelped} color='info' sx={btnSx}>
                 <div className="flex w-full justify-start px-2 gap-5 items-center">
                     <GroupAddIcon/>
                     <Typography>Personas Ayudadas</Typography>
                 </div>
             </Button>
             <div className="flex grow items-end w-full" >
-                <Button fullWidth color="warning" onClick={onClickCerrarSesion} sx={btnSx}>
+                <Button data-tour-id="logout" fullWidth color="warning" onClick={onClickCerrarSesion} sx={btnSx}>
                     <div className="flex w-full justify-start px-2 gap-5 items-center">
                         <LogoutIcon fontSize="small" />
                         <Typography variant="body2">Cerrar Sesión</Typography>
