@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   Fab,
   Tooltip,
@@ -8,13 +9,17 @@ import {
   DialogContentText,
   DialogActions,
   Button,
+  Box,
 } from '@mui/material'
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline'
 import { useTourStore } from '../stores/useTourStore'
+import { mascotAssets } from '../assets/mascot/mascotAssets'
 
 export default function HelpButton() {
+  const location = useLocation()
   const [openDialog, setOpenDialog] = useState(false)
   const { startTour } = useTourStore()
+
+  if (location.pathname.includes('login')) return null
 
   const handleFabClick = () => {
     setOpenDialog(true)
@@ -30,23 +35,59 @@ export default function HelpButton() {
       <Tooltip title="¿Necesitas ayuda?" placement="left">
         <Fab
           onClick={handleFabClick}
-          size="medium"
+          aria-label="Abrir ayuda guiada"
           sx={{
             position: 'fixed',
             bottom: 24,
             right: 24,
             zIndex: 90,
-            bgcolor: '#009BA5',
-            color: '#fff',
-            '&:hover': { bgcolor: '#007a82' },
+            width: 88,
+            height: 88,
+            bgcolor: '#fff',
+            border: '2px solid #009BA5',
+            color: '#009BA5',
+            overflow: 'visible',
+            '&:hover': { bgcolor: '#E6F7F8' },
           }}
         >
-          <HelpOutlineIcon />
+          <Box
+            component="img"
+            src={mascotAssets.thinking}
+            alt="Mascota de ayuda"
+            sx={{ width: 72, height: 72, objectFit: 'contain' }}
+          />
+          <Box
+            component="span"
+            sx={{
+              position: 'absolute',
+              top: -4,
+              right: -4,
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              bgcolor: '#009BA5',
+              color: '#fff',
+              border: '2px solid #fff',
+              fontWeight: 800,
+              fontSize: 20,
+              lineHeight: '28px',
+            }}
+          >
+            ?
+          </Box>
         </Fab>
       </Tooltip>
 
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle>🤖 ¡Hola! Soy tu guía</DialogTitle>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box
+            component="img"
+            src={mascotAssets.wave}
+            alt="Mascota saludando"
+            sx={{ width: 88, height: 88, objectFit: 'contain' }}
+          />
+          ¡Hola! Soy tu guía
+        </DialogTitle>
         <DialogContent>
           <DialogContentText>
             ¿Quieres que te ayude a identificar cada sección de la barra lateral?

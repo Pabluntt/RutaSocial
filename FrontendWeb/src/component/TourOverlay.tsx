@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useTourStore } from '../stores/useTourStore'
 import TourHighlight from './TourHighlight'
 import TourMascot from './TourMascot'
 import { useTheme, useMediaQuery } from '@mui/material'
 
 export default function TourOverlay() {
+  const location = useLocation()
   const { isActive, currentStep, steps, closeTour, nextStep, prevStep } = useTourStore()
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
   const theme = useTheme()
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'))
+
+  if (location.pathname.includes('login')) return null
 
   useEffect(() => {
     if (!isActive) return
@@ -38,18 +42,6 @@ export default function TourOverlay() {
   const isFirst = currentStep === 0
   const isLast = currentStep === steps.length - 1
 
-  const visibleSteps = steps.filter((s) => {
-    if (s.id === 'admin-users' || s.id === 'admin-routes') {
-      return !!document.querySelector(s.selector)
-    }
-    return true
-  })
-
-  const currentVisibleIndex = visibleSteps.findIndex(
-    (s) => s.id === steps[currentStep]?.id,
-  )
-  const totalVisible = visibleSteps.length
-
   let mascotTop: number | undefined
   let mascotLeft: number | undefined
 
@@ -57,7 +49,7 @@ export default function TourOverlay() {
     const viewW = window.innerWidth
     const isLeftSide = targetRect.left < viewW / 2
 
-    mascotTop = targetRect.top - 10
+    mascotTop = Math.max(24, targetRect.top - 10)
     if (isLeftSide) {
       mascotLeft = targetRect.right + 20
     } else {
@@ -105,7 +97,7 @@ export default function TourOverlay() {
         </button>
 
         <span className="text-xs text-gray-400 min-w-[60px] text-center">
-          {currentVisibleIndex + 1} / {totalVisible}
+          {currentStep + 1} / {steps.length}
         </span>
 
         {isLast ? (
