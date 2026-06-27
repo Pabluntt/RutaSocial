@@ -1,2 +1,9 @@
 .env
+.env.*
+*.env
+Backend/.env
+FrontendWeb/.env
+FrontendMovil/frontmovil/.env
+!.env.example
+!*.env.example
 .idea/
