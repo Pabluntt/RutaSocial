@@ -11,6 +11,7 @@ type TSessionState = {
     role?: string 
     routeId ?: string
     routeStatus : boolean
+    _hydrated : boolean
     setCountRetryGPS : (countRetryGPS : number) => void
     setEnableGPS : (enableGPS : boolean) => void
     setUsername: (username : string) => void 
@@ -33,6 +34,7 @@ const useSessionStore = create<TSessionState>()(
                 role: undefined,
                 routeStatus: false,
                 routeId : undefined,
+                _hydrated : false,
                 setCountRetryGPS : (countRetryGPS : number) => set(() => ({ countRetryGPS })),
                 setEnableGPS : ( enableGPS : boolean) => set(() => ({ enableGPS })),
                 setRouteStatus : (routeStatus : boolean) => set(() => ({ routeStatus })),
@@ -51,6 +53,9 @@ const useSessionStore = create<TSessionState>()(
             {
                 name: 'sessionStore',
                 storage: createJSONStorage(() => localStorage),
+                onRehydrateStorage: () => () => {
+                    useSessionStore.setState({ _hydrated: true })
+                },
             }
         )
     )

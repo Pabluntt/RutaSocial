@@ -15,8 +15,8 @@ export default function Login() {
     const [ emailError, setEmailError ] = useState<string>('')
     const [ password, setPassword ] = useState<string>('')
     const [ passwordError, setPasswordError ] = useState<string>('')
-    const { accessToken } = useSessionStore()
-    const { mutate, isSuccess, error } = useLogin()
+    const { accessToken, _hydrated } = useSessionStore()
+    const { mutate, error } = useLogin()
 
     const validateInputs = () => {
       
@@ -43,20 +43,14 @@ export default function Login() {
     }
     
     useEffect(() => {
-      if(accessToken) {
-        navigate(`${import.meta.env.VITE_BASE_URL}/calendario`)
+      if (_hydrated && accessToken) {
+        navigate(`${import.meta.env.VITE_BASE_URL}/calendario`, { replace: true })
       }
-    }, [accessToken])
-
-    useEffect(() => {
-      if(isSuccess) {
-        navigate(`${import.meta.env.VITE_BASE_URL}/calendario`)
-      }
-    }, [isSuccess, navigate])
+    }, [_hydrated, accessToken])
 
 
     return (
-      <Box className="flex w-full h-full justify-center"
+      <Box className="flex w-full min-h-screen justify-center"
           sx={[
           (_) => ({
             '&::before': {
@@ -73,7 +67,7 @@ export default function Login() {
         ]}
       >
         <div className="flex items-center justify-center w-full p-2">
-          <form className="w-full max-w-lg" onSubmit={onSubmitForm} noValidate>
+          <form className="w-full max-w-3xl" onSubmit={onSubmitForm} noValidate>
               <Card variant='elevation' elevation={1} className="flex flex-col gap-6 rounded-2xl w-full p-4 sm:p-8 md:p-16">
                 <div className="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-16">
                   <div className="flex flex-col items-start justify-start gap-6 w-full lg:w-90">
@@ -157,12 +151,12 @@ export default function Login() {
                     </Typography>*/}
                   </div>
                   <div className="flex w-full lg:w-1/2 flex-col items-center justify-center">
-                      <img src="HDC_RGB_full-color-horizontal.png" loading="lazy" className="max-w-full h-auto"/>
+                      <img src="logoHdc.png" loading="lazy" className="max-w-full h-auto"/>
                       <Typography variant='subtitle2' textAlign={'center'} fontSize={{
                         xs : '0.65rem',
                         sm : '1rem',
                       }}>
-                        Hecho con ❤️ por <a href="devSync"><b>DevSync</b></a>
+                        Hecho con ❤️ por <b>YepCoding</b>
                       </Typography>
                   </div>
                 </div>

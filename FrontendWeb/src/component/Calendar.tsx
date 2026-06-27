@@ -28,7 +28,8 @@ import { CalendarService } from '../api/services/CalendarService'
 
 export default function Calendar() {
 
-    const userID = useProfile().data?.id
+    const { accessToken } = useSessionStore()
+    const userID = useProfile(!!accessToken).data?.id
     const { role } = useAuth()
     const navigate = useNavigate()
     const { setRouteStatus, setRouteId } = useSessionStore()
@@ -148,6 +149,29 @@ export default function Calendar() {
 
     return (
         <div className='flex flex-col w-full h-full'>
+            <style>{`
+                .fc .fc-daygrid-day { border-color: #e5e7eb; border-style: dashed; }
+                .fc .fc-scrollgrid { border-color: #e5e7eb !important; }
+                .fc .fc-col-header { border-bottom: 2px solid #d1d5db !important; }
+                .fc .fc-daygrid-day-frame { min-height: 100px; }
+                .fc .fc-col-header-cell { padding: 10px 0 6px; font-weight: 400; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; border: none !important; }
+                .fc .fc-col-header-cell-cushion { text-decoration: none; color: #009BA5; }
+                .fc .fc-daygrid-day-number { font-size: 0.82rem; padding: 4px 6px; color: #374151; border-radius: 50%; }
+                .fc .fc-day-today { background: transparent !important; }
+                .fc .fc-day-today .fc-daygrid-day-number { background: #009BA5; color: #fff; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; margin: 2px 4px; }
+                .fc .fc-day-other .fc-daygrid-day-number { opacity: 0.35; }
+                .fc .fc-daygrid-event { margin: 0 !important; padding: 3px 6px !important; border: none !important; background: transparent !important; font-size: 0.78rem; cursor: pointer; }
+                .fc .fc-daygrid-event:hover { background: #f5f5f5 !important; border-radius: 4px; }
+                .fc .fc-daygrid-event-harness { margin-bottom: 1px; }
+                .fc .fc-more-link { font-size: 0.72rem; color: #6b7280; border: none !important; padding: 0 4px; }
+                .fc .fc-more-link:hover { color: #009BA5; }
+                .fc .fc-toolbar-title { font-size: 1.1rem !important; font-weight: 500; }
+                .fc .fc-button { background: transparent !important; border: 1px solid #e5e7eb !important; color: #374151 !important; border-radius: 8px !important; padding: 4px 10px !important; box-shadow: none !important; font-size: 0.78rem !important; }
+                .fc .fc-button-primary:not(:disabled):hover { background: #f5f5f5 !important; }
+                .fc .fc-button-primary:disabled { opacity: 0.35 !important; }
+                .fc .fc-today-button { background: #f3f4f6 !important; border-radius: 9999px !important; font-weight: 500 !important; }
+                .fc .fc-button-primary:not(:disabled).fc-button-active { background: #009BA5 !important; color: #fff !important; border-color: #009BA5 !important; }
+            `}</style>
             <div className='px-2 sm:px-10 w-full'>
                 <FullCalendar 
                     longPressDelay={100}
@@ -166,10 +190,10 @@ export default function Calendar() {
                     dayMaxEvents={(computerDevice ? true : 2)}
                     unselectAuto
                     locale={esLocale}
-                    events={data?.map((event, index) => ({
+                    events={data?.map((event) => ({
                         id : event.id,
                         start : event.dateStart.toISOString().slice(0, 10),
-                        title : ((computerDevice || event.title.length < 5) ? event.title : event.title.slice(0, 5) + '...'),
+                        title : event.title,
                         allDay : true,
                         color: event.colorInstitution
                     }))}
@@ -180,8 +204,22 @@ export default function Calendar() {
                     eventClick={handleEventClick}
                     dayHeaderFormat={computerDevice ? { weekday: 'long' } : { weekday: 'short' }}
                     titleFormat={computerDevice ? { year: 'numeric', month: 'long' } : { year: 'numeric', month: 'short' }}
-                    
-                    
+                    eventContent={(arg) => (
+                        <span className="flex items-center gap-1.5 truncate w-full px-0.5">
+                            <span
+                                className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: arg.event.backgroundColor || '#3b82f6' }}
+                            />
+                            {computerDevice && (
+                                <span className="truncate text-gray-700 font-medium leading-tight">
+                                    {arg.event.title}
+                                </span>
+                            )}
+                        </span>
+                    )}
+                    moreLinkContent={(arg) => (
+                        <span className="text-gray-400 text-xs font-medium">+{arg.num} más</span>
+                    )}
                 />
             </div>
             <Popover

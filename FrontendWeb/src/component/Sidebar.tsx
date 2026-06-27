@@ -97,7 +97,7 @@ export default function Sidebar() {
             <div className="flex flex-col grow justify-end items-center py-4 gap-3">
                 <Tooltip title="Cerrar sesión"><IconButton data-tour-id="logout" onClick={onClickCerrarSesion}><LogoutIcon color="error" fontSize="large" /></IconButton></Tooltip>
                 <Divider variant='middle' className="w-4/5" />
-                <a href="https://www.hogardecristo.cl/" target="_blank" rel="noopener noreferrer"><img src={"https://hcstore.org/wp-content/uploads/2020/01/cropped-hc-192x192.png"} loading="lazy" width={45} height={45}/></a>
+                <a href="https://www.hogardecristo.cl/" target="_blank" rel="noopener noreferrer"><img src="/HDC_RGB_full-color-horizontal.png" alt="Hogar de Cristo" className="w-10 h-10 object-contain" /></a>
             </div>
             <DialogSendNotice open={open} setOpen={setOpen} />
             <DialogLogout stateOpen={[openDialogLogout, setOpenLogout]} />
