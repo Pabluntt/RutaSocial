@@ -1,5 +1,5 @@
 import {  useMutation, useQuery } from "@tanstack/react-query";
-import { InstitutionService, TRegisterInstitution, TUpdateInstitution } from "../services/InstitutionService";
+import { InstitutionService, TRegisterInstitution } from "../services/InstitutionService";
 
 
 
@@ -21,11 +21,5 @@ export function useInstitution( id : string) {
 export function useCreateInstitution() {
     return useMutation({
         mutationFn : ( instituton : TRegisterInstitution) => InstitutionService.CreateInstitution(instituton) 
-    })
-}
-
-export function useUpdateInstitution() {
-    return useMutation({
-        mutationFn : ( institution : TUpdateInstitution) => InstitutionService.UpdateInstitution(institution)
     })
 }

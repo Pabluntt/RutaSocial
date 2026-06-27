@@ -43,6 +43,7 @@ func NewRouteUseCase(repo repository.RouteRepository) RouteUseCase {
 func (r routeUseCase) FindAll(c *gin.Context) {
 	routes, err := r.routeRepository.FindAll(c.Request.Context())
 	if err != nil {
+		logUseCaseError(c, "route.find_all", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener rutas"})
 		return
 	}
@@ -55,6 +56,7 @@ func (r routeUseCase) FindByID(c *gin.Context) {
 	id := c.Param("id")
 	route, err := r.routeRepository.FindByID(c.Request.Context(), id)
 	if err != nil {
+		logUseCaseWarn(c, "route.find_by_id", http.StatusBadRequest, err, "route_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Ruta no encontrada"})
 		return
 	}
@@ -66,6 +68,7 @@ func (r routeUseCase) FindByID(c *gin.Context) {
 func (r routeUseCase) CreateRoute(c *gin.Context) {
 	var route domain.Route
 	if err := c.ShouldBindJSON(&route); err != nil {
+		logUseCaseWarn(c, "route.create.bind_json", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -77,6 +80,7 @@ func (r routeUseCase) CreateRoute(c *gin.Context) {
 
 	err := r.routeRepository.CreateRoute(c.Request.Context(), &route)
 	if err != nil {
+		logUseCaseError(c, "route.create", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear la ruta"})
 		return
 	}
@@ -95,6 +99,7 @@ func (r routeUseCase) UpdateRoute(c *gin.Context) {
 	var updateData map[string]interface{}
 
 	if err := c.ShouldBindJSON(&updateData); err != nil {
+		logUseCaseWarn(c, "route.update.bind_json", http.StatusBadRequest, err, "route_id", routeID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -106,6 +111,7 @@ func (r routeUseCase) UpdateRoute(c *gin.Context) {
 	updateData["_id"] = routeID
 	updatedRoute, err := r.routeRepository.UpdateRoute(c.Request.Context(), updateData)
 	if err != nil {
+		logUseCaseError(c, "route.update", http.StatusBadRequest, err, "route_id", routeID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar la ruta"})
 		return
 	}
@@ -119,6 +125,7 @@ func (r routeUseCase) DeleteRoute(c *gin.Context) {
 	id := c.Param("id")
 	err := r.routeRepository.DeleteRoute(c.Request.Context(), id)
 	if err != nil {
+		logUseCaseWarn(c, "route.delete", http.StatusBadRequest, err, "route_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al eliminar la ruta"})
 		return
 	}
@@ -142,6 +149,7 @@ func (r routeUseCase) FinishRoute(c *gin.Context) {
 
 	err := r.routeRepository.FinishRoute(c.Request.Context(), routeID, userID)
 	if err != nil {
+		logUseCaseWarn(c, "route.finish", http.StatusForbidden, err, "route_id", routeID)
 		c.IndentedJSON(http.StatusForbidden, gin.H{"error": "No tienes permiso para finalizar esta ruta"})
 		return
 	}
@@ -165,6 +173,7 @@ func (r routeUseCase) JoinRoute(c *gin.Context) {
 
 	route, err := r.routeRepository.JoinRoute(c.Request.Context(), inviteCode, userID)
 	if err != nil {
+		logUseCaseWarn(c, "route.join", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al unirse a la ruta"})
 		return
 	}
@@ -188,6 +197,7 @@ func (r routeUseCase) LeaveRoute(c *gin.Context) {
 
 	err := r.routeRepository.LeaveRoute(c.Request.Context(), routeID, userID)
 	if err != nil {
+		logUseCaseWarn(c, "route.leave", http.StatusBadRequest, err, "route_id", routeID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -206,6 +216,7 @@ func (r routeUseCase) GetMyParticipation(c *gin.Context) {
 
 	participation, err := r.routeRepository.GetMyParticipation(c.Request.Context(), userID)
 	if err != nil {
+		logUseCaseError(c, "route.get_my_participation", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener participaciones"})
 		return
 	}
@@ -223,6 +234,7 @@ func (r routeUseCase) GetUserRoutes(c *gin.Context) {
 
 	routes, err := r.routeRepository.GetRoutesByUserID(c.Request.Context(), userID)
 	if err != nil {
+		logUseCaseError(c, "route.get_user_routes", http.StatusBadRequest, err, "target_user_id", userID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener rutas del usuario"})
 		return
 	}
@@ -240,12 +252,14 @@ func (r routeUseCase) ExportReport(c *gin.Context) {
 
 	route, err := r.routeRepository.FindByID(c.Request.Context(), routeID)
 	if err != nil {
+		logUseCaseWarn(c, "route.export_report.find_route", http.StatusBadRequest, err, "route_id", routeID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Ruta no encontrada"})
 		return
 	}
 
 	helpPoints, err := r.routeRepository.GetHelpPointsByRouteID(c.Request.Context(), routeID)
 	if err != nil {
+		logUseCaseError(c, "route.export_report.get_help_points", http.StatusBadRequest, err, "route_id", routeID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener puntos de ayuda"})
 		return
 	}
@@ -401,10 +415,11 @@ func (r routeUseCase) ExportReport(c *gin.Context) {
 	}
 
 	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	filename := fmt.Sprintf("informe_ruta_%s.xlsx", route.Title)
+	filename := fmt.Sprintf("informe_ruta_%s.xlsx", utils.SafeFilename(route.Title))
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
 	c.Header("Content-Transfer-Encoding", "binary")
 	if err := f.Write(c.Writer); err != nil {
+		logUseCaseError(c, "route.export_report.write", http.StatusBadRequest, err, "route_id", routeID)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error al generar el informe"})
 	}
 }

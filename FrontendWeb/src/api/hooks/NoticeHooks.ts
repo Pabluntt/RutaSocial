@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { NoticeService } from "../services/NoticeService";
 import { Notice } from "../models/Notice";
-import { MapNoticeToCreateRequest, MapNoticeToUpdateRequest } from "../adapters/Notice.adapter";
+import { MapNoticeToCreateRequest } from "../adapters/Notice.adapter";
 
 export type NoticesReadUnread = {
     read : Notice[]
@@ -30,29 +30,9 @@ export function useNoticesMap() {
     })
 }
 
-export function useNotices() {
-    return useQuery({
-        queryKey: ['notices'],
-        queryFn: () => (NoticeService.GetNotices())
-            
-    })
-}
-
-export function useDeleteNotice(_id : string) {
-    return useMutation({
-        mutationFn: () => (NoticeService.DeleteNotice(_id,))
-    })
-}
-
 export function useDismissNotice() {
     return useMutation({
         mutationFn: (id: string) => (NoticeService.DismissNotice(id))
-    })
-}
-
-export function useUpdateNotice() {
-    return useMutation({
-        mutationFn: (body : Notice) => (NoticeService.UpdateNotice(MapNoticeToUpdateRequest(body))),
     })
 }
 

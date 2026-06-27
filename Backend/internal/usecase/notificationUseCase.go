@@ -41,6 +41,7 @@ func NewNotificationUseCase(notificationRepository repository.NotificationReposi
 func (n notificationUseCase) CreateNotification(c *gin.Context) {
 	var notification domain.Aviso
 	if err := c.ShouldBindJSON(&notification); err != nil {
+		logUseCaseWarn(c, "notification.create.bind_json", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -69,6 +70,7 @@ func (n notificationUseCase) CreateNotification(c *gin.Context) {
 
 	err = n.notificationRepository.CreateNotification(c.Request.Context(), notification)
 	if err != nil {
+		logUseCaseError(c, "notification.create", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear aviso"})
 		return
 	}
@@ -92,6 +94,7 @@ func (n notificationUseCase) DeleteNotification(c *gin.Context) {
 
 	if userRole != "admin" {
 		if err := n.notificationRepository.FindByIDAndUserID(c.Request.Context(), notificationID, userID); err != nil {
+			logUseCaseWarn(c, "notification.delete.authorize", http.StatusForbidden, err, "notification_id", notificationID)
 			c.IndentedJSON(http.StatusForbidden, gin.H{"error": "No tienes permiso para eliminar este aviso"})
 			return
 		}
@@ -99,6 +102,7 @@ func (n notificationUseCase) DeleteNotification(c *gin.Context) {
 
 	err := n.notificationRepository.DeleteNotification(c.Request.Context(), notificationID)
 	if err != nil {
+		logUseCaseError(c, "notification.delete", http.StatusBadRequest, err, "notification_id", notificationID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al eliminar aviso"})
 		return
 	}
@@ -122,6 +126,7 @@ func (n notificationUseCase) UpdateNotification(c *gin.Context) {
 
 	if userRole != "admin" {
 		if err := n.notificationRepository.FindByIDAndUserID(c.Request.Context(), notificationID, userID); err != nil {
+			logUseCaseWarn(c, "notification.update.authorize", http.StatusBadRequest, err, "notification_id", notificationID)
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -129,6 +134,7 @@ func (n notificationUseCase) UpdateNotification(c *gin.Context) {
 
 	var updateData map[string]interface{}
 	if err := c.ShouldBindJSON(&updateData); err != nil {
+		logUseCaseWarn(c, "notification.update.bind_json", http.StatusBadRequest, err, "notification_id", notificationID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -149,6 +155,7 @@ func (n notificationUseCase) UpdateNotification(c *gin.Context) {
 	updateData["_id"] = notificationID
 	updatedNotification, err := n.notificationRepository.UpdateNotification(c.Request.Context(), updateData)
 	if err != nil {
+		logUseCaseError(c, "notification.update", http.StatusBadRequest, err, "notification_id", notificationID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar la aviso"})
 		return
 	}
@@ -162,6 +169,7 @@ func (n notificationUseCase) GetNotifications(c *gin.Context) {
 
 	notifications, err := n.notificationRepository.GetNotifications(c.Request.Context())
 	if err != nil {
+		logUseCaseError(c, "notification.get_all", http.StatusInternalServerError, err)
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener aviso"})
 		return
 	}
@@ -177,6 +185,7 @@ func (n notificationUseCase) GetUnreadNotifications(c *gin.Context) {
 	}
 	notifications, err := n.notificationRepository.GetUnreadNotifications(c.Request.Context(), userID)
 	if err != nil {
+		logUseCaseError(c, "notification.get_unread", http.StatusInternalServerError, err)
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener aviso"})
 		return
 	}
@@ -193,6 +202,7 @@ func (n notificationUseCase) GetReadNotifications(c *gin.Context) {
 	}
 	notifications, err := n.notificationRepository.GetReadNotifications(c.Request.Context(), userID)
 	if err != nil {
+		logUseCaseError(c, "notification.get_read", http.StatusInternalServerError, err)
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener aviso"})
 		return
 	}
@@ -210,6 +220,7 @@ func (n notificationUseCase) MarkNotificationAsRead(c *gin.Context) {
 	}
 	err := n.notificationRepository.MarkNotificationAsRead(c.Request.Context(), notificationID, userID)
 	if err != nil {
+		logUseCaseError(c, "notification.mark_read", http.StatusInternalServerError, err, "notification_id", notificationID)
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener aviso"})
 		return
 	}
@@ -233,6 +244,7 @@ func (n notificationUseCase) DismissNotification(c *gin.Context) {
 
 	err := n.notificationRepository.DismissNotification(c.Request.Context(), notificationID, userID)
 	if err != nil {
+		logUseCaseError(c, "notification.dismiss", http.StatusInternalServerError, err, "notification_id", notificationID)
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "Error al ocultar aviso"})
 		return
 	}

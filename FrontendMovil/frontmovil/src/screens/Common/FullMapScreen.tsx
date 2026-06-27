@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Dimensions, Alert, Platform, Modal, TextInput
+  View, Text, StyleSheet, TouchableOpacity, Alert, Platform, Modal, TextInput
 } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,7 +15,6 @@ import * as Location from 'expo-location';
 
 const rawUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_URL_BACKEND || '';
 const backendUrl = Platform.OS === 'android' ? rawUrl.replace('localhost', '10.0.2.2') : rawUrl;
-const screenHeight = Dimensions.get('window').height;
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'FullMap'>;
 
@@ -217,8 +216,7 @@ export default function FullMapScreen() {
           date: new Date().toISOString()
         }]);
         Alert.alert('Atención registrada');
-      } catch (err: any) {
-        console.log('❌ Error al registrar atención:', err.response?.data || err.message);
+      } catch {
         Alert.alert('Error al registrar atención');
       }
     }
@@ -242,7 +240,7 @@ export default function FullMapScreen() {
     setIsFinishing(true);
     try {
       const token = await AsyncStorage.getItem('accessToken');
-      const res = await axios.patch(`${backendUrl}/route/${routeId}`, {}, {
+      await axios.patch(`${backendUrl}/route/${routeId}`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRouteFinished(true);

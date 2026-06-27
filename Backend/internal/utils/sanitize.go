@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"regexp"
+	"strings"
 )
 
 // IsValidEmail verifica si un correo electrónico es válido utilizando una expresión regular.
@@ -16,8 +17,24 @@ func IsValidEmail(email string) bool {
 // IsValidString verifica si una cadena de texto es válida, esta función es utilizada para validar nombres (de personas e instituciones), descripciones y otros campos de texto.
 // La expresión regular utilizada permite letras, números, espacios, guiones, guiones bajos, puntos, comas, arrobas y acentos en letras.
 func IsValidString(str string) bool {
-	re := regexp.MustCompile(`^[a-zA-Z0-9\s\-_.,@:áéíóúÁÉÍÓÚñÑ()!?¿¡]+$`)
+	str = strings.TrimSpace(str)
+	if str == "" || hasControlChars(str) {
+		return false
+	}
+	if strings.Contains(strings.ToLower(str), "javascript:") {
+		return false
+	}
+	re := regexp.MustCompile(`^[a-zA-Z0-9 \-_.,@:áéíóúÁÉÍÓÚñÑ()!?¿¡]+$`)
 	return re.MatchString(str)
+}
+
+// IsValidPassword permite contraseñas fuertes sin aceptar caracteres que puedan
+// alterar HTML, JSON embebido, headers o logs multilinea.
+func IsValidPassword(str string) bool {
+	if str == "" || hasControlChars(str) {
+		return false
+	}
+	return !strings.ContainsAny(str, "<>'\"")
 }
 
 // IsValidPhone verifica si un número de teléfono es válido.
@@ -46,6 +63,7 @@ func SanitizeStringFields(c *gin.Context, updateData map[string]interface{}) boo
 	for key, value := range updateData {
 		strVal, ok := value.(string)
 		if ok {
+			strVal = strings.TrimSpace(strVal)
 			if !IsValidString(strVal) {
 				c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Hay caracteres inválidos"})
 				return false
@@ -54,4 +72,39 @@ func SanitizeStringFields(c *gin.Context, updateData map[string]interface{}) boo
 		}
 	}
 	return true
+}
+
+func hasControlChars(str string) bool {
+	for _, r := range str {
+		if r < 32 || r == 127 {
+			return true
+		}
+	}
+	return false
+}
+
+// SafeFilename normaliza texto de usuario para usarlo en Content-Disposition.
+func SafeFilename(name string) string {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return "archivo"
+	}
+
+	replacer := strings.NewReplacer(
+		"\r", "_",
+		"\n", "_",
+		"\t", "_",
+		"/", "_",
+		"\\", "_",
+		"\"", "_",
+		"'", "_",
+		";", "_",
+		":", "_",
+	)
+	name = replacer.Replace(name)
+	name = strings.Trim(name, " ._")
+	if name == "" {
+		return "archivo"
+	}
+	return name
 }

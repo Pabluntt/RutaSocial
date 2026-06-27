@@ -36,7 +36,6 @@ export default function EventScreen({ navigation }: Props) {
 
   const getToken = async () => {
     const token = await AsyncStorage.getItem('accessToken');
-    if (!token) console.warn('No se encontró token');
     return token;
   };
 

@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   Platform,
   TouchableOpacity,
-  TextInput,
   Modal,
   Alert,
 } from 'react-native';
@@ -29,13 +28,9 @@ export default function HistoryScreen() {
   const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'day' | 'week' | 'month' | 'all'>('all');
-  const [editModalVisible, setEditModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState<any>(null);
-  const [editedDescription, setEditedDescription] = useState('');
-  const [editedStatus, setEditedStatus] = useState('');
   const [userId, setUserId] = useState('');
-  const [role, setRole] = useState(''); // <--- GUARDAMOS ROL
   const [showOnlyMine, setShowOnlyMine] = useState(true);
   const [expandedRoutes, setExpandedRoutes] = useState<{ [key: string]: boolean }>({});
   const [helpPointsByRoute, setHelpPointsByRoute] = useState<{ [key: string]: any[] }>({});
@@ -44,9 +39,6 @@ export default function HistoryScreen() {
     const init = async () => {
       const id = await AsyncStorage.getItem('userId');
       setUserId(id || '');
-      // Cargamos el rol si está en AsyncStorage
-      const userRole = await AsyncStorage.getItem('role');
-      setRole(userRole || '');
       fetchRoutes();
     };
     init();
@@ -140,29 +132,6 @@ export default function HistoryScreen() {
     }
   };
 
-  const handleSave = async () => {
-    try {
-      const token = await AsyncStorage.getItem('accessToken');
-      await axios.put(
-        `${backendUrl}/route/${selectedRoute._id}`,
-        {
-          description: editedDescription,
-          status: editedStatus,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setEditModalVisible(false);
-      setSelectedRoute(null);
-      await fetchRoutes();
-      Alert.alert('Ruta editada correctamente');
-    } catch (error) {
-      setEditModalVisible(false);
-      setSelectedRoute(null);
-      Alert.alert('Error al editar la ruta');
-    }
-  };
   // --- ITEM CON BOTÓN BASURERO ---
   const renderItem = ({ item }: any) => (
     <View style={styles.routeItem}>
@@ -179,19 +148,6 @@ export default function HistoryScreen() {
           >
             <Icon name="trash" size={22} color="#FF5A00" />
           </TouchableOpacity>
-          {/* Si también quieres dejar la edición, puedes dejar el lápiz aquí
-          <TouchableOpacity
-            onPress={() => {
-              setSelectedRoute(item);
-              setEditedDescription(item.description);
-              setEditedStatus(item.status);
-              setEditModalVisible(true);
-            }}
-            style={{ paddingHorizontal: 8 }}
-          >
-            <Icon name="edit" size={22} color="#0F9997" />
-          </TouchableOpacity>
-          */}
         </View>
       </View>
       <Text style={styles.detail}>
@@ -294,36 +250,6 @@ export default function HistoryScreen() {
         </View>
       </Modal>
 
-      {/* Modal de edición, si quieres mantenerlo */}
-      {selectedRoute && (
-        <Modal visible={editModalVisible} animationType="slide" transparent>
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Editar Ruta</Text>
-              <TextInput
-                style={styles.input}
-                value={editedDescription}
-                onChangeText={setEditedDescription}
-                placeholder="Descripción"
-              />
-              <TextInput
-                style={styles.input}
-                value={editedStatus}
-                onChangeText={setEditedStatus}
-                placeholder="Estado"
-              />
-              <View style={styles.modalButtons}>
-                <TouchableOpacity onPress={handleSave}>
-                  <Text style={styles.saveButton}>Guardar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => setEditModalVisible(false)}>
-                  <Text style={styles.cancelButton}>Cancelar</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      )}
     </View>
   );
 }
@@ -417,14 +343,6 @@ const styles = StyleSheet.create({
     color: '#0F9997',
     marginBottom: 15,
     textAlign: 'center',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 10,
-    padding: 10,
-    marginVertical: 8,
-    fontSize: 14,
   },
   modalButtons: {
     flexDirection: 'row',

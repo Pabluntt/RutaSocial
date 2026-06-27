@@ -24,6 +24,4 @@ func SetupAuthRouter(r *gin.Engine) {
 
 	r.POST("/register", authController.Register)
 	r.POST("/login", middleware.RateLimitMiddleware(5, time.Minute), authController.Login)
-	protected := r.Group("/")
-	protected.Use(middleware.AuthMiddleware())
 }

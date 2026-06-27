@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { UserService } from "../services/UserService";
 import useSessionStore from "../../stores/useSessionStore";
-import { MapUserToAdminCreateRequest, MapUserToCreateRequest, MapUserToLoginRequest, MapUserToUpdateRequest } from "../adapters/User.adapter";
+import { MapUserToAdminCreateRequest, MapUserToLoginRequest, MapUserToUpdateRequest } from "../adapters/User.adapter";
 import { IUser } from "../models/User";
 
 
@@ -14,12 +14,6 @@ export function useLogin() {
         onSuccess(data) {
             setToken(data as string)
         },
-    })
-}
-
-export function useRegister() {
-    return useMutation({
-        mutationFn: ( user : Pick<IUser, 'email' | 'password' | 'phone' | 'institutionID' | 'name' | 'role'>) => (UserService.Register(MapUserToCreateRequest(user)))
     })
 }
 

@@ -37,6 +37,7 @@ func NewHelpingPointUseCase(helpingPointRepository repository.HelpPointRepositor
 func (h helpingPointUseCase) GetAllPoints(c *gin.Context) {
 	helpPoints, err := h.helpingPointRepository.GetAllPoints(c.Request.Context())
 	if err != nil {
+		logUseCaseError(c, "help_point.get_all", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener puntos de ayuda"})
 		return
 	}
@@ -54,6 +55,7 @@ func (h helpingPointUseCase) CreateHelpingPoint(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&helpPoint); err != nil {
+		logUseCaseWarn(c, "help_point.create.bind_json", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -84,6 +86,7 @@ func (h helpingPointUseCase) CreateHelpingPoint(c *gin.Context) {
 
 	createdHelpPoint, err := h.helpingPointRepository.CreateHelpingPoint(c.Request.Context(), helpPoint, userID)
 	if err != nil {
+		logUseCaseError(c, "help_point.create", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear punto de ayuda"})
 		return
 	}
@@ -106,12 +109,14 @@ func (h helpingPointUseCase) UpdateHelpingPoint(c *gin.Context) {
 	}
 
 	if err := h.helpingPointRepository.FindByIDAndUserID(c.Request.Context(), helpingPointID, userID); err != nil {
+		logUseCaseWarn(c, "help_point.update.authorize", http.StatusBadRequest, err, "help_point_id", helpingPointID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	var updateData map[string]interface{}
 	if err := c.ShouldBindJSON(&updateData); err != nil {
+		logUseCaseWarn(c, "help_point.update.bind_json", http.StatusBadRequest, err, "help_point_id", helpingPointID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -123,6 +128,7 @@ func (h helpingPointUseCase) UpdateHelpingPoint(c *gin.Context) {
 	updateData["_id"] = helpingPointID
 	updatedHelpingPoint, err := h.helpingPointRepository.UpdateHelpingPoint(c.Request.Context(), updateData)
 	if err != nil {
+		logUseCaseError(c, "help_point.update", http.StatusBadRequest, err, "help_point_id", helpingPointID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar el punto de ayuda"})
 		return
 	}
@@ -145,12 +151,14 @@ func (h helpingPointUseCase) LinkPersonaToHelpPoint(c *gin.Context) {
 	}
 
 	if err := h.helpingPointRepository.FindByIDAndUserID(c.Request.Context(), helpPointID, userID); err != nil {
+		logUseCaseWarn(c, "help_point.link_persona.authorize", http.StatusBadRequest, err, "help_point_id", helpPointID, "persona_id", personaID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	err := h.helpingPointRepository.LinkPersonaToHelpPoint(c.Request.Context(), helpPointID, personaID)
 	if err != nil {
+		logUseCaseError(c, "help_point.link_persona", http.StatusBadRequest, err, "help_point_id", helpPointID, "persona_id", personaID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al vincular persona"})
 		return
 	}
@@ -173,12 +181,14 @@ func (h helpingPointUseCase) DeleteHelpingPoint(c *gin.Context) {
 	}
 
 	if err := h.helpingPointRepository.FindByIDAndUserID(c.Request.Context(), helpingPointID, userID); err != nil {
+		logUseCaseWarn(c, "help_point.delete.authorize", http.StatusNotFound, err, "help_point_id", helpingPointID)
 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
 	err := h.helpingPointRepository.DeleteHelpingPoint(c.Request.Context(), helpingPointID)
 	if err != nil {
+		logUseCaseError(c, "help_point.delete", http.StatusBadRequest, err, "help_point_id", helpingPointID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al eliminar punto de ayuda"})
 		return
 	}

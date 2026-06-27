@@ -33,6 +33,7 @@ func NewPersonaUseCase(repo repository.PersonaRepository) PersonaUseCase {
 func (uc *personaUseCase) GetAll(c *gin.Context) {
 	personas, err := uc.repo.GetAll(c.Request.Context())
 	if err != nil {
+		logUseCaseError(c, "persona.get_all", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener personas"})
 		return
 	}
@@ -48,6 +49,7 @@ func (uc *personaUseCase) GetByID(c *gin.Context) {
 
 	persona, err := uc.repo.GetByID(c.Request.Context(), id)
 	if err != nil {
+		logUseCaseWarn(c, "persona.get_by_id", http.StatusNotFound, err, "persona_id", id)
 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
@@ -63,6 +65,7 @@ func (uc *personaUseCase) Search(c *gin.Context) {
 
 	personas, err := uc.repo.Search(c.Request.Context(), query)
 	if err != nil {
+		logUseCaseError(c, "persona.search", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al buscar personas"})
 		return
 	}
@@ -72,6 +75,7 @@ func (uc *personaUseCase) Search(c *gin.Context) {
 func (uc *personaUseCase) Create(c *gin.Context) {
 	var persona domain.Persona
 	if err := c.ShouldBindJSON(&persona); err != nil {
+		logUseCaseWarn(c, "persona.create.bind_json", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -94,6 +98,7 @@ func (uc *personaUseCase) Create(c *gin.Context) {
 	if persona.Rut != "" {
 		existing, err := uc.repo.GetByRut(c.Request.Context(), persona.Rut)
 		if err != nil {
+			logUseCaseError(c, "persona.create.check_rut", http.StatusBadRequest, err)
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al verificar RUT"})
 			return
 		}
@@ -105,6 +110,7 @@ func (uc *personaUseCase) Create(c *gin.Context) {
 
 	created, err := uc.repo.Create(c.Request.Context(), persona)
 	if err != nil {
+		logUseCaseError(c, "persona.create", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear persona"})
 		return
 	}
@@ -120,6 +126,7 @@ func (uc *personaUseCase) Update(c *gin.Context) {
 
 	var updateData map[string]interface{}
 	if err := c.ShouldBindJSON(&updateData); err != nil {
+		logUseCaseWarn(c, "persona.update.bind_json", http.StatusBadRequest, err, "persona_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -135,6 +142,7 @@ func (uc *personaUseCase) Update(c *gin.Context) {
 
 	updated, err := uc.repo.Update(c.Request.Context(), id, updateData)
 	if err != nil {
+		logUseCaseError(c, "persona.update", http.StatusBadRequest, err, "persona_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -148,8 +156,9 @@ func (uc *personaUseCase) Delete(c *gin.Context) {
 		return
 	}
 
-		err := uc.repo.Delete(c.Request.Context(), id)
+	err := uc.repo.Delete(c.Request.Context(), id)
 	if err != nil {
+		logUseCaseWarn(c, "persona.delete", http.StatusNotFound, err, "persona_id", id)
 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
@@ -165,6 +174,7 @@ func (uc *personaUseCase) AddAntecedente(c *gin.Context) {
 
 	var entry domain.AntecedenteEntry
 	if err := c.ShouldBindJSON(&entry); err != nil {
+		logUseCaseWarn(c, "persona.add_antecedente.bind_json", http.StatusBadRequest, err, "persona_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -181,12 +191,14 @@ func (uc *personaUseCase) AddAntecedente(c *gin.Context) {
 
 	err := uc.repo.AddAntecedente(c.Request.Context(), id, entry)
 	if err != nil {
+		logUseCaseError(c, "persona.add_antecedente", http.StatusBadRequest, err, "persona_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	persona, err := uc.repo.GetByID(c.Request.Context(), id)
 	if err != nil {
+		logUseCaseError(c, "persona.add_antecedente.reload", http.StatusBadRequest, err, "persona_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -203,12 +215,14 @@ func (uc *personaUseCase) DeleteAntecedente(c *gin.Context) {
 
 	err := uc.repo.DeleteAntecedente(c.Request.Context(), id, entryID)
 	if err != nil {
+		logUseCaseError(c, "persona.delete_antecedente", http.StatusBadRequest, err, "persona_id", id, "entry_id", entryID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	persona, err := uc.repo.GetByID(c.Request.Context(), id)
 	if err != nil {
+		logUseCaseError(c, "persona.delete_antecedente.reload", http.StatusBadRequest, err, "persona_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -224,6 +238,7 @@ func (uc *personaUseCase) AddInfoMedica(c *gin.Context) {
 
 	var entry domain.AntecedenteEntry
 	if err := c.ShouldBindJSON(&entry); err != nil {
+		logUseCaseWarn(c, "persona.add_info_medica.bind_json", http.StatusBadRequest, err, "persona_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -240,12 +255,14 @@ func (uc *personaUseCase) AddInfoMedica(c *gin.Context) {
 
 	err := uc.repo.AddInfoMedica(c.Request.Context(), id, entry)
 	if err != nil {
+		logUseCaseError(c, "persona.add_info_medica", http.StatusBadRequest, err, "persona_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	persona, err := uc.repo.GetByID(c.Request.Context(), id)
 	if err != nil {
+		logUseCaseError(c, "persona.add_info_medica.reload", http.StatusBadRequest, err, "persona_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -262,15 +279,16 @@ func (uc *personaUseCase) DeleteInfoMedica(c *gin.Context) {
 
 	err := uc.repo.DeleteInfoMedica(c.Request.Context(), id, entryID)
 	if err != nil {
+		logUseCaseError(c, "persona.delete_info_medica", http.StatusBadRequest, err, "persona_id", id, "entry_id", entryID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	persona, err := uc.repo.GetByID(c.Request.Context(), id)
 	if err != nil {
+		logUseCaseError(c, "persona.delete_info_medica.reload", http.StatusBadRequest, err, "persona_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": persona})
 }
-

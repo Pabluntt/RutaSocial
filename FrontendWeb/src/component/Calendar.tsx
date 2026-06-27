@@ -27,6 +27,8 @@ import useSessionStore from '../stores/useSessionStore'
 import { RouteService } from '../api/services/RouteService'
 import { CalendarService } from '../api/services/CalendarService'
 
+const isHexColor = (color: string | undefined): color is string => /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color ?? '')
+
 export default function Calendar() {
 
     const { accessToken } = useSessionStore()
@@ -219,7 +221,7 @@ export default function Calendar() {
                         <span className="flex items-center gap-1.5 truncate w-full px-0.5">
                             <span
                                 className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
-                                style={{ backgroundColor: arg.event.backgroundColor || '#3b82f6' }}
+                                style={{ backgroundColor: isHexColor(arg.event.backgroundColor) ? arg.event.backgroundColor : '#3b82f6' }}
                             />
                             {computerDevice && (
                                 <span className="truncate text-gray-700 font-medium leading-tight">

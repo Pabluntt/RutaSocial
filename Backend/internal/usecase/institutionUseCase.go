@@ -36,6 +36,7 @@ func NewInstitutionUseCase(institutionRepository repository.InstitutionRepositor
 func (i institutionUseCase) GetAllInstitutions(c *gin.Context) {
 	institutions, err := i.institutionRepository.GetAllInstitutions(c.Request.Context())
 	if err != nil {
+		logUseCaseError(c, "institution.get_all", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener las instituciones"})
 		return
 	}
@@ -53,6 +54,7 @@ func (i institutionUseCase) GetInstitutionByID(c *gin.Context) {
 
 	institution, err := i.institutionRepository.GetInstitutionByID(c.Request.Context(), idSTR)
 	if err != nil {
+		logUseCaseWarn(c, "institution.get_by_id", http.StatusBadRequest, err, "institution_id", idSTR)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener la institución"})
 		return
 	}
@@ -63,6 +65,7 @@ func (i institutionUseCase) GetInstitutionByID(c *gin.Context) {
 func (i institutionUseCase) CreateInstitution(c *gin.Context) {
 	var institution domain.Institution
 	if err := c.ShouldBindJSON(&institution); err != nil {
+		logUseCaseWarn(c, "institution.create.bind_json", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -74,6 +77,7 @@ func (i institutionUseCase) CreateInstitution(c *gin.Context) {
 
 	err := i.institutionRepository.CreateInstitution(c.Request.Context(), institution)
 	if err != nil {
+		logUseCaseError(c, "institution.create", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear la institución"})
 		return
 	}
@@ -90,12 +94,14 @@ func (i institutionUseCase) UpdateInstitution(c *gin.Context) {
 
 	_, err := i.institutionRepository.GetInstitutionByID(c.Request.Context(), idSTR)
 	if err != nil {
+		logUseCaseWarn(c, "institution.update.find", http.StatusBadRequest, err, "institution_id", idSTR)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Institución no encontrada"})
 		return
 	}
 
 	var updateData map[string]interface{}
 	if err := c.ShouldBindJSON(&updateData); err != nil {
+		logUseCaseWarn(c, "institution.update.bind_json", http.StatusBadRequest, err, "institution_id", idSTR)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -114,6 +120,7 @@ func (i institutionUseCase) UpdateInstitution(c *gin.Context) {
 
 	err = i.institutionRepository.UpdateInstitution(c.Request.Context(), idSTR, updateData)
 	if err != nil {
+		logUseCaseError(c, "institution.update", http.StatusBadRequest, err, "institution_id", idSTR)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar la institución"})
 		return
 	}
@@ -132,16 +139,17 @@ func (i institutionUseCase) DeleteInstitution(c *gin.Context) {
 
 	_, err := i.institutionRepository.GetInstitutionByID(c.Request.Context(), idSTR)
 	if err != nil {
+		logUseCaseWarn(c, "institution.delete.find", http.StatusBadRequest, err, "institution_id", idSTR)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Institución no encontrada"})
 		return
 	}
 
 	err = i.institutionRepository.DeleteInstitution(c.Request.Context(), idSTR)
 	if err != nil {
+		logUseCaseError(c, "institution.delete", http.StatusBadRequest, err, "institution_id", idSTR)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al eliminar la institución"})
 		return
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Institución eliminada correctamente"})
 }
-

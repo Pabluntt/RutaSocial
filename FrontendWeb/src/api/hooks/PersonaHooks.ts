@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { PersonaService } from "../services/PersonaService"
-import { TPersonaCreateRequest, TPersonaUpdateRequest } from "../adapters/Persona.adapter"
+import { TPersonaUpdateRequest } from "../adapters/Persona.adapter"
 
 export function usePersonas(query?: string) {
     return useQuery({
@@ -17,14 +17,6 @@ export function usePersona(id: string) {
     })
 }
 
-export function useCreatePersona() {
-    const qc = useQueryClient()
-    return useMutation({
-        mutationFn: (body: TPersonaCreateRequest) => PersonaService.Create(body),
-        onSuccess: () => qc.invalidateQueries({ queryKey: ['personas'] }),
-    })
-}
-
 export function useUpdatePersona() {
     const qc = useQueryClient()
     return useMutation({
@@ -33,14 +25,6 @@ export function useUpdatePersona() {
             qc.invalidateQueries({ queryKey: ['personas'] })
             qc.invalidateQueries({ queryKey: ['persona'] })
         },
-    })
-}
-
-export function useDeletePersona() {
-    const qc = useQueryClient()
-    return useMutation({
-        mutationFn: (id: string) => PersonaService.Delete(id),
-        onSuccess: () => qc.invalidateQueries({ queryKey: ['personas'] }),
     })
 }
 

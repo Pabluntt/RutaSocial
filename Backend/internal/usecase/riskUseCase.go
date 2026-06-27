@@ -35,6 +35,7 @@ func NewRiskUseCase(riskRepository repository.RiskRepository) RiskUseCase {
 func (r riskUseCase) GetAllRisks(c *gin.Context) {
 	risks, err := r.riskRepository.GetRisks(c.Request.Context())
 	if err != nil {
+		logUseCaseError(c, "risk.get_all", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener riesgos"})
 		return
 	}
@@ -46,6 +47,7 @@ func (r riskUseCase) GetAllRisks(c *gin.Context) {
 func (r riskUseCase) CreateRisk(c *gin.Context) {
 	var risk domain.Riesgo
 	if err := c.ShouldBindJSON(&risk); err != nil {
+		logUseCaseWarn(c, "risk.create.bind_json", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -57,6 +59,7 @@ func (r riskUseCase) CreateRisk(c *gin.Context) {
 
 	err := r.riskRepository.CreateRisk(c.Request.Context(), risk)
 	if err != nil {
+		logUseCaseError(c, "risk.create", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear el riesgo"})
 		return
 	}
@@ -69,6 +72,7 @@ func (r riskUseCase) DeleteRisk(c *gin.Context) {
 	id := c.Param("id")
 	err := r.riskRepository.DeleteRisk(c.Request.Context(), id)
 	if err != nil {
+		logUseCaseWarn(c, "risk.delete", http.StatusBadRequest, err, "risk_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al eliminar el riesgo"})
 		return
 	}
@@ -86,6 +90,7 @@ func (r riskUseCase) UpdateRisk(c *gin.Context) {
 
 	var updateData map[string]interface{}
 	if err := c.ShouldBindJSON(&updateData); err != nil {
+		logUseCaseWarn(c, "risk.update.bind_json", http.StatusBadRequest, err, "risk_id", riskID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -97,10 +102,10 @@ func (r riskUseCase) UpdateRisk(c *gin.Context) {
 	updateData["_id"] = riskID
 	updatedRisk, err := r.riskRepository.UpdateRisk(c.Request.Context(), updateData)
 	if err != nil {
+		logUseCaseError(c, "risk.update", http.StatusBadRequest, err, "risk_id", riskID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar el riesgo"})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": updatedRisk})
 
 }
-

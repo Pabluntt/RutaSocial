@@ -36,6 +36,7 @@ func NewCalendarEventUseCase(calendarRepository repository.CalendarEventReposito
 func (ce calendarEventUseCase) GetAllCalendarEvents(c *gin.Context) {
 	events, err := ce.calendarRepository.GetAllCalendarEvents(c.Request.Context())
 	if err != nil {
+		logUseCaseError(c, "calendar_event.get_all", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener eventos"})
 		return
 	}
@@ -52,6 +53,7 @@ func (ce calendarEventUseCase) GetUserCalendarEvents(c *gin.Context) {
 
 	events, err := ce.calendarRepository.GetCalendarEventsByUserID(c.Request.Context(), userID)
 	if err != nil {
+		logUseCaseError(c, "calendar_event.get_by_user", http.StatusBadRequest, err, "target_user_id", userID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener eventos del usuario"})
 		return
 	}
@@ -64,6 +66,7 @@ func (ce calendarEventUseCase) GetUserCalendarEvents(c *gin.Context) {
 func (ce calendarEventUseCase) CreateCalendarEvent(c *gin.Context) {
 	var event domain.EventoCalendario
 	if err := c.ShouldBindJSON(&event); err != nil {
+		logUseCaseWarn(c, "calendar_event.create.bind_json", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -80,6 +83,7 @@ func (ce calendarEventUseCase) CreateCalendarEvent(c *gin.Context) {
 
 	createdEvent, err := ce.calendarRepository.CreateCalendarEvent(c.Request.Context(), event, userID)
 	if err != nil {
+		logUseCaseError(c, "calendar_event.create", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear el evento: "})
 		return
 	}
@@ -103,6 +107,7 @@ func (ce calendarEventUseCase) DeleteCalendarEvent(c *gin.Context) {
 
 	if userRole != "admin" {
 		if err := ce.calendarRepository.FindByIDAndUserID(c.Request.Context(), eventID, userID); err != nil {
+			logUseCaseWarn(c, "calendar_event.delete.authorize", http.StatusBadRequest, err, "event_id", eventID)
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -110,6 +115,7 @@ func (ce calendarEventUseCase) DeleteCalendarEvent(c *gin.Context) {
 
 	err := ce.calendarRepository.DeleteCalendarEvent(c.Request.Context(), eventID)
 	if err != nil {
+		logUseCaseError(c, "calendar_event.delete", http.StatusBadRequest, err, "event_id", eventID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al eliminar el evento"})
 		return
 	}
@@ -132,6 +138,7 @@ func (ce calendarEventUseCase) UpdateCalendarEvent(c *gin.Context) {
 
 	if userRole != "admin" {
 		if err := ce.calendarRepository.FindByIDAndUserID(c.Request.Context(), eventID, userID); err != nil {
+			logUseCaseWarn(c, "calendar_event.update.authorize", http.StatusBadRequest, err, "event_id", eventID)
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -139,6 +146,7 @@ func (ce calendarEventUseCase) UpdateCalendarEvent(c *gin.Context) {
 
 	var updateData map[string]interface{}
 	if err := c.ShouldBindJSON(&updateData); err != nil {
+		logUseCaseWarn(c, "calendar_event.update.bind_json", http.StatusBadRequest, err, "event_id", eventID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -156,6 +164,7 @@ func (ce calendarEventUseCase) UpdateCalendarEvent(c *gin.Context) {
 
 	updateEvent, err := ce.calendarRepository.UpdateCalendarEvent(c.Request.Context(), updateData)
 	if err != nil {
+		logUseCaseError(c, "calendar_event.update", http.StatusBadRequest, err, "event_id", eventID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar el evento"})
 		return
 	}

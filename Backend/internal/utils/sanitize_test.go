@@ -121,6 +121,48 @@ func TestIsValidString_InvalidCharacters_False(t *testing.T) {
 	assert.False(t, ok, "La cadena debe ser solo puede presentar caracteres alfanuméricos, espacios, guiones, guiones bajos, puntos y comas")
 }
 
+func TestIsValidString_XSSPayloads_False(t *testing.T) {
+	payloads := []string{
+		`<script>alert(1)</script>`,
+		`"><img src=x onerror=alert(1)>`,
+		`javascript:alert(1)`,
+		"Texto\ncon salto",
+		"Texto\rcon retorno",
+		"Texto\tcon tab",
+		"Texto\x00null",
+	}
+
+	for _, payload := range payloads {
+		assert.False(t, IsValidString(payload), "payload debe rechazarse: %q", payload)
+	}
+}
+
+func TestIsValidString_TrimsAndRejectsBlank_False(t *testing.T) {
+	assert.False(t, IsValidString("   "))
+}
+
+func TestIsValidPassword_AllowsStrongSymbols_True(t *testing.T) {
+	assert.True(t, IsValidPassword(`Clave!#$%&*+=?@^_{}~123`))
+}
+
+func TestIsValidPassword_XSSAndControlChars_False(t *testing.T) {
+	payloads := []string{
+		`abc<script>`,
+		`abc"onmouseover=alert(1)`,
+		"abc\ndef",
+		"abc\x00def",
+	}
+
+	for _, payload := range payloads {
+		assert.False(t, IsValidPassword(payload), "password debe rechazar payload: %q", payload)
+	}
+}
+
+func TestSafeFilename_RemovesHeaderUnsafeChars(t *testing.T) {
+	filename := SafeFilename(" Ruta: Norte\r\nmaliciosa/../x ")
+	assert.Equal(t, "Ruta_ Norte__maliciosa_.._x", filename)
+}
+
 func FuzzIsValidString_AnyChars_True(f *testing.F) {
 	f.Add("0123456789")
 	f.Add("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
@@ -172,5 +214,3 @@ func TestIsValidColor_unacceptedChars_False(t *testing.T) {
 	ok := IsValidColor(normalColor)
 	assert.False(t, ok, "La cadena solo debe contener letras desde la a hasta la f y/o numeros desde el 0 hasta el 9")
 }
-
-

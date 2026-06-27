@@ -40,17 +40,19 @@ func (a authUseCase) Login(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
+		logUseCaseWarn(c, "auth.login.bind_json", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al procesar los datos de inicio de sesión"})
 		return
 	}
 
-	if !utils.IsValidEmail(body.Email) || !utils.IsValidString(body.Password) {
+	if !utils.IsValidEmail(body.Email) || !utils.IsValidPassword(body.Password) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "El correo electrónico o la contraseña no son válidos"})
 		return
 	}
 
 	token, err := a.authRepository.Login(c.Request.Context(), body.Email, body.Password)
 	if err != nil {
+		logUseCaseWarn(c, "auth.login", http.StatusUnauthorized, err)
 		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Credenciales inválidas"})
 		return
 	}
@@ -64,6 +66,7 @@ func (a authUseCase) Register(c *gin.Context) {
 	var user domain.Usuario
 
 	if err := c.ShouldBindJSON(&user); err != nil {
+		logUseCaseWarn(c, "auth.register.bind_json", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al procesar los datos del usuario"})
 		return
 	}
@@ -73,7 +76,7 @@ func (a authUseCase) Register(c *gin.Context) {
 		return
 	}
 
-	if !utils.IsValidString(user.Name) || !utils.IsValidString(user.Password) || !utils.IsValidPhone(user.Phone) {
+	if !utils.IsValidString(user.Name) || !utils.IsValidPassword(user.Password) || !utils.IsValidPhone(user.Phone) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Los datos entregados solo pueden presentar caracteres alfanuméricos, espacios, guiones, guiones bajos, puntos y comas"})
 		return
 	}
@@ -85,10 +88,10 @@ func (a authUseCase) Register(c *gin.Context) {
 
 	token, err := a.authRepository.Register(c.Request.Context(), user)
 	if err != nil {
+		logUseCaseError(c, "auth.register", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Ocurrió un registrar el usuario"})
 		return
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"token": token})
 }
-

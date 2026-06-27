@@ -61,7 +61,7 @@ export default function DrawerList() {
     }
 
     const onClickSendNotice = () => {
-
+        setOpenDialogNotice(true)
     }
 
     const color = '#28bdc8'

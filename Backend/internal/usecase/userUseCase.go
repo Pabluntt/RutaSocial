@@ -44,6 +44,7 @@ func (u userUseCase) GetUserByID(c *gin.Context) {
 	id := c.Param("id")
 	user, err := u.userRepository.GetUserByID(c.Request.Context(), id)
 	if err != nil {
+		logUseCaseWarn(c, "user.get_by_id", http.StatusNotFound, err, "target_user_id", id)
 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": "Usuario no encontrado"})
 		return
 	}
@@ -55,6 +56,7 @@ func (u userUseCase) GetPublicInfoByID(c *gin.Context) {
 	id := c.Param("id")
 	result, err := u.userRepository.GetPublicInfoByID(c.Request.Context(), id)
 	if err != nil {
+		logUseCaseWarn(c, "user.get_public_info", http.StatusBadRequest, err, "target_user_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Usuario no encontrado"})
 		return
 	}
@@ -81,6 +83,7 @@ func (u userUseCase) UpdateUserInfo(c *gin.Context) {
 
 	var updateData map[string]interface{}
 	if err := c.ShouldBindJSON(&updateData); err != nil {
+		logUseCaseWarn(c, "user.update_profile.bind_json", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -107,6 +110,7 @@ func (u userUseCase) UpdateUserInfo(c *gin.Context) {
 	updatedUser, err := u.userRepository.UpdateUserInfo(c.Request.Context(), user.ID, updateData)
 
 	if err != nil {
+		logUseCaseError(c, "user.update_profile", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar usuario"})
 		return
 	}
@@ -118,6 +122,7 @@ func (u userUseCase) UpdateUserInfo(c *gin.Context) {
 func (u userUseCase) GetAllUsers(c *gin.Context) {
 	users, err := u.userRepository.GetAllUsers(c.Request.Context())
 	if err != nil {
+		logUseCaseError(c, "user.get_all", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener usuarios"})
 		return
 	}
@@ -129,6 +134,7 @@ func (u userUseCase) GetAllUsers(c *gin.Context) {
 func (u userUseCase) CreateUserByAdmin(c *gin.Context) {
 	var req domain.AdminCreateUserRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		logUseCaseWarn(c, "user.admin_create.bind_json", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al procesar los datos del usuario"})
 		return
 	}
@@ -160,6 +166,7 @@ func (u userUseCase) CreateUserByAdmin(c *gin.Context) {
 
 	institutionID, err := bson.ObjectIDFromHex(req.InstitutionID)
 	if err != nil {
+		logUseCaseWarn(c, "user.admin_create.invalid_institution", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Institución inválida"})
 		return
 	}
@@ -186,6 +193,7 @@ func (u userUseCase) CreateUserByAdmin(c *gin.Context) {
 
 	createdUser, err := u.userRepository.CreateUserByAdmin(c.Request.Context(), newUser)
 	if err != nil {
+		logUseCaseError(c, "user.admin_create", http.StatusBadRequest, err, "institution_id", req.InstitutionID, "role", role)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear usuario"})
 		return
 	}
@@ -204,6 +212,7 @@ func (u userUseCase) UpdateUserByAdmin(c *gin.Context) {
 
 	var updateData map[string]interface{}
 	if err := c.ShouldBindJSON(&updateData); err != nil {
+		logUseCaseWarn(c, "user.admin_update.bind_json", http.StatusBadRequest, err, "target_user_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -240,6 +249,7 @@ func (u userUseCase) UpdateUserByAdmin(c *gin.Context) {
 
 	updatedUser, err := u.userRepository.UpdateUserByAdmin(c.Request.Context(), updateData)
 	if err != nil {
+		logUseCaseError(c, "user.admin_update", http.StatusBadRequest, err, "target_user_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -266,6 +276,7 @@ func (u userUseCase) DeleteUser(c *gin.Context) {
 	id := c.Param("id")
 	err := u.userRepository.DeleteUserByID(c.Request.Context(), id)
 	if err != nil {
+		logUseCaseWarn(c, "user.delete", http.StatusBadRequest, err, "target_user_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -301,9 +312,9 @@ func (u userUseCase) ValidateUser(c *gin.Context) (domain.Usuario, bool) {
 
 	user, err := u.userRepository.GetUserByID(c.Request.Context(), userIDStr)
 	if err != nil {
+		logUseCaseWarn(c, "user.validate.get_by_id", http.StatusBadRequest, err, "target_user_id", userIDStr)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Usuario no encontrado"})
 		return domain.Usuario{}, true
 	}
 	return user, false
 }
-

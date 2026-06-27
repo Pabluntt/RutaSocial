@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { getAllAlojamientos, createAlojamiento, updateAlojamiento, deleteAlojamiento } from "../services/AlojamientoService"
+import { getAllAlojamientos, createAlojamiento, updateAlojamiento } from "../services/AlojamientoService"
 import type { CreateAlojamientoRequest } from "../services/AlojamientoService"
 
 export function useAlojamientos() {
@@ -24,16 +24,6 @@ export function useUpdateAlojamiento() {
     return useMutation({
         mutationFn: ({ id, data }: { id: string; data: Partial<{ cupos: number; name: string }> }) =>
             updateAlojamiento(id, data),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["alojamientos"] })
-        },
-    })
-}
-
-export function useDeleteAlojamiento() {
-    const queryClient = useQueryClient()
-    return useMutation({
-        mutationFn: (id: string) => deleteAlojamiento(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["alojamientos"] })
         },

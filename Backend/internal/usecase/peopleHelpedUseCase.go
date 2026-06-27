@@ -35,6 +35,7 @@ func NewPeopleHelpedUseCase(peopleHelpedRepository repository.PeopleHelpedReposi
 func (p peopleHelpedUseCase) GetAllPeopleHelped(c *gin.Context) {
 	peopleHelped, err := p.peopleHelpedRepository.GetPeopleHelped(c.Request.Context())
 	if err != nil {
+		logUseCaseError(c, "people_helped.get_all", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener personas ayudadas"})
 		return
 	}
@@ -45,11 +46,21 @@ func (p peopleHelpedUseCase) GetAllPeopleHelped(c *gin.Context) {
 func (p peopleHelpedUseCase) CreatePersonHelped(c *gin.Context) {
 	var person domain.PersonaAyudada
 	if err := c.ShouldBindJSON(&person); err != nil {
+		logUseCaseWarn(c, "people_helped.create.bind_json", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
+		return
+	}
+	if !utils.IsValidString(person.Name) || (person.Gender != "" && !utils.IsValidString(person.Gender)) {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Se presentaron caracteres inválidos"})
+		return
+	}
+	if person.Rut != "" && !utils.IsValidRut(person.Rut) {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "El formato del RUT no es válido"})
 		return
 	}
 	err := p.peopleHelpedRepository.CreatePersonHelped(c.Request.Context(), person)
 	if err != nil {
+		logUseCaseError(c, "people_helped.create", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear la persona ayudada"})
 		return
 	}
@@ -61,6 +72,7 @@ func (p peopleHelpedUseCase) DeletePersonHelped(c *gin.Context) {
 	id := c.Param("id")
 	err := p.peopleHelpedRepository.DeletePersonHelped(c.Request.Context(), id)
 	if err != nil {
+		logUseCaseWarn(c, "people_helped.delete", http.StatusBadRequest, err, "person_id", id)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al eliminar la persona ayudada"})
 		return
 	}
@@ -77,6 +89,7 @@ func (p peopleHelpedUseCase) UpdatePersonHelped(c *gin.Context) {
 
 	var updateData map[string]interface{}
 	if err := c.ShouldBindJSON(&updateData); err != nil {
+		logUseCaseWarn(c, "people_helped.update.bind_json", http.StatusBadRequest, err, "person_id", personID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
@@ -88,9 +101,9 @@ func (p peopleHelpedUseCase) UpdatePersonHelped(c *gin.Context) {
 	updateData["_id"] = personID
 	updatedPerson, err := p.peopleHelpedRepository.UpdatePersonHelped(c.Request.Context(), updateData)
 	if err != nil {
+		logUseCaseError(c, "people_helped.update", http.StatusBadRequest, err, "person_id", personID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar la persona ayudada"})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": updatedPerson})
 }
-

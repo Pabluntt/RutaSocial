@@ -23,9 +23,3 @@ export function useUpdateRisk() {
         mutationFn : (risk : Risk) => (RiskService.UpdateRisk(MapRiskToUpdateRequest(risk)))
     })
 }
-
-export function useDeleteRisk( riskId : string ) {
-    return useMutation({
-        mutationFn : () => (RiskService.DeleteRisk( riskId ))
-    })
-}

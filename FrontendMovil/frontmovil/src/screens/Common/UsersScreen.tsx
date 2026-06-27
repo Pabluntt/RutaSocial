@@ -137,21 +137,6 @@ export default function UsersScreen({ navigation }: Props) {
   };
 
   useEffect(() => {
-  (async () => {
-    const token = await AsyncStorage.getItem('accessToken');
-    if (token) {
-      // Imprime tu token en consola
-      console.log("TOKEN JWT:", token);
-
-      // Decodifícalo rápido para revisar claims
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        console.log("JWT PAYLOAD:", payload);
-      } catch (e) {
-        console.log("No se pudo decodificar JWT");
-      }
-    }
-  })();
   fetchUsers();
 }, []);
 

@@ -24,15 +24,6 @@ var redIcon = new L.Icon({
   });
 
 
-var alertIcon = new L.Icon({
-    iconUrl: 'warning-alert-green.svg',
-    iconSize: [30, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
-})
-
-
 const iconsMap = {
     [RiskStatus.Severe]: new L.Icon({ iconUrl : 'warning-alert-severe.svg', iconSize: [30, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowAnchor: [41, 41]}),
     [RiskStatus.Warning]: new L.Icon({ iconUrl : 'warning-alert-warning.svg', iconSize: [30, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowAnchor: [41, 41]}),

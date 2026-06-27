@@ -33,6 +33,7 @@ func NewExportDataUseCase(exportDataRepository repository.ExportDataRepository) 
 func (ed exportDataUseCase) ExportPeopleHelped(c *gin.Context) {
 	peopleHelped, err := ed.exportDataRepository.GetPeopleHelpedData(c.Request.Context())
 	if err != nil {
+		logUseCaseError(c, "export.people_helped.get_data", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener datos"})
 		return
 	}
@@ -62,7 +63,7 @@ func (ed exportDataUseCase) ExportPeopleHelped(c *gin.Context) {
 	c.Header("Content-Disposition", "attachment; filename=people_helped.xlsx")
 	c.Header("Content-Transfer-Encoding", "binary")
 	if err := f.Write(c.Writer); err != nil {
+		logUseCaseError(c, "export.people_helped.write", http.StatusBadRequest, err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error al generar el archivo Excel"})
 	}
 }
-

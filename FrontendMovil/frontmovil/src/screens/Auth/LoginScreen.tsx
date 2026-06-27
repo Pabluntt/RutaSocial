@@ -57,7 +57,6 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     if (tokens?.accessToken) {
       try {
         const decoded: any = jwt_decode(tokens.accessToken);
-        console.log('DECODED JWT:', decoded);
         const userId = decoded.user_id;
         const user_Role = decoded.user_role; // <--- así se obtiene el rol del JWT
 

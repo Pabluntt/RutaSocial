@@ -35,10 +35,10 @@ type openMeteoCurrent struct {
 }
 
 type openMeteoResponse struct {
-	Latitude  float64            `json:"latitude"`
-	Longitude float64            `json:"longitude"`
-	Current   openMeteoCurrent   `json:"current"`
-	Hourly    openMeteoHourly    `json:"hourly"`
+	Latitude  float64          `json:"latitude"`
+	Longitude float64          `json:"longitude"`
+	Current   openMeteoCurrent `json:"current"`
+	Hourly    openMeteoHourly  `json:"hourly"`
 }
 
 func isRainCode(code int) bool {
@@ -189,6 +189,7 @@ func buildForecast(now time.Time, times []string, codes []int) []domain.WeatherF
 func (u *weatherUseCase) GetWeather(c *gin.Context) {
 	var req domain.WeatherRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
+		logUseCaseWarn(c, "weather.bind_query", http.StatusBadRequest, err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "latitude y longitude son requeridos"})
 		return
 	}
@@ -200,6 +201,7 @@ func (u *weatherUseCase) GetWeather(c *gin.Context) {
 
 	resp, err := weatherClient.Get(url)
 	if err != nil {
+		logUseCaseError(c, "weather.fetch", http.StatusInternalServerError, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al consultar el clima"})
 		return
 	}
@@ -207,17 +209,20 @@ func (u *weatherUseCase) GetWeather(c *gin.Context) {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
+		logUseCaseError(c, "weather.read_response", http.StatusInternalServerError, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al leer respuesta del clima"})
 		return
 	}
 
 	if resp.StatusCode != http.StatusOK {
+		logUseCaseError(c, "weather.non_ok_status", http.StatusInternalServerError, fmt.Errorf("open-meteo returned status %d", resp.StatusCode), "upstream_status", resp.StatusCode)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error del servicio climático"})
 		return
 	}
 
 	var openMeteo openMeteoResponse
 	if err := json.Unmarshal(body, &openMeteo); err != nil {
+		logUseCaseError(c, "weather.decode_response", http.StatusInternalServerError, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al procesar datos del clima"})
 		return
 	}

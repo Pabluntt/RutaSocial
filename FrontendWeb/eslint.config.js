@@ -1,3 +1,4 @@
+import { defineConfig } from "eslint/config";
 import js from "@eslint/js";
 import globals from "globals";
 import tseslint from "typescript-eslint";
@@ -7,10 +8,13 @@ import reactDom from "eslint-plugin-react-dom";
 
 export default defineConfig([
   {
+    ignores: ["dist/**", "node_modules/**", "eslint.config.js"],
+  },
+  {
     files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"],
     languageOptions: {
       parserOptions: {
-        project: ["./tsconfig.json"],
+        project: ["./tsconfig.app.json", "./tsconfig.node.json"],
         tsconfigRootDir: import.meta.dirname,
       },
       globals: globals.browser,
