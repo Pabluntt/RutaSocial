@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useSessionStore from "../../stores/useSessionStore";
-import { Box, Button, Card, Divider, FormControl, FormLabel, TextField, Typography } from "@mui/material";
+import { Box, Button, Card, CircularProgress, Divider, FormControl, FormLabel, TextField, Typography } from "@mui/material";
 import { isValidEmail } from "../../utils/verifyInput";
 import { sxInput } from "../../style/sxInput";
 import { useLogin } from "../../api/hooks/UserHooks";
@@ -15,38 +15,37 @@ export default function Login() {
     const [ emailError, setEmailError ] = useState<string>('')
     const [ password, setPassword ] = useState<string>('')
     const [ passwordError, setPasswordError ] = useState<string>('')
-    const { accessToken, _hydrated } = useSessionStore()
-    const { mutate, error } = useLogin()
+    const { accessToken } = useSessionStore()
+    const { mutate, error, isPending } = useLogin()
 
-    const validateInputs = () => {
-      
+    const onSubmitForm = (e :React.FormEvent) => {
+      e.preventDefault()
+
+      let hasError = false
+
       if(email === '' || !isValidEmail(email)) {
-        setEmailError('Ingresa Ingresa un Email válido')
+        setEmailError('Ingresa un Email válido')
+        hasError = true
       } else {
         setEmailError('')
       }
 
       if(password === '') {
         setPasswordError('Ingresa una Contraseña')
+        hasError = true
       } else {
         setPasswordError('')
       }
-      
-    }
-    
-    const onSubmitForm = (e :React.FormEvent) => {
-      e.preventDefault()
-      if(emailError !== '' || passwordError !== '') {
-        return
-      }
+
+      if (hasError) return
       mutate({ email, password })
     }
     
     useEffect(() => {
-      if (_hydrated && accessToken) {
+      if (accessToken) {
         navigate(`${import.meta.env.VITE_BASE_URL}/calendario`, { replace: true })
       }
-    }, [_hydrated, accessToken])
+    }, [accessToken])
 
 
     return (
@@ -120,19 +119,18 @@ export default function Login() {
                         onChange={(e) => setPassword(e.currentTarget.value)}
                       />
                     </FormControl>
-                    <Button type="submit" fullWidth variant="contained"
-                      onClick={validateInputs}
+                    <Button type="submit" fullWidth variant="contained" disabled={isPending}
                       sx={{
                         color : 'white',
                         background : '#009BA5',
                         py: 1.5,
                       }}
                     >
-                      Ingresar
+                      {isPending ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Ingresar'}
                     </Button>
                     <Divider className="w-full" />
                     <Typography variant='body2' minHeight={"1.5em"} alignSelf={'center'} textAlign={'center'} color="error">
-                      {error ? (error as any).error : null}
+                      {error ? (typeof error === 'string' ? error : (error as any).error || 'Error al iniciar sesión') : null}
                     </Typography>
                 
                     {/*<Typography alignSelf={'center'}

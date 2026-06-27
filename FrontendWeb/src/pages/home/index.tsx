@@ -211,12 +211,6 @@ export default function Home() {
         }
     }, [riskQuery.data, helpPointQuery.data])
 
-    useEffect(() => {
-        console.log("ROL DEL USUARIO: ", role)
-    }, [loading])
-
-
-
     const theme = useTheme();
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'));
 
@@ -394,7 +388,7 @@ export default function Home() {
                             : 
                             null
                         }
-                        <div className={"absolute bottom-20 z-20 flex flex-row items-end gap-4 " + (computerDevice ? "right-16" : "right-6")}>
+                        <div className={"absolute bottom-24 z-20 flex flex-row items-end gap-4 " + (computerDevice ? "right-16" : "right-6")}>
                             {!routeStatus ? 
                                 <>
                                     <SpeedDialCreateRoute

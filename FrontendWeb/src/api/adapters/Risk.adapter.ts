@@ -32,7 +32,7 @@ export function MapRiskFromBackend( data : Partial<TRiskBackend> ) : Risk {
     Object.entries(risk).forEach(( entry ) => {
         const [ key, value ] = entry 
         if(value === undefined) {
-            throw Error(`Missing required filed: ${key}`)
+            throw Error(`Missing required field: ${key}`)
         }
     })
     return risk as Risk

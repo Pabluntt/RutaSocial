@@ -24,7 +24,7 @@ export function HelpPointUpdateProvider({ children } : { children : React.ReactN
 export const useHelpPointUpdateDialog = () => {
     const state  = useContext(HelpPointUpdateContext)
     if(!state) {
-        throw new Error("useZoom has to be used within ZoomProvider");
+        throw new Error("useHelpPointUpdateDialog has to be used within HelpPointUpdateProvider");
     }
     return state
 }

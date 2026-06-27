@@ -1,8 +1,6 @@
 import { create } from "zustand"
 import { createJSONStorage, devtools, persist } from "zustand/middleware"
 
-
-
 type TSessionState = {
     countRetryGPS : number
     accessToken?: string 
@@ -11,7 +9,6 @@ type TSessionState = {
     role?: string 
     routeId ?: string
     routeStatus : boolean
-    _hydrated : boolean
     setCountRetryGPS : (countRetryGPS : number) => void
     setEnableGPS : (enableGPS : boolean) => void
     setUsername: (username : string) => void 
@@ -21,7 +18,6 @@ type TSessionState = {
     setRouteId : (routeId ?: string) => void
     clearSession: () => void 
 }
-
 
 const useSessionStore = create<TSessionState>()(
     devtools(
@@ -34,7 +30,6 @@ const useSessionStore = create<TSessionState>()(
                 role: undefined,
                 routeStatus: false,
                 routeId : undefined,
-                _hydrated : false,
                 setCountRetryGPS : (countRetryGPS : number) => set(() => ({ countRetryGPS })),
                 setEnableGPS : ( enableGPS : boolean) => set(() => ({ enableGPS })),
                 setRouteStatus : (routeStatus : boolean) => set(() => ({ routeStatus })),
@@ -46,16 +41,17 @@ const useSessionStore = create<TSessionState>()(
                     set(() => ({
                         accessToken: undefined,
                         role: undefined,
-                        username: undefined
+                        username: undefined,
+                        routeStatus: false,
+                        routeId: undefined,
+                        enableGPS: false,
+                        countRetryGPS: 0
                     }))
                 )                
             }),
             {
                 name: 'sessionStore',
                 storage: createJSONStorage(() => localStorage),
-                onRehydrateStorage: () => () => {
-                    useSessionStore.setState({ _hydrated: true })
-                },
             }
         )
     )

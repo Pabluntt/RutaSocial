@@ -3,7 +3,7 @@ import { DateSpanApi } from "@fullcalendar/core/index.js";
 
 export function isSingleDaySelection(selectionInfo : DateSpanApi) {
     let startDate = selectionInfo.start;
-    let endDate = selectionInfo.end;
+    let endDate = new Date(selectionInfo.end);
     endDate.setSeconds(endDate.getSeconds() - 1);  // allow full day selection
 
     return startDate.getDate() === endDate.getDate()

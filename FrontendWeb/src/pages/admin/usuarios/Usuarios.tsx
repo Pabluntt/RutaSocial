@@ -59,8 +59,7 @@ export default function Usuarios() {
             a.click();
             a.remove();
             window.URL.revokeObjectURL(_url);
-        }).catch((err) => {
-            console.log(err)
+        }).catch(() => {
         })
     }
     const theme = useTheme();

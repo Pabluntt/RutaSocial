@@ -31,7 +31,7 @@ func NewExportDataUseCase(exportDataRepository repository.ExportDataRepository) 
 // ExportPeopleHelped maneja la solicitud para exportar datos de personas ayudadas a un archivo Excel.
 // Obtiene los datos de personas ayudadas del repositorio, crea un archivo Excel,
 func (ed exportDataUseCase) ExportPeopleHelped(c *gin.Context) {
-	peopleHelped, err := ed.exportDataRepository.GetPeopleHelpedData()
+	peopleHelped, err := ed.exportDataRepository.GetPeopleHelpedData(c.Request.Context())
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener datos"})
 		return
@@ -65,3 +65,4 @@ func (ed exportDataUseCase) ExportPeopleHelped(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Error al generar el archivo Excel"})
 	}
 }
+

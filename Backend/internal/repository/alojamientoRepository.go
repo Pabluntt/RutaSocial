@@ -10,10 +10,10 @@ import (
 )
 
 type AlojamientoRepository interface {
-	GetAlojamientos() ([]domain.Alojamiento, error)
-	CreateAlojamiento(alojamiento domain.Alojamiento) error
-	DeleteAlojamiento(id string) error
-	UpdateAlojamiento(updateData map[string]interface{}) (domain.Alojamiento, error)
+GetAlojamientos(ctx context.Context) ([]domain.Alojamiento, error)
+CreateAlojamiento(ctx context.Context, alojamiento domain.Alojamiento) error
+DeleteAlojamiento(ctx context.Context, id string) error
+UpdateAlojamiento(ctx context.Context, updateData map[string]interface{}) (domain.Alojamiento, error)
 }
 
 type alojamientoRepository struct {
@@ -26,8 +26,8 @@ func NewAlojamientoRepository(alojamientoCollection *mongo.Collection) Alojamien
 	}
 }
 
-func (r *alojamientoRepository) GetAlojamientos() ([]domain.Alojamiento, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *alojamientoRepository) GetAlojamientos(ctx context.Context) ([]domain.Alojamiento, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	cursor, err := r.AlojamientoCollection.Find(ctx, bson.M{})
 	if err != nil {
@@ -46,8 +46,8 @@ func (r *alojamientoRepository) GetAlojamientos() ([]domain.Alojamiento, error) 
 	return alojamientos, nil
 }
 
-func (r *alojamientoRepository) CreateAlojamiento(alojamiento domain.Alojamiento) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *alojamientoRepository) CreateAlojamiento(ctx context.Context, alojamiento domain.Alojamiento) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	alojamiento.ID = bson.NewObjectID()
 	alojamiento.DateRegister = time.Now()
@@ -55,8 +55,8 @@ func (r *alojamientoRepository) CreateAlojamiento(alojamiento domain.Alojamiento
 	return err
 }
 
-func (r *alojamientoRepository) DeleteAlojamiento(id string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *alojamientoRepository) DeleteAlojamiento(ctx context.Context, id string) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
@@ -66,8 +66,8 @@ func (r *alojamientoRepository) DeleteAlojamiento(id string) error {
 	return err
 }
 
-func (r *alojamientoRepository) UpdateAlojamiento(updateData map[string]interface{}) (domain.Alojamiento, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *alojamientoRepository) UpdateAlojamiento(ctx context.Context, updateData map[string]interface{}) (domain.Alojamiento, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	idStr, ok := updateData["_id"].(string)
 	if !ok {
@@ -102,3 +102,7 @@ func (r *alojamientoRepository) UpdateAlojamiento(updateData map[string]interfac
 	}
 	return updatedAlojamiento, nil
 }
+
+
+
+

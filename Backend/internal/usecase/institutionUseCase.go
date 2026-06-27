@@ -34,7 +34,7 @@ func NewInstitutionUseCase(institutionRepository repository.InstitutionRepositor
 
 // GetAllInstitutions maneja la solicitud para obtener todas las instituciones.
 func (i institutionUseCase) GetAllInstitutions(c *gin.Context) {
-	institutions, err := i.institutionRepository.GetAllInstitutions()
+	institutions, err := i.institutionRepository.GetAllInstitutions(c.Request.Context())
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener las instituciones"})
 		return
@@ -51,7 +51,7 @@ func (i institutionUseCase) GetInstitutionByID(c *gin.Context) {
 		return
 	}
 
-	institution, err := i.institutionRepository.GetInstitutionByID(idSTR)
+	institution, err := i.institutionRepository.GetInstitutionByID(c.Request.Context(), idSTR)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener la institución"})
 		return
@@ -72,7 +72,7 @@ func (i institutionUseCase) CreateInstitution(c *gin.Context) {
 		return
 	}
 
-	err := i.institutionRepository.CreateInstitution(institution)
+	err := i.institutionRepository.CreateInstitution(c.Request.Context(), institution)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear la institución"})
 		return
@@ -88,7 +88,7 @@ func (i institutionUseCase) UpdateInstitution(c *gin.Context) {
 		return
 	}
 
-	_, err := i.institutionRepository.GetInstitutionByID(idSTR)
+	_, err := i.institutionRepository.GetInstitutionByID(c.Request.Context(), idSTR)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Institución no encontrada"})
 		return
@@ -112,7 +112,7 @@ func (i institutionUseCase) UpdateInstitution(c *gin.Context) {
 		return
 	}
 
-	err = i.institutionRepository.UpdateInstitution(idSTR, updateData)
+	err = i.institutionRepository.UpdateInstitution(c.Request.Context(), idSTR, updateData)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar la institución"})
 		return
@@ -130,13 +130,13 @@ func (i institutionUseCase) DeleteInstitution(c *gin.Context) {
 		return
 	}
 
-	_, err := i.institutionRepository.GetInstitutionByID(idSTR)
+	_, err := i.institutionRepository.GetInstitutionByID(c.Request.Context(), idSTR)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Institución no encontrada"})
 		return
 	}
 
-	err = i.institutionRepository.DeleteInstitution(idSTR)
+	err = i.institutionRepository.DeleteInstitution(c.Request.Context(), idSTR)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al eliminar la institución"})
 		return
@@ -144,3 +144,4 @@ func (i institutionUseCase) DeleteInstitution(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Institución eliminada correctamente"})
 }
+

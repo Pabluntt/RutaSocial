@@ -25,6 +25,8 @@ import NotFound from './component/NotFound'
 import { EventCalendarUpdateProvider } from './context/EventCalendarUpdateContext'
 import HelpButton from './component/HelpButton'
 import TourOverlay from './component/TourOverlay'
+import ErrorBoundary from './component/ErrorBoundary'
+import HydrationGate from './component/HydrationGate'
 
 const queryClient = new QueryClient()
 
@@ -54,11 +56,13 @@ function App() {
  
   return (
   <QueryClientProvider client={queryClient}>    
+    <HydrationGate>
       <RiskUpdateProvider>
         <AuthProvider>
           <ZoomProvider>
             <ThemeProvider theme={customQuery}>
-                <Routes>
+                <ErrorBoundary>
+                  <Routes>
                     <Route path={`${import.meta.env.VITE_BASE_URL}/`} element={
                       <EventCalendarUpdateProvider>
                         <Schedule />
@@ -86,12 +90,14 @@ function App() {
                     <Route path={`${import.meta.env.VITE_BASE_URL}/personas-ayudadas/:id`} element={<PersonaProfile />} />
                     <Route path='*' element={ <NotFound />} />
                 </Routes>
+                </ErrorBoundary>
                 <HelpButton />
                 <TourOverlay />
             </ThemeProvider>
           </ZoomProvider>
         </AuthProvider>
       </RiskUpdateProvider>
+    </HydrationGate>
   </QueryClientProvider>
   )
 }

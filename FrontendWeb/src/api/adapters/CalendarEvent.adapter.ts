@@ -31,8 +31,7 @@ export async function MapCalendarEventFromBackend(
         const user = (await UserService.GetPublicInfoByID(data.author_id as string))
         colorInstitution = (await InstitutionService.FindByID(user.institutionID)).color
         authorName = user.name
-    } catch(e) {
-        console.log(e)
+    } catch(_e) {
     }
 
     // Parsear fecha correctamente sin problemas de timezone

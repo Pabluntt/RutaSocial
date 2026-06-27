@@ -24,7 +24,7 @@ export function RiskUpdateProvider({ children } : { children : React.ReactNode})
 export const useRiskUpdateDialog = () => {
     const state  = useContext(RiskUpdateContext)
     if(!state) {
-        throw new Error("useZoom has to be used within ZoomProvider");
+        throw new Error("useRiskUpdateDialog has to be used within RiskUpdateProvider");
     }
     return state
 }

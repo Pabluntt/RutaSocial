@@ -25,7 +25,7 @@ export function EventCalendarUpdateProvider({ children } : { children : React.Re
 export const useEventCalendarUpdateDialog = () => {
     const state  = useContext(EventCalendarUpdateContext)
     if(!state) {
-        throw new Error("useZoom has to be used within ZoomProvider");
+        throw new Error("useEventCalendarUpdateDialog has to be used within EventCalendarUpdateProvider");
     }
     return state
 }

@@ -21,7 +21,7 @@ func SetupInstitutionRouter(r *gin.Engine) {
 	protected := r.Group("/institution")
 	protected.Use(middleware.AuthMiddleware())
 	protected.GET("/", middleware.RoleMiddleware("admin"), institutionController.GetAllInstitutions)
-	protected.GET(":id", institutionController.GetInstitutionByID)
+	protected.GET("/:id", institutionController.GetInstitutionByID)
 	protected.POST("/", middleware.RoleMiddleware("admin"), institutionController.CreateInstitution)
 	protected.PUT("/:id", middleware.RoleMiddleware("admin"), institutionController.UpdateInstitution)
 	protected.DELETE("/:id", middleware.RoleMiddleware("admin"), institutionController.DeleteInstitution)

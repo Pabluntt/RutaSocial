@@ -5,6 +5,7 @@ import { useHelpPoints, useLinkPersonaToHelpPoint } from "../../api/hooks/HelpPo
 import { HelpPoint } from "../../api/models/HelpPoint"
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import L from 'leaflet'
 
 type LinkHelpPointDialogProps = {
     open: boolean
@@ -21,28 +22,26 @@ function MiniMap({ coords }: { coords: number[] }) {
         const el = mapRef.current
         if (!el || coords.length !== 2) return
 
-        import('leaflet').then(L => {
-            if (mapInstanceRef.current) {
-                mapInstanceRef.current.remove()
-            }
+        if (mapInstanceRef.current) {
+            mapInstanceRef.current.remove()
+        }
 
-            const map = L.map(el, {
-                center: [coords[1], coords[0]],
-                zoom: 15,
-                zoomControl: false,
-                dragging: false,
-                scrollWheelZoom: false,
-            })
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap',
-            }).addTo(map)
-
-            L.marker([coords[1], coords[0]]).addTo(map)
-
-            setTimeout(() => map.invalidateSize(), 50)
-            mapInstanceRef.current = map
+        const map = L.map(el, {
+            center: [coords[1], coords[0]],
+            zoom: 15,
+            zoomControl: false,
+            dragging: false,
+            scrollWheelZoom: false,
         })
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap',
+        }).addTo(map)
+
+        L.marker([coords[1], coords[0]]).addTo(map)
+
+        setTimeout(() => map.invalidateSize(), 50)
+        mapInstanceRef.current = map
 
         return () => {
             if (mapInstanceRef.current) {

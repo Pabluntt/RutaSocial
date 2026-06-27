@@ -46,7 +46,6 @@ export default function MapEvents({setLocation, stateOnSelectLocationMap, stateD
     
     useMapEvents( {
         click(e: { latlng: { lat: number; lng: number } }) {
-            console.log('[MapEvents] CLICK en mapa con coords:', {latitude: e.latlng.lat, longitude: e.latlng.lng})
             setLocation({latitude: e.latlng.lat, longitude: e.latlng.lng})
             setOnSelectLocationMap(false)
             

@@ -6,7 +6,6 @@ import (
 	"github.com/SebaVCH/hdcProject/internal/repository"
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/xuri/excelize/v2"
 	"net/http"
 )
@@ -42,7 +41,7 @@ func NewRouteUseCase(repo repository.RouteRepository) RouteUseCase {
 // FindAll maneja la solicitud para obtener todas las rutas.
 // Retorna un JSON con todas las rutas o un error si ocurre algún problema.
 func (r routeUseCase) FindAll(c *gin.Context) {
-	routes, err := r.routeRepository.FindAll()
+	routes, err := r.routeRepository.FindAll(c.Request.Context())
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener rutas"})
 		return
@@ -54,7 +53,7 @@ func (r routeUseCase) FindAll(c *gin.Context) {
 // Retorna un JSON con la ruta encontrada o un error si no se encuentra.
 func (r routeUseCase) FindByID(c *gin.Context) {
 	id := c.Param("id")
-	route, err := r.routeRepository.FindByID(id)
+	route, err := r.routeRepository.FindByID(c.Request.Context(), id)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Ruta no encontrada"})
 		return
@@ -76,7 +75,7 @@ func (r routeUseCase) CreateRoute(c *gin.Context) {
 		return
 	}
 
-	err := r.routeRepository.CreateRoute(&route)
+	err := r.routeRepository.CreateRoute(c.Request.Context(), &route)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear la ruta"})
 		return
@@ -105,7 +104,7 @@ func (r routeUseCase) UpdateRoute(c *gin.Context) {
 	}
 
 	updateData["_id"] = routeID
-	updatedRoute, err := r.routeRepository.UpdateRoute(updateData)
+	updatedRoute, err := r.routeRepository.UpdateRoute(c.Request.Context(), updateData)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar la ruta"})
 		return
@@ -118,7 +117,7 @@ func (r routeUseCase) UpdateRoute(c *gin.Context) {
 // Si el ID no se proporciona, retorna un error 400 Bad Request.
 func (r routeUseCase) DeleteRoute(c *gin.Context) {
 	id := c.Param("id")
-	err := r.routeRepository.DeleteRoute(id)
+	err := r.routeRepository.DeleteRoute(c.Request.Context(), id)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al eliminar la ruta"})
 		return
@@ -128,7 +127,7 @@ func (r routeUseCase) DeleteRoute(c *gin.Context) {
 }
 
 // FinishRoute maneja la solicitud para finalizar una ruta.
-// Verifica que el ID de la ruta sea válido y que la ruta pueda ser finalizada.
+// Verifica que el ID de la ruta sea válido, que el usuario autenticado sea el líder, y finaliza la ruta.
 func (r routeUseCase) FinishRoute(c *gin.Context) {
 	routeID := c.Param("id")
 	if routeID == "" {
@@ -136,9 +135,14 @@ func (r routeUseCase) FinishRoute(c *gin.Context) {
 		return
 	}
 
-	err := r.routeRepository.FinishRoute(routeID)
+	userID, ok := getAuthenticatedUserID(c)
+	if !ok {
+		return
+	}
+
+	err := r.routeRepository.FinishRoute(c.Request.Context(), routeID, userID)
 	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al finalizar la ruta"})
+		c.IndentedJSON(http.StatusForbidden, gin.H{"error": "No tienes permiso para finalizar esta ruta"})
 		return
 	}
 
@@ -154,25 +158,12 @@ func (r routeUseCase) JoinRoute(c *gin.Context) {
 		return
 	}
 
-	claims, exists := c.Get("user")
-	if !exists {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Usuario no autenticado"})
-		return
-	}
-
-	mapClaims, ok := claims.(jwt.MapClaims)
+	userID, ok := getAuthenticatedUserID(c)
 	if !ok {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Usuario no autenticado"})
 		return
 	}
 
-	userID, ok := mapClaims["user_id"].(string)
-	if !ok || userID == "" {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Usuario no autenticado"})
-		return
-	}
-
-	route, err := r.routeRepository.JoinRoute(inviteCode, userID)
+	route, err := r.routeRepository.JoinRoute(c.Request.Context(), inviteCode, userID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al unirse a la ruta"})
 		return
@@ -190,25 +181,12 @@ func (r routeUseCase) LeaveRoute(c *gin.Context) {
 		return
 	}
 
-	claims, exists := c.Get("user")
-	if !exists {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Usuario no autenticado"})
-		return
-	}
-
-	mapClaims, ok := claims.(jwt.MapClaims)
+	userID, ok := getAuthenticatedUserID(c)
 	if !ok {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Usuario no autenticado"})
 		return
 	}
 
-	userID, ok := mapClaims["user_id"].(string)
-	if !ok || userID == "" {
-		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Usuario no autenticado"})
-		return
-	}
-
-	err := r.routeRepository.LeaveRoute(routeID, userID)
+	err := r.routeRepository.LeaveRoute(c.Request.Context(), routeID, userID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -226,7 +204,7 @@ func (r routeUseCase) GetMyParticipation(c *gin.Context) {
 		return
 	}
 
-	participation, err := r.routeRepository.GetMyParticipation(userID)
+	participation, err := r.routeRepository.GetMyParticipation(c.Request.Context(), userID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener participaciones"})
 		return
@@ -243,7 +221,7 @@ func (r routeUseCase) GetUserRoutes(c *gin.Context) {
 		return
 	}
 
-	routes, err := r.routeRepository.GetRoutesByUserID(userID)
+	routes, err := r.routeRepository.GetRoutesByUserID(c.Request.Context(), userID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener rutas del usuario"})
 		return
@@ -260,13 +238,13 @@ func (r routeUseCase) ExportReport(c *gin.Context) {
 		return
 	}
 
-	route, err := r.routeRepository.FindByID(routeID)
+	route, err := r.routeRepository.FindByID(c.Request.Context(), routeID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Ruta no encontrada"})
 		return
 	}
 
-	helpPoints, err := r.routeRepository.GetHelpPointsByRouteID(routeID)
+	helpPoints, err := r.routeRepository.GetHelpPointsByRouteID(c.Request.Context(), routeID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener puntos de ayuda"})
 		return

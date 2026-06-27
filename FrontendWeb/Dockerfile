@@ -1,5 +1,5 @@
 # Frontend/Dockerfile
-FROM node:23.8-alpine
+FROM node:23.8-alpine AS build
 WORKDIR /app
 
 ENV VITE_URL_BACKEND=http://localhost:8080
@@ -15,7 +15,8 @@ RUN npm run build
 # Verify dist exists and has content
 RUN ls -la dist/ && test -f dist/index.html || (echo "ERROR: dist/index.html not found!" && exit 1)
 
-# Use node server instead of nginx
-RUN npm install -g serve
+FROM nginx:1.27-alpine
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80
-CMD ["serve", "-s", "dist", "-l", "80"]
+CMD ["nginx", "-g", "daemon off;"]

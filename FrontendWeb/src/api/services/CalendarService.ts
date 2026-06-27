@@ -9,7 +9,6 @@ export class CalendarService {
 
     static async GetEvents() : Promise<CalendarEvent[]> {
         const { data } = await axiosInstance.get(`/${this.RESOURCE_NAME}`)
-        console.log(data)
         return await Promise.all((data as TCalendarEventBackend[]).map(async (event, _) => (
            await MapCalendarEventFromBackend(event as TCalendarEventBackend) 
         )))
@@ -26,7 +25,6 @@ export class CalendarService {
     }
 
     static async UpdateEvent( eventUpdate : TCalendarEventUpdateRequest) : Promise<string> {
-        console.log(eventUpdate)
         const { data } = await axiosInstance.put(`/${this.RESOURCE_NAME}/${eventUpdate._id}`, eventUpdate)
         return data?.message
     }

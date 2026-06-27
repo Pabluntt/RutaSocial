@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"github.com/SebaVCH/hdcProject/internal/domain"
+	"github.com/SebaVCH/hdcProject/internal/dto"
 	"github.com/SebaVCH/hdcProject/internal/repository"
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"github.com/gin-gonic/gin"
@@ -41,19 +42,18 @@ func NewUserUseCase(repo repository.UserRepository) UserUseCase {
 // Retorna un JSON con el usuario encontrado o un error si no se encuentra.
 func (u userUseCase) GetUserByID(c *gin.Context) {
 	id := c.Param("id")
-	user, err := u.userRepository.GetUserByID(id)
+	user, err := u.userRepository.GetUserByID(c.Request.Context(), id)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": "Usuario no encontrado"})
 		return
 	}
-	user.Sanitize()
-	c.IndentedJSON(http.StatusOK, gin.H{"message": user})
+	c.IndentedJSON(http.StatusOK, gin.H{"message": dto.MapUserToResponse(user)})
 }
 
 // GetPublicInfoByID maneja la solicitud para obtener información pública de un usuario por su ID.
 func (u userUseCase) GetPublicInfoByID(c *gin.Context) {
 	id := c.Param("id")
-	result, err := u.userRepository.GetPublicInfoByID(id)
+	result, err := u.userRepository.GetPublicInfoByID(c.Request.Context(), id)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Usuario no encontrado"})
 		return
@@ -68,8 +68,7 @@ func (u userUseCase) GetUserProfile(c *gin.Context) {
 	if done {
 		return
 	}
-	user.Sanitize()
-	c.IndentedJSON(http.StatusOK, gin.H{"message": user})
+	c.IndentedJSON(http.StatusOK, gin.H{"message": dto.MapUserToResponse(user)})
 }
 
 // UpdateUserInfo maneja la solicitud para actualizar la información del usuario autenticado.
@@ -105,29 +104,24 @@ func (u userUseCase) UpdateUserInfo(c *gin.Context) {
 		}
 	}
 
-	updatedUser, err := u.userRepository.UpdateUserInfo(user.ID, updateData)
+	updatedUser, err := u.userRepository.UpdateUserInfo(c.Request.Context(), user.ID, updateData)
 
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar usuario"})
 		return
 	}
-	updatedUser.Sanitize()
-
-	c.IndentedJSON(http.StatusOK, gin.H{"message": updatedUser})
+	c.IndentedJSON(http.StatusOK, gin.H{"message": dto.MapUserToResponse(updatedUser)})
 }
 
 // GetAllUsers maneja la solicitud para obtener todos los usuarios.
 // Retorna un JSON con la lista de usuarios o un error si ocurre algún problema al obtenerlos.
 func (u userUseCase) GetAllUsers(c *gin.Context) {
-	users, err := u.userRepository.GetAllUsers()
+	users, err := u.userRepository.GetAllUsers(c.Request.Context())
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener usuarios"})
 		return
 	}
-	for i := range users {
-		users[i].Sanitize()
-	}
-	c.IndentedJSON(http.StatusOK, gin.H{"message": users})
+	c.IndentedJSON(http.StatusOK, gin.H{"message": dto.MapUsersToResponse(users)})
 }
 
 // CreateUserByAdmin maneja la solicitud para crear un usuario desde el panel admin.
@@ -190,14 +184,13 @@ func (u userUseCase) CreateUserByAdmin(c *gin.Context) {
 		InstitutionID: institutionID,
 	}
 
-	createdUser, err := u.userRepository.CreateUserByAdmin(newUser)
+	createdUser, err := u.userRepository.CreateUserByAdmin(c.Request.Context(), newUser)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear usuario"})
 		return
 	}
 
-	createdUser.Password = ""
-	c.IndentedJSON(http.StatusCreated, gin.H{"message": createdUser})
+	c.IndentedJSON(http.StatusCreated, gin.H{"message": dto.MapUserToResponse(createdUser)})
 }
 
 // UpdateUserByAdmin maneja la solicitud para que un administrador actualice un usuario.
@@ -245,14 +238,13 @@ func (u userUseCase) UpdateUserByAdmin(c *gin.Context) {
 
 	updateData["_id"] = id
 
-	updatedUser, err := u.userRepository.UpdateUserByAdmin(updateData)
+	updatedUser, err := u.userRepository.UpdateUserByAdmin(c.Request.Context(), updateData)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	updatedUser.Sanitize()
-	c.IndentedJSON(http.StatusOK, gin.H{"message": updatedUser})
+	c.IndentedJSON(http.StatusOK, gin.H{"message": dto.MapUserToResponse(updatedUser)})
 }
 
 // DeleteUser maneja la solicitud para eliminar un usuario por su ID.
@@ -272,7 +264,7 @@ func (u userUseCase) UpdateUserByAdmin(c *gin.Context) {
 // @Router /user/{id} [delete]
 func (u userUseCase) DeleteUser(c *gin.Context) {
 	id := c.Param("id")
-	err := u.userRepository.DeleteUserByID(id)
+	err := u.userRepository.DeleteUserByID(c.Request.Context(), id)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -307,10 +299,11 @@ func (u userUseCase) ValidateUser(c *gin.Context) (domain.Usuario, bool) {
 		return domain.Usuario{}, true
 	}
 
-	user, err := u.userRepository.GetUserByID(userIDStr)
+	user, err := u.userRepository.GetUserByID(c.Request.Context(), userIDStr)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Usuario no encontrado"})
 		return domain.Usuario{}, true
 	}
 	return user, false
 }
+

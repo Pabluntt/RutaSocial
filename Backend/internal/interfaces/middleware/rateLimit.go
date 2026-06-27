@@ -19,7 +19,30 @@ var loginLimiter = &rateLimiter{
 	reset:    make(map[string]time.Time),
 }
 
+var cleanupOnce sync.Once
+
+func startCleanup(limiter *rateLimiter, window time.Duration) {
+	cleanupOnce.Do(func() {
+		go func() {
+			ticker := time.NewTicker(window * 2)
+			defer ticker.Stop()
+			for range ticker.C {
+				limiter.mu.Lock()
+				now := time.Now()
+				for ip, resetTime := range limiter.reset {
+					if now.After(resetTime.Add(window)) {
+						delete(limiter.attempts, ip)
+						delete(limiter.reset, ip)
+					}
+				}
+				limiter.mu.Unlock()
+			}
+		}()
+	})
+}
+
 func RateLimitMiddleware(maxAttempts int, window time.Duration) gin.HandlerFunc {
+	startCleanup(loginLimiter, window)
 	return func(c *gin.Context) {
 		ip := c.ClientIP()
 

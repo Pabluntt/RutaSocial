@@ -146,7 +146,6 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
             routeID: selectedRouteId
         }
         if(selectInfo) {
-            console.log(selectInfo.startStr)
             selectInfo.view.calendar.addEvent({
                 id: '123',
                 title: formCalendarEvent.title,
@@ -157,7 +156,6 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
             })
             selectInfo.view.calendar.unselect();
         }
-        console.log(newEvent)
 
         mutate(newEvent)
     }

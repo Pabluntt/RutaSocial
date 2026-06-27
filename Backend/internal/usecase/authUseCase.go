@@ -49,7 +49,7 @@ func (a authUseCase) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := a.authRepository.Login(body.Email, body.Password)
+	token, err := a.authRepository.Login(c.Request.Context(), body.Email, body.Password)
 	if err != nil {
 		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Credenciales inválidas"})
 		return
@@ -83,7 +83,7 @@ func (a authUseCase) Register(c *gin.Context) {
 		return
 	}
 
-	token, err := a.authRepository.Register(user)
+	token, err := a.authRepository.Register(c.Request.Context(), user)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Ocurrió un registrar el usuario"})
 		return
@@ -91,3 +91,4 @@ func (a authUseCase) Register(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, gin.H{"token": token})
 }
+

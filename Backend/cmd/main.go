@@ -3,7 +3,8 @@
 package main
 
 import (
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/SebaVCH/hdcProject/cmd/app"
 )
@@ -27,6 +28,7 @@ import (
 
 func main() {
 	if err := app.StartBackend(); err != nil {
-		log.Fatalf("Error fatal iniciando backend: %v", err)
+		slog.Error("Error fatal iniciando backend", "error", err)
+		os.Exit(1)
 	}
 }

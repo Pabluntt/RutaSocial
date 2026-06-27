@@ -10,7 +10,6 @@ export class RiskService {
 
     static async CreateRisk( body : TCreateRisk ) : Promise<Risk> {
         const { data } = await axiosInstance.post(`/${this.RESOURCE_NAME}`, body)
-        console.log(data)
         return MapRiskFromBackend(data?.message as TRiskBackend)
     }
 
@@ -22,7 +21,6 @@ export class RiskService {
     }
 
     static async UpdateRisk( body: TUpdateRisk) : Promise<Risk> {
-        console.log(body)
         const { data } = await axiosInstance.put(`/${this.RESOURCE_NAME}/${body._id}`, body)
         return MapRiskFromBackend(data?.message as TRiskBackend)
     }

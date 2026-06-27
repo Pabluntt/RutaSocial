@@ -26,7 +26,7 @@ func NewAlojamientoUseCase(alojamientoRepository repository.AlojamientoRepositor
 }
 
 func (a alojamientoUseCase) GetAllAlojamientos(c *gin.Context) {
-	alojamientos, err := a.alojamientoRepository.GetAlojamientos()
+	alojamientos, err := a.alojamientoRepository.GetAlojamientos(c.Request.Context())
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener alojamientos"})
 		return
@@ -46,7 +46,7 @@ func (a alojamientoUseCase) CreateAlojamiento(c *gin.Context) {
 		return
 	}
 
-	err := a.alojamientoRepository.CreateAlojamiento(alojamiento)
+	err := a.alojamientoRepository.CreateAlojamiento(c.Request.Context(), alojamiento)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear el alojamiento"})
 		return
@@ -56,7 +56,7 @@ func (a alojamientoUseCase) CreateAlojamiento(c *gin.Context) {
 
 func (a alojamientoUseCase) DeleteAlojamiento(c *gin.Context) {
 	id := c.Param("id")
-	err := a.alojamientoRepository.DeleteAlojamiento(id)
+	err := a.alojamientoRepository.DeleteAlojamiento(c.Request.Context(), id)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al eliminar el alojamiento"})
 		return
@@ -82,10 +82,11 @@ func (a alojamientoUseCase) UpdateAlojamiento(c *gin.Context) {
 	}
 
 	updateData["_id"] = alojamientoID
-	updatedAlojamiento, err := a.alojamientoRepository.UpdateAlojamiento(updateData)
+	updatedAlojamiento, err := a.alojamientoRepository.UpdateAlojamiento(c.Request.Context(), updateData)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar el alojamiento"})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": updatedAlojamiento})
 }
+

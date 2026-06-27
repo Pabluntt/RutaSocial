@@ -2,6 +2,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -27,6 +28,10 @@ func LoadEnv() error {
 	_ = godotenv.Load(envPath)
 
 	JwtSecret = []byte(os.Getenv("JWT_SECRET"))
+
+	if len(JwtSecret) == 0 {
+		return fmt.Errorf("JWT_SECRET no puede estar vacío")
+	}
 
 	DBName = os.Getenv("MONGODB_DB_NAME")
 	if DBName == "" {

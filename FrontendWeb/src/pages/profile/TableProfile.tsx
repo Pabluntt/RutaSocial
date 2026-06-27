@@ -31,7 +31,6 @@ export default function TableProfile({ stateUser, stateHasChanges, stateResumenA
      const useQueryRoutesByUser = useRoutesByUser(user.id, true)
 
      useEffect(() => { // Calcular total rutas completadas & última fecha ruta
-          console.log(user.id)
           if(useQueryRoutesByUser.data) {
                const routes = useQueryRoutesByUser.data.sort((a, b) => compareSort(a, b))
                setResumenActividad({...resumen, 

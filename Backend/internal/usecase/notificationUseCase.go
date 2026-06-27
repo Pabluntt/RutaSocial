@@ -5,7 +5,7 @@ import (
 	"github.com/SebaVCH/hdcProject/internal/repository"
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"net/http"
 )
 
@@ -50,7 +50,24 @@ func (n notificationUseCase) CreateNotification(c *gin.Context) {
 		return
 	}
 
-	err := n.notificationRepository.CreateNotification(notification)
+	userID, userRole, ok := getAuthenticatedUserIDAndRole(c)
+	if !ok {
+		return
+	}
+
+	if notification.SendToAll && userRole != "admin" {
+		c.IndentedJSON(http.StatusForbidden, gin.H{"error": "No tienes permiso para enviar avisos a todos"})
+		return
+	}
+
+	authorID, err := bson.ObjectIDFromHex(userID)
+	if err != nil {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Token inválido"})
+		return
+	}
+	notification.AuthorID = authorID
+
+	err = n.notificationRepository.CreateNotification(c.Request.Context(), notification)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear aviso"})
 		return
@@ -68,19 +85,19 @@ func (n notificationUseCase) DeleteNotification(c *gin.Context) {
 		return
 	}
 
-	claims, _ := c.Get("user")
-	userClaims := claims.(jwt.MapClaims)
-	userID := userClaims["user_id"].(string)
-	userRole := userClaims["user_role"].(string)
+	userID, userRole, ok := getAuthenticatedUserIDAndRole(c)
+	if !ok {
+		return
+	}
 
 	if userRole != "admin" {
-		if err := n.notificationRepository.FindByIDAndUserID(notificationID, userID); err != nil {
+		if err := n.notificationRepository.FindByIDAndUserID(c.Request.Context(), notificationID, userID); err != nil {
 			c.IndentedJSON(http.StatusForbidden, gin.H{"error": "No tienes permiso para eliminar este aviso"})
 			return
 		}
 	}
 
-	err := n.notificationRepository.DeleteNotification(notificationID)
+	err := n.notificationRepository.DeleteNotification(c.Request.Context(), notificationID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al eliminar aviso"})
 		return
@@ -98,13 +115,13 @@ func (n notificationUseCase) UpdateNotification(c *gin.Context) {
 		return
 	}
 
-	claims, _ := c.Get("user")
-	userClaims := claims.(jwt.MapClaims)
-	userID := userClaims["user_id"].(string)
-	userRole := userClaims["user_role"].(string)
+	userID, userRole, ok := getAuthenticatedUserIDAndRole(c)
+	if !ok {
+		return
+	}
 
 	if userRole != "admin" {
-		if err := n.notificationRepository.FindByIDAndUserID(notificationID, userID); err != nil {
+		if err := n.notificationRepository.FindByIDAndUserID(c.Request.Context(), notificationID, userID); err != nil {
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -120,8 +137,17 @@ func (n notificationUseCase) UpdateNotification(c *gin.Context) {
 		return
 	}
 
+	if _, ok := updateData["send_to_all"]; ok {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "No se puede modificar el alcance del aviso"})
+		return
+	}
+	if _, ok := updateData["send_email"]; ok {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "No se puede modificar el envío por correo del aviso"})
+		return
+	}
+
 	updateData["_id"] = notificationID
-	updatedNotification, err := n.notificationRepository.UpdateNotification(updateData)
+	updatedNotification, err := n.notificationRepository.UpdateNotification(c.Request.Context(), updateData)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar la aviso"})
 		return
@@ -134,7 +160,7 @@ func (n notificationUseCase) UpdateNotification(c *gin.Context) {
 // Verifica que el usuario esté autenticado y obtiene las notificaciones desde el repositorio.
 func (n notificationUseCase) GetNotifications(c *gin.Context) {
 
-	notifications, err := n.notificationRepository.GetNotifications()
+	notifications, err := n.notificationRepository.GetNotifications(c.Request.Context())
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener aviso"})
 		return
@@ -145,10 +171,11 @@ func (n notificationUseCase) GetNotifications(c *gin.Context) {
 
 // GetUnreadNotifications maneja la solicitud para obtener las notificaciones no leídas del usuario.
 func (n notificationUseCase) GetUnreadNotifications(c *gin.Context) {
-	claims, _ := c.Get("user")
-	userClaims := claims.(jwt.MapClaims)
-	userID := userClaims["user_id"].(string)
-	notifications, err := n.notificationRepository.GetUnreadNotifications(userID)
+	userID, ok := getAuthenticatedUserID(c)
+	if !ok {
+		return
+	}
+	notifications, err := n.notificationRepository.GetUnreadNotifications(c.Request.Context(), userID)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener aviso"})
 		return
@@ -160,10 +187,11 @@ func (n notificationUseCase) GetUnreadNotifications(c *gin.Context) {
 // GetReadNotifications maneja la solicitud para obtener las notificaciones leídas del usuario.
 // Verifica que el usuario esté autenticado y obtiene las notificaciones leídas desde el repositorio.
 func (n notificationUseCase) GetReadNotifications(c *gin.Context) {
-	claims, _ := c.Get("user")
-	userClaims := claims.(jwt.MapClaims)
-	userID := userClaims["user_id"].(string)
-	notifications, err := n.notificationRepository.GetReadNotifications(userID)
+	userID, ok := getAuthenticatedUserID(c)
+	if !ok {
+		return
+	}
+	notifications, err := n.notificationRepository.GetReadNotifications(c.Request.Context(), userID)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener aviso"})
 		return
@@ -176,10 +204,11 @@ func (n notificationUseCase) GetReadNotifications(c *gin.Context) {
 // Verifica que el ID de la notificación sea válido y actualiza su estado en la base de datos.
 func (n notificationUseCase) MarkNotificationAsRead(c *gin.Context) {
 	notificationID := c.Param("id")
-	claims, _ := c.Get("user")
-	userClaims := claims.(jwt.MapClaims)
-	userID := userClaims["user_id"].(string)
-	err := n.notificationRepository.MarkNotificationAsRead(notificationID, userID)
+	userID, ok := getAuthenticatedUserID(c)
+	if !ok {
+		return
+	}
+	err := n.notificationRepository.MarkNotificationAsRead(c.Request.Context(), notificationID, userID)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener aviso"})
 		return
@@ -197,11 +226,12 @@ func (n notificationUseCase) DismissNotification(c *gin.Context) {
 		return
 	}
 
-	claims, _ := c.Get("user")
-	userClaims := claims.(jwt.MapClaims)
-	userID := userClaims["user_id"].(string)
+	userID, ok := getAuthenticatedUserID(c)
+	if !ok {
+		return
+	}
 
-	err := n.notificationRepository.DismissNotification(notificationID, userID)
+	err := n.notificationRepository.DismissNotification(c.Request.Context(), notificationID, userID)
 	if err != nil {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "Error al ocultar aviso"})
 		return

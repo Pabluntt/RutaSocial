@@ -3,7 +3,7 @@ import CustomDrawer from "../../component/CustomDrawer";
 import DrawerList from "../../component/DrawerList";
 import Mapa from "../../component/Map/Mapa";
 import { Position } from "../../utils/getCurrentLocation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import ListHistory from "./ListHistory";
 import useSessionStore from "../../stores/useSessionStore";
 import HandlerLocationHistory from "./handlerLocationHistory";
@@ -18,7 +18,7 @@ import { useProfile } from "../../api/hooks/UserHooks";
 import { useRoutes, useRoutesByUser } from "../../api/hooks/RouteHooks";
 import { useHelpPoints } from "../../api/hooks/HelpPointHooks";
 import { RouteStatus } from "../../Enums/RouteStatus";
-import { filterHelpPointsByTimeRange, HeatmapTimeRange } from "../../utils/heatmapUtils";
+
 
 
 function getFormatDate(a : Date, opt : string) {
@@ -43,10 +43,6 @@ export default function RouteHistory() {
     const [ opFecha, setOPFecha ] = useState('Día')
 
     const [ onlyUser, setOnlyUser ] = useState(false)
-    const [ showHeatmap, setShowHeatmap ] = useState(false)
-    const [ heatmapTimeRange, setHeatmapTimeRange ] = useState<HeatmapTimeRange>('none')
-    const [ heatmapCustomStart, setHeatmapCustomStart ] = useState<Date | null>(null)
-    const [ heatmapCustomEnd, setHeatmapCustomEnd ] = useState<Date | null>(null)
     const [ routes, setRoutes ] = useState<Route[]>([])
 
     const userID = useProfile().data?.id
@@ -112,11 +108,6 @@ export default function RouteHistory() {
 
     }, [opFecha, routes])
 
-    const heatmapHelpPoints = useMemo(() =>
-        filterHelpPointsByTimeRange(helpPoints, heatmapTimeRange, heatmapCustomStart, heatmapCustomEnd),
-        [helpPoints, heatmapTimeRange, heatmapCustomStart, heatmapCustomEnd]
-    )
-
     const theme = useTheme()
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'))
     
@@ -136,10 +127,9 @@ export default function RouteHistory() {
                 <div className={"flex " + (computerDevice ? 'grow' : 'h-64 min-h-64 order-1')}>
                     <Mapa
                         stateCurrentLocation={[currentLocation, setCurrentLocation]}
-                        helpPoints={showHeatmap ? heatmapHelpPoints : helpPoints}
+                        helpPoints={helpPoints}
                         risks={[]}
                         enableTraceLine
-                        showHeatmap={showHeatmap}
                     >
                         <HandlerLocationHistory stateShowLocation={[showLocation, setShowLocation]} stateLocation={[HPLocation, setHPLocation]} />
                     </Mapa>
@@ -152,10 +142,6 @@ export default function RouteHistory() {
                         stateShowLocation={[showLocation, setShowLocation]} 
                         stateRoutes={[mapRoutes, setMapRoutes]} 
                         stateHelpPoints={[helpPoints, setHelpPoints]}
-                        stateShowHeatmap={[showHeatmap, setShowHeatmap]}
-                        stateHeatmapTimeRange={[heatmapTimeRange, setHeatmapTimeRange]}
-                        stateHeatmapCustomStart={[heatmapCustomStart, setHeatmapCustomStart]}
-                        stateHeatmapCustomEnd={[heatmapCustomEnd, setHeatmapCustomEnd]}
                     />
                 </Paper>
             </div>

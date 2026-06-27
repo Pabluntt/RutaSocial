@@ -128,50 +128,6 @@
       line-height: 1.7;
     }
 
-    .password-section {
-      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-      border-radius: 12px;
-      padding: 25px;
-      margin-bottom: 30px;
-      border-left: 4px solid #FF5A00;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .password-section::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 100px;
-      height: 100px;
-      background: linear-gradient(45deg, rgba(255, 90, 0, 0.05), transparent);
-      border-radius: 50%;
-    }
-
-    .password-label {
-      color: #4a5568;
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .password-value {
-      color: #FF5A00;
-      font-size: 24px;
-      font-weight: 700;
-      font-family: 'Courier New', monospace;
-      background: rgba(255, 90, 0, 0.1);
-      padding: 10px 15px;
-      border-radius: 8px;
-      display: inline-block;
-      letter-spacing: 2px;
-      position: relative;
-      z-index: 2;
-    }
-
     .cta-button {
       background: linear-gradient(135deg, #79CB3A 0%, #6bb32a 100%);
       color: white;
@@ -298,15 +254,6 @@
         padding: 30px 20px;
       }
 
-      .password-section {
-        padding: 20px;
-      }
-
-      .password-value {
-        font-size: 18px;
-        letter-spacing: 1px;
-      }
-
       .footer {
         padding: 20px;
       }
@@ -333,11 +280,6 @@
 
     <div class="message">
       <p>¡Gracias por unirte a nuestra comunidad! Tu cuenta ha sido creada exitosamente y ya puedes comenzar a ser parte de la misión de Hogar de Cristo.</p>
-    </div>
-
-    <div class="password-section">
-      <div class="password-label">Tu contraseña temporal:</div>
-      <div class="password-value">{{ .Password }}</div>
     </div>
 
     <div style="text-align: center; margin-bottom: 30px;">

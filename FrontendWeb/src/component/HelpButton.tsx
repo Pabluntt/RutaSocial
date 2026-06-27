@@ -41,8 +41,8 @@ export default function HelpButton() {
             bottom: 24,
             right: 24,
             zIndex: 90,
-            width: 88,
-            height: 88,
+            width: 64,
+            height: 64,
             bgcolor: '#fff',
             border: '2px solid #009BA5',
             color: '#009BA5',
@@ -54,7 +54,7 @@ export default function HelpButton() {
             component="img"
             src={mascotAssets.thinking}
             alt="Mascota de ayuda"
-            sx={{ width: 72, height: 72, objectFit: 'contain' }}
+            sx={{ width: 55, height: 55, objectFit: 'contain' }}
           />
           <Box
             component="span"
@@ -62,15 +62,15 @@ export default function HelpButton() {
               position: 'absolute',
               top: -4,
               right: -4,
-              width: 32,
-              height: 32,
+              width: 22,
+              height: 22,
               borderRadius: '50%',
               bgcolor: '#009BA5',
               color: '#fff',
               border: '2px solid #fff',
               fontWeight: 800,
-              fontSize: 20,
-              lineHeight: '28px',
+              fontSize: 14,
+              lineHeight: '18px',
             }}
           >
             ?

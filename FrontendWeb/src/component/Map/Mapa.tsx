@@ -1,4 +1,5 @@
 import L, { LatLngExpression } from "leaflet";
+import markerShadowUrl from "leaflet/dist/images/marker-shadow.png";
 import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap, ZoomControl } from "react-leaflet";
 import { Button, Divider, Chip, Paper, Box, Typography } from "@mui/material";
 import { format } from 'date-fns';
@@ -15,7 +16,7 @@ import 'leaflet.heat'
 
 var redIcon = new L.Icon({
     iconUrl: 'marker-icon-red.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    shadowUrl: markerShadowUrl,
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
@@ -36,7 +37,7 @@ const iconsMap = {
     [RiskStatus.Severe]: new L.Icon({ iconUrl : 'warning-alert-severe.svg', iconSize: [30, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowAnchor: [41, 41]}),
     [RiskStatus.Warning]: new L.Icon({ iconUrl : 'warning-alert-warning.svg', iconSize: [30, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowAnchor: [41, 41]}),
     [RiskStatus.Completed]: new L.Icon({ iconUrl : 'warning-alert-completed.svg', iconSize: [41,61], iconAnchor: [12, 41], popupAnchor: [8, -34], shadowAnchor: [41, 41]}),
-    [RiskStatus.Enviroment]: new L.Icon({ iconUrl : 'warning-alert-enviroment.svg', iconSize: [30, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowAnchor: [41, 41]}),
+    [RiskStatus.Environment]: new L.Icon({ iconUrl : 'warning-alert-enviroment.svg', iconSize: [30, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowAnchor: [41, 41]}),
 } satisfies Record<RiskStatus, L.Icon>;
 
 function HeatmapLayer({ helpPoints, showHeatmap }: { helpPoints: HelpPoint[], showHeatmap: boolean }) {

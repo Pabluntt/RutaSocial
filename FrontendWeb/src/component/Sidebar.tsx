@@ -104,20 +104,3 @@ export default function Sidebar() {
         </div>
     )
 };
-
-
-
-{/* 
-<div className="flex flex-col shadow-[4px_0_6px_-1px_rgba(0,0,0,0.25)] z-10">
-                        <Tooltip title={"Home"}>
-                            <IconButton onClick={onClickHome} sx={{ p : 2}}>
-                                <HomeIcon htmlColor="#374151" sx={{ fontSize: 40 }} />
-                            </IconButton>
-                        </Tooltip>
-                        <Divider variant="middle"/>
-                        <ListIconHome />
-                        <div className="flex grow justify-center items-end py-4">
-                            <a href="https://www.hogardecristo.cl/" target="_blank" rel="noopener noreferrer"><img src={"https://hcstore.org/wp-content/uploads/2020/01/cropped-hc-192x192.png"} loading="lazy" width={48} height={48}/></a>
-                        </div>
-                    </div>    
-    */}

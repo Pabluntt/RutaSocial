@@ -22,6 +22,7 @@ func SetupRouter() *gin.Engine {
 	// CORS middleware debe ser el primero en la cadena de middlewares
 	// Insertamos al inicio usando `Use` que lo añade al inicio
 	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.CSPMiddleware())
 	r.Use(middleware.BodySizeLimit(10 << 20)) // 10 MB limit
 
 	docs.SwaggerInfo.BasePath = "/"

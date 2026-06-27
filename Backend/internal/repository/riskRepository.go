@@ -12,10 +12,10 @@ import (
 // RiskRepository define la interfaz para las operaciones relacionadas con riesgos.
 // Contiene métodos para obtener, crear, eliminar y actualizar riesgos.
 type RiskRepository interface {
-	GetRisks() ([]domain.Riesgo, error)
-	CreateRisk(risk domain.Riesgo) error
-	DeleteRisk(id string) error
-	UpdateRisk(updateData map[string]interface{}) (domain.Riesgo, error)
+GetRisks(ctx context.Context) ([]domain.Riesgo, error)
+CreateRisk(ctx context.Context, risk domain.Riesgo) error
+DeleteRisk(ctx context.Context, id string) error
+UpdateRisk(ctx context.Context, updateData map[string]interface{}) (domain.Riesgo, error)
 }
 
 // riskRepository implementa la interfaz RiskRepository.
@@ -34,8 +34,8 @@ func NewRiskRepository(riskCollection *mongo.Collection) RiskRepository {
 
 // GetRisks obtiene todos los riesgos de la base de datos.
 // Retorna un slice de riesgos o un error si ocurre algún problema.
-func (r *riskRepository) GetRisks() ([]domain.Riesgo, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *riskRepository) GetRisks(ctx context.Context) ([]domain.Riesgo, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	cursor, err := r.RiskCollection.Find(ctx, bson.M{})
 	if err != nil {
@@ -56,8 +56,8 @@ func (r *riskRepository) GetRisks() ([]domain.Riesgo, error) {
 
 // CreateRisk crea un nuevo riesgo en la base de datos.
 // Asigna un ID y una fecha de registro al riesgo.
-func (r *riskRepository) CreateRisk(risk domain.Riesgo) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *riskRepository) CreateRisk(ctx context.Context, risk domain.Riesgo) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	risk.ID = bson.NewObjectID()
 	risk.DateRegister = time.Now()
@@ -67,8 +67,8 @@ func (r *riskRepository) CreateRisk(risk domain.Riesgo) error {
 
 // DeleteRisk elimina un riesgo de la base de datos por su ID.
 // Recibe el ID como string, lo convierte a ObjectID y elimina el documento correspondiente.
-func (r *riskRepository) DeleteRisk(id string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *riskRepository) DeleteRisk(ctx context.Context, id string) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
@@ -80,8 +80,8 @@ func (r *riskRepository) DeleteRisk(id string) error {
 
 // UpdateRisk actualiza un riesgo en la base de datos.
 // Recibe un mapa de datos a actualizar, verifica el ID del riesgo y actualiza los campos correspondientes.
-func (r *riskRepository) UpdateRisk(updateData map[string]interface{}) (domain.Riesgo, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *riskRepository) UpdateRisk(ctx context.Context, updateData map[string]interface{}) (domain.Riesgo, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	idStr, ok := updateData["_id"].(string)
 	if !ok {
@@ -116,3 +116,7 @@ func (r *riskRepository) UpdateRisk(updateData map[string]interface{}) (domain.R
 	}
 	return updatedRisk, nil
 }
+
+
+
+

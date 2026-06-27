@@ -10,6 +10,8 @@ import { useCreateNotice, useNoticesMap } from '../../api/hooks/NoticeHooks';
 import { useProfile } from '../../api/hooks/UserHooks';
 import InputDescription from '../Input/InputDescription';
 import CloseDialogButton from '../Button/CloseDialogButton';
+import { useAuth } from '../../context/AuthContext';
+import { Role } from '../../Enums/Role';
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
@@ -34,6 +36,8 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
 
     const { isError, mutate, data, isSuccess } = useCreateNotice()
     const { refetch } = useNoticesMap()
+    const { role } = useAuth()
+    const canSendToAll = role === Role.admin
 
     const authorID = useProfile().data?.id
 
@@ -67,7 +71,7 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
 
     const onPostNotice = () => {
         if(!validateForm()) return
-        mutate({ description, authorID: authorID as string, sendEmail: false, sendToAll })
+        mutate({ description, authorID: authorID as string, sendEmail: false, sendToAll: canSendToAll && sendToAll })
         setTimeout(() => {
             handleClose()
         }, 600)
@@ -110,22 +114,24 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
                     <Typography color='error'>
                         {noticeError.authorID}
                     </Typography>
-                    <Tooltip title="Activado: el aviso llega a todos los usuarios. Desactivado: solo llega a usuarios activos de tu institución">
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={sendToAll}
-                                    onChange={(e) => setSendToAll(e.target.checked)}
-                                    color="primary"
-                                />
-                            }
-                            label={
-                                <Typography variant="body2">
-                                    {sendToAll ? 'Enviar a todos' : 'Solo a mi institución'}
-                                </Typography>
-                            }
-                        />
-                    </Tooltip>
+                    {canSendToAll && (
+                        <Tooltip title="Activado: el aviso llega a todos los usuarios. Desactivado: solo llega a usuarios activos de tu institución">
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={sendToAll}
+                                        onChange={(e) => setSendToAll(e.target.checked)}
+                                        color="primary"
+                                    />
+                                }
+                                label={
+                                    <Typography variant="body2">
+                                        {sendToAll ? 'Enviar a todos' : 'Solo a mi institución'}
+                                    </Typography>
+                                }
+                            />
+                        </Tooltip>
+                    )}
                 </DialogContent>
                 <DialogActions>
                     <Button variant='contained' onClick={onPostNotice}>

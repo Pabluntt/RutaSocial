@@ -5,7 +5,6 @@ import (
 	"github.com/SebaVCH/hdcProject/internal/repository"
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 )
 
@@ -35,7 +34,7 @@ func NewCalendarEventUseCase(calendarRepository repository.CalendarEventReposito
 
 // GetAllCalendarEvents maneja la solicitud para obtener todos los eventos de calendario.
 func (ce calendarEventUseCase) GetAllCalendarEvents(c *gin.Context) {
-	events, err := ce.calendarRepository.GetAllCalendarEvents()
+	events, err := ce.calendarRepository.GetAllCalendarEvents(c.Request.Context())
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener eventos"})
 		return
@@ -51,7 +50,7 @@ func (ce calendarEventUseCase) GetUserCalendarEvents(c *gin.Context) {
 		return
 	}
 
-	events, err := ce.calendarRepository.GetCalendarEventsByUserID(userID)
+	events, err := ce.calendarRepository.GetCalendarEventsByUserID(c.Request.Context(), userID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener eventos del usuario"})
 		return
@@ -74,11 +73,12 @@ func (ce calendarEventUseCase) CreateCalendarEvent(c *gin.Context) {
 		return
 	}
 
-	claims, _ := c.Get("user")
-	userClaims := claims.(jwt.MapClaims)
-	userID := userClaims["user_id"].(string)
+	userID, ok := getAuthenticatedUserID(c)
+	if !ok {
+		return
+	}
 
-	createdEvent, err := ce.calendarRepository.CreateCalendarEvent(event, userID)
+	createdEvent, err := ce.calendarRepository.CreateCalendarEvent(c.Request.Context(), event, userID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear el evento: "})
 		return
@@ -96,19 +96,19 @@ func (ce calendarEventUseCase) DeleteCalendarEvent(c *gin.Context) {
 		return
 	}
 
-	claims, _ := c.Get("user")
-	userClaims := claims.(jwt.MapClaims)
-	userID := userClaims["user_id"].(string)
-	userRole := userClaims["user_role"].(string)
+	userID, userRole, ok := getAuthenticatedUserIDAndRole(c)
+	if !ok {
+		return
+	}
 
 	if userRole != "admin" {
-		if err := ce.calendarRepository.FindByIDAndUserID(eventID, userID); err != nil {
+		if err := ce.calendarRepository.FindByIDAndUserID(c.Request.Context(), eventID, userID); err != nil {
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 	}
 
-	err := ce.calendarRepository.DeleteCalendarEvent(eventID)
+	err := ce.calendarRepository.DeleteCalendarEvent(c.Request.Context(), eventID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al eliminar el evento"})
 		return
@@ -125,13 +125,13 @@ func (ce calendarEventUseCase) UpdateCalendarEvent(c *gin.Context) {
 		return
 	}
 
-	claims, _ := c.Get("user")
-	userClaims := claims.(jwt.MapClaims)
-	userID := userClaims["user_id"].(string)
-	userRole := userClaims["user_role"].(string)
+	userID, userRole, ok := getAuthenticatedUserIDAndRole(c)
+	if !ok {
+		return
+	}
 
 	if userRole != "admin" {
-		if err := ce.calendarRepository.FindByIDAndUserID(eventID, userID); err != nil {
+		if err := ce.calendarRepository.FindByIDAndUserID(c.Request.Context(), eventID, userID); err != nil {
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -154,7 +154,7 @@ func (ce calendarEventUseCase) UpdateCalendarEvent(c *gin.Context) {
 		}
 	}
 
-	updateEvent, err := ce.calendarRepository.UpdateCalendarEvent(updateData)
+	updateEvent, err := ce.calendarRepository.UpdateCalendarEvent(c.Request.Context(), updateData)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar el evento"})
 		return

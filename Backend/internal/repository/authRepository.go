@@ -5,7 +5,7 @@ package repository
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log/slog"
 	"github.com/SebaVCH/hdcProject/internal/domain"
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"time"
@@ -17,8 +17,8 @@ import (
 // AuthRepository define la interfaz para las operaciones de autenticación.
 // Contiene métodos para iniciar sesión y registrar usuarios.
 type AuthRepository interface {
-	Login(email, password string) (string, error)
-	Register(user domain.Usuario) (string, error)
+Login(ctx context.Context, email, password string) (string, error)
+Register(ctx context.Context, user domain.Usuario) (string, error)
 }
 
 // authRepository implementa la interfaz AuthRepository.
@@ -35,9 +35,9 @@ func NewAuthRepository(userCollection *mongo.Collection) AuthRepository {
 
 // Login maneja la solicitud de inicio de sesión.
 // Busca al usuario por su correo electrónico, verifica la contraseña y genera un token JWT si las credenciales son válidas.
-func (a *authRepository) Login(email, password string) (string, error) {
+func (a *authRepository) Login(ctx context.Context, email, password string) (string, error) {
 	var user domain.Usuario
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	err := a.UserCollection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
 	if err != nil {
@@ -58,8 +58,8 @@ func (a *authRepository) Login(email, password string) (string, error) {
 
 // Register maneja la solicitud de registro de un nuevo usuario.
 // Verifica si el usuario ya existe, hashea la contraseña, inserta al usuario en la base de datos y envía un correo de registro con dicha contraseña.
-func (a *authRepository) Register(user domain.Usuario) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+func (a *authRepository) Register(ctx context.Context, user domain.Usuario) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
 	existing := a.UserCollection.FindOne(ctx, bson.M{"email": user.Email})
@@ -72,7 +72,6 @@ func (a *authRepository) Register(user domain.Usuario) (string, error) {
 		return "", err
 	}
 
-	unhashedPassword := user.Password
 	user.Password = hashedPassword
 	user.CompletedRoutes = 0
 	user.ListRoutes = []domain.Route{}
@@ -91,10 +90,14 @@ func (a *authRepository) Register(user domain.Usuario) (string, error) {
 		return "", err
 	}
 
-	err = utils.SendRegistrationMail(user, unhashedPassword)
+	err = utils.SendRegistrationMail(user)
 	if err != nil {
-		fmt.Println("Error enviando correo:", err)
+		slog.Error("Error enviando correo de registro", "error", err)
 	}
 
 	return token, nil
 }
+
+
+
+

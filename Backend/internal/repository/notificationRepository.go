@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+
 	"github.com/SebaVCH/hdcProject/internal/domain"
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -13,15 +14,15 @@ import (
 // NotificationRepository define la interfaz para las operaciones relacionadas con notificaciones.
 // Contiene métodos para crear, eliminar, actualizar, obtener notificaciones y marcar como leídas.
 type NotificationRepository interface {
-	CreateNotification(notification domain.Aviso) error
-	DeleteNotification(notificationID string) error
-	UpdateNotification(data map[string]interface{}) (domain.Aviso, error)
-	GetNotifications() ([]domain.Aviso, error)
-	FindByIDAndUserID(id string, userID string) error
-	GetUnreadNotifications(userID string) ([]domain.Aviso, error)
-	GetReadNotifications(userID string) ([]domain.Aviso, error)
-	MarkNotificationAsRead(notificationID string, userID string) error
-	DismissNotification(notificationID string, userID string) error
+	CreateNotification(ctx context.Context, notification domain.Aviso) error
+	DeleteNotification(ctx context.Context, notificationID string) error
+	UpdateNotification(ctx context.Context, data map[string]interface{}) (domain.Aviso, error)
+	GetNotifications(ctx context.Context) ([]domain.Aviso, error)
+	FindByIDAndUserID(ctx context.Context, id string, userID string) error
+	GetUnreadNotifications(ctx context.Context, userID string) ([]domain.Aviso, error)
+	GetReadNotifications(ctx context.Context, userID string) ([]domain.Aviso, error)
+	MarkNotificationAsRead(ctx context.Context, notificationID string, userID string) error
+	DismissNotification(ctx context.Context, notificationID string, userID string) error
 }
 
 // notificationRepository implementa la interfaz NotificationRepository.
@@ -45,15 +46,11 @@ func NewNotificationRepository(notificationsCollection, usersCollection, notific
 // CreateNotification crea una nueva notificación en la base de datos.
 // Asigna un ID y una fecha de creación a la notificación, inserta la notificación en la colección y envía correos electrónicos a los usuarios si es necesario.
 // Si SendToAll es false (por defecto), solo notifica a usuarios activos de la misma institución que el autor.
-func (n *notificationRepository) CreateNotification(notification domain.Aviso) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+func (n *notificationRepository) CreateNotification(ctx context.Context, notification domain.Aviso) error {
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 	notification.ID = bson.NewObjectID()
 	notification.CreatedAt = time.Now()
-	_, err := n.NotificationsCollection.InsertOne(ctx, notification)
-	if err != nil {
-		return err
-	}
 
 	var userFilter bson.M
 	if !notification.SendToAll {
@@ -87,24 +84,39 @@ func (n *notificationRepository) CreateNotification(notification domain.Aviso) e
 	}
 	defer cursor.Close(ctx)
 
+	relations := make([]interface{}, 0)
 	for cursor.Next(ctx) {
 		var user domain.Usuario
 		if err := cursor.Decode(&user); err != nil {
 			continue
 		}
 
-		relation := domain.NotificationPersonRelation{
+		relations = append(relations, domain.NotificationPersonRelation{
 			ID:             bson.NewObjectID(),
 			NotificationID: notification.ID,
 			PersonID:       user.ID,
 			Read:           false,
 			ReadAt:         time.Time{},
 			Dismissed:      false,
-		}
-		_, _ = n.NotificationPersonRelationCollection.InsertOne(ctx, relation)
+		})
 
 		if notification.SendEmail {
 			go utils.SendNotificationMail(user, notification)
+		}
+	}
+	if err := cursor.Err(); err != nil {
+		return err
+	}
+
+	_, err = n.NotificationsCollection.InsertOne(ctx, notification)
+	if err != nil {
+		return err
+	}
+
+	if len(relations) > 0 {
+		_, err = n.NotificationPersonRelationCollection.InsertMany(ctx, relations)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -113,8 +125,8 @@ func (n *notificationRepository) CreateNotification(notification domain.Aviso) e
 
 // DeleteNotification elimina una notificación por su ID.
 // Convierte el ID de cadena a ObjectID y elimina el documento correspondiente de la colección.
-func (n *notificationRepository) DeleteNotification(notificationID string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (n *notificationRepository) DeleteNotification(ctx context.Context, notificationID string) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(notificationID)
 	if err != nil {
@@ -126,8 +138,8 @@ func (n *notificationRepository) DeleteNotification(notificationID string) error
 
 // UpdateNotification actualiza una notificación existente en la base de datos.
 // Recibe un mapa de datos a actualizar, verifica el ID de la notificación y actualiza los campos correspondientes.
-func (n *notificationRepository) UpdateNotification(data map[string]interface{}) (domain.Aviso, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (n *notificationRepository) UpdateNotification(ctx context.Context, data map[string]interface{}) (domain.Aviso, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	idStr, ok := data["_id"].(string)
 	if !ok {
@@ -164,8 +176,8 @@ func (n *notificationRepository) UpdateNotification(data map[string]interface{})
 }
 
 // GetNotifications obtiene todas las notificaciones de la base de datos.
-func (n *notificationRepository) GetNotifications() ([]domain.Aviso, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (n *notificationRepository) GetNotifications(ctx context.Context) ([]domain.Aviso, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	cursor, err := n.NotificationsCollection.Find(ctx, bson.M{})
 	if err != nil {
@@ -186,16 +198,20 @@ func (n *notificationRepository) GetNotifications() ([]domain.Aviso, error) {
 
 // FindByIDAndUserID busca una notificación por su ID y el ID del usuario.
 // Convierte el ID de cadena a ObjectID y verifica si la notificación pertenece al usuario especificado.
-func (n *notificationRepository) FindByIDAndUserID(id string, userID string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (n *notificationRepository) FindByIDAndUserID(ctx context.Context, id string, userID string) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return errors.New("ID de evento de calendario inválido")
 	}
+	userObjID, err := bson.ObjectIDFromHex(userID)
+	if err != nil {
+		return errors.New("ID de usuario inválido")
+	}
 
 	var aviso domain.Aviso
-	filter := bson.M{"_id": objID, "author_id": userID}
+	filter := bson.M{"_id": objID, "author_id": userObjID}
 	err = n.NotificationsCollection.FindOne(ctx, filter).Decode(&aviso)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -208,50 +224,18 @@ func (n *notificationRepository) FindByIDAndUserID(id string, userID string) err
 
 // GetUnreadNotifications obtiene las notificaciones no leídas de un usuario específico.
 // Recibe el ID del usuario, busca las relaciones de notificaciones con personas y retorna las notificaciones no leídas.
-func (n *notificationRepository) GetUnreadNotifications(userID string) ([]domain.Aviso, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-	userObjID, err := bson.ObjectIDFromHex(userID)
-	if err != nil {
-		return nil, errors.New("ID de usuario inválido")
-	}
-
-	cursor, err := n.NotificationPersonRelationCollection.Find(
-		ctx,
-		bson.M{"person_id": userObjID, "read": false, "dismissed": false},
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(ctx)
-
-	var relations []domain.NotificationPersonRelation
-	for cursor.Next(ctx) {
-		var rel domain.NotificationPersonRelation
-		if err := cursor.Decode(&rel); err != nil {
-			continue
-		}
-		relations = append(relations, rel)
-	}
-
-	var notifications []domain.Aviso
-	for _, rel := range relations {
-		var notif domain.Aviso
-		err := n.NotificationsCollection.FindOne(
-			ctx,
-			bson.M{"_id": rel.NotificationID},
-		).Decode(&notif)
-		if err == nil {
-			notifications = append(notifications, notif)
-		}
-	}
-	return notifications, nil
+func (n *notificationRepository) GetUnreadNotifications(ctx context.Context, userID string) ([]domain.Aviso, error) {
+	return n.getNotificationsByReadStatus(ctx, userID, false)
 }
 
 // GetReadNotifications obtiene las notificaciones leídas de un usuario específico.
 // Recibe el ID del usuario, busca las relaciones de notificaciones con personas y retorna las notificaciones leídas.
-func (n *notificationRepository) GetReadNotifications(userID string) ([]domain.Aviso, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+func (n *notificationRepository) GetReadNotifications(ctx context.Context, userID string) ([]domain.Aviso, error) {
+	return n.getNotificationsByReadStatus(ctx, userID, true)
+}
+
+func (n *notificationRepository) getNotificationsByReadStatus(ctx context.Context, userID string, read bool) ([]domain.Aviso, error) {
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 	userObjID, err := bson.ObjectIDFromHex(userID)
 	if err != nil {
@@ -260,40 +244,45 @@ func (n *notificationRepository) GetReadNotifications(userID string) ([]domain.A
 
 	cursor, err := n.NotificationPersonRelationCollection.Find(
 		ctx,
-		bson.M{"person_id": userObjID, "read": true, "dismissed": false},
+		bson.M{"person_id": userObjID, "read": read, "dismissed": false},
 	)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	var relations []domain.NotificationPersonRelation
+	notificationIDs := make([]bson.ObjectID, 0)
 	for cursor.Next(ctx) {
 		var rel domain.NotificationPersonRelation
 		if err := cursor.Decode(&rel); err != nil {
 			continue
 		}
-		relations = append(relations, rel)
+		notificationIDs = append(notificationIDs, rel.NotificationID)
+	}
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+	if len(notificationIDs) == 0 {
+		return []domain.Aviso{}, nil
 	}
 
+	notificationCursor, err := n.NotificationsCollection.Find(ctx, bson.M{"_id": bson.M{"$in": notificationIDs}})
+	if err != nil {
+		return nil, err
+	}
+	defer notificationCursor.Close(ctx)
+
 	var notifications []domain.Aviso
-	for _, rel := range relations {
-		var notif domain.Aviso
-		err := n.NotificationsCollection.FindOne(
-			ctx,
-			bson.M{"_id": rel.NotificationID},
-		).Decode(&notif)
-		if err == nil {
-			notifications = append(notifications, notif)
-		}
+	if err := notificationCursor.All(ctx, &notifications); err != nil {
+		return nil, err
 	}
 	return notifications, nil
 }
 
 // MarkNotificationAsRead marca una notificación como leída para un usuario específico.
 // Recibe el ID de la notificación y el ID del usuario, actualiza el estado de la notificación y la fecha de lectura.
-func (n *notificationRepository) MarkNotificationAsRead(notificationID string, userID string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (n *notificationRepository) MarkNotificationAsRead(ctx context.Context, notificationID string, userID string) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	notifObjID, err := bson.ObjectIDFromHex(notificationID)
 	if err != nil {
@@ -320,8 +309,8 @@ func (n *notificationRepository) MarkNotificationAsRead(notificationID string, u
 
 // DismissNotification oculta una notificación para un usuario específico (solo de su vista).
 // Recibe el ID de la notificación y el ID del usuario, marca dismissed=true en la relación.
-func (n *notificationRepository) DismissNotification(notificationID string, userID string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (n *notificationRepository) DismissNotification(ctx context.Context, notificationID string, userID string) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	notifObjID, err := bson.ObjectIDFromHex(notificationID)
 	if err != nil {

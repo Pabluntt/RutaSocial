@@ -1,4 +1,4 @@
-import { Button, CircularProgress, ClickAwayListener, Divider, Fade, useMediaQuery, useTheme } from "@mui/material"
+import { Alert, Button, CircularProgress, ClickAwayListener, Divider, Fade, useMediaQuery, useTheme } from "@mui/material"
 import CustomDrawer from "../../component/CustomDrawer"
 import { useEffect, useState } from "react"
 import DrawerList from "../../component/DrawerList"
@@ -30,7 +30,7 @@ export default function Profile() {
     const [ hasChange, setHasChange ] = useState(false)
     const [ resumenActividad, setResumenActividad ] = useState<TResumenActividad>({})
     
-    const { data, isLoading, isSuccess, refetch, error } = useProfile()
+    const { data, isLoading, isSuccess, refetch, isError } = useProfile()
     
     const mutation = useUpdateUser()
 
@@ -113,7 +113,15 @@ export default function Profile() {
                             }
                         </div>
                         { computerDevice ? <Divider className="my-4 w-full" /> : <></>}
-                        { isLoading || !isSuccess || !user ? 
+                        { isError ? 
+                            <div className="flex flex-col grow w-full h-full items-center justify-center gap-2">
+                                <Alert severity="error">
+                                    Error al cargar el perfil.{' '}
+                                    <span className="underline cursor-pointer" onClick={() => refetch()}>Reintentar</span>
+                                </Alert>
+                            </div>
+                            :
+                        isLoading || !user ? 
                             <div className="flex flex-col grow w-full h-full items-center justify-center gap-2">
                                 <CircularProgress size={computerDevice ? 90 : 60} color="inherit" thickness={2}/>
                             </div>

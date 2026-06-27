@@ -2,10 +2,10 @@ package utils
 
 import (
 	"context"
+	"log/slog"
 	"github.com/SebaVCH/hdcProject/internal/domain"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
-	"log"
 	"os"
 	"time"
 )
@@ -18,13 +18,13 @@ func CreateDefaultAdmin(userCollection *mongo.Collection) error {
 	var admin domain.Usuario
 	err := userCollection.FindOne(ctx, bson.M{"email": adminEmail}).Decode(&admin)
 	if err == nil {
-		log.Printf("Admin por defecto ya existe con el email: %s", adminEmail)
+		slog.Info("Admin por defecto ya existe", "email", adminEmail)
 		return nil
 	}
 
 	passwordHashed, err2 := HashPassword(os.Getenv("ADMIN_PASSWORD"))
 	if err2 != nil {
-		log.Printf("Error al hashear la contraseña del admin por defecto: %v", err)
+		slog.Error("Error al hashear contraseña del admin por defecto", "error", err2)
 		return err2
 	}
 	admin = domain.Usuario{
@@ -38,7 +38,7 @@ func CreateDefaultAdmin(userCollection *mongo.Collection) error {
 
 	_, err = userCollection.InsertOne(ctx, admin)
 	if err != nil {
-		log.Printf("Error al crear el admin por defecto: %v", err)
+		slog.Error("Error al crear el admin por defecto", "error", err)
 		return err
 	}
 

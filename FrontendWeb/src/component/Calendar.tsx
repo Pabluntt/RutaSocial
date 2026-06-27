@@ -13,6 +13,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { format, isToday } from 'date-fns'
+import { Alert, CircularProgress } from '@mui/material'
 import { es } from 'date-fns/locale'
 import { useCalendarEvents, useDeleteCalendarEvent } from '../api/hooks/CalendarEventHooks'
 import { CalendarEvent } from '../api/models/Calendar'
@@ -63,13 +64,6 @@ export default function Calendar() {
             setEventClicked(undefined)
         }, 300)
     }
-
-    useEffect(() => {
-        console.log(error)
-        if(isSuccess) {
-            console.log("aca en calendar: ", data)
-        }
-    }, [data])
 
     useEffect(() => {
         if(deleteQuery.data) {
@@ -172,6 +166,23 @@ export default function Calendar() {
                 .fc .fc-today-button { background: #f3f4f6 !important; border-radius: 9999px !important; font-weight: 500 !important; }
                 .fc .fc-button-primary:not(:disabled).fc-button-active { background: #009BA5 !important; color: #fff !important; border-color: #009BA5 !important; }
             `}</style>
+            {isPending && (
+              <div className="flex justify-center items-center py-20">
+                <CircularProgress />
+              </div>
+            )}
+            {isError && (
+              <Alert severity="error" sx={{ mx: 2, sm: 10, mt: 2 }}>
+                Error al cargar eventos del calendario.{' '}
+                <span
+                  className="underline cursor-pointer text-blue-600"
+                  onClick={() => refetch()}
+                >
+                  Reintentar
+                </span>
+              </Alert>
+            )}
+            {!isPending && !isError && (
             <div className='px-2 sm:px-10 w-full'>
                 <FullCalendar 
                     longPressDelay={100}
@@ -222,6 +233,7 @@ export default function Calendar() {
                     )}
                 />
             </div>
+            )}
             <Popover
                 id={id}
                 open={openPopover}

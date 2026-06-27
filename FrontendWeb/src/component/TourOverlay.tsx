@@ -12,9 +12,8 @@ export default function TourOverlay() {
   const theme = useTheme()
   const isDesktop = useMediaQuery(theme.breakpoints.up('sm'))
 
-  if (location.pathname.includes('login')) return null
-
   useEffect(() => {
+    if (location.pathname.includes('login')) return
     if (!isActive) return
     const step = steps[currentStep]
     if (!step) return
@@ -35,7 +34,9 @@ export default function TourOverlay() {
       window.removeEventListener('scroll', updateRect, true)
       window.removeEventListener('resize', updateRect)
     }
-  }, [isActive, currentStep, steps])
+  }, [isActive, currentStep, steps, location.pathname])
+
+  if (location.pathname.includes('login')) return null
 
   if (!isActive) return null
 

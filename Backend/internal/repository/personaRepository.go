@@ -10,17 +10,17 @@ import (
 )
 
 type PersonaRepository interface {
-	GetAll() ([]domain.Persona, error)
-	GetByID(id string) (domain.Persona, error)
-	GetByRut(rut string) (domain.Persona, error)
-	Search(query string) ([]domain.Persona, error)
-	Create(persona domain.Persona) (domain.Persona, error)
-	Update(id string, data map[string]interface{}) (domain.Persona, error)
-	Delete(id string) error
-	AddAntecedente(personaID string, entry domain.AntecedenteEntry) error
-	DeleteAntecedente(personaID string, entryID string) error
-	AddInfoMedica(personaID string, entry domain.AntecedenteEntry) error
-	DeleteInfoMedica(personaID string, entryID string) error
+GetAll(ctx context.Context) ([]domain.Persona, error)
+GetByID(ctx context.Context, id string) (domain.Persona, error)
+GetByRut(ctx context.Context, rut string) (domain.Persona, error)
+Search(ctx context.Context, query string) ([]domain.Persona, error)
+Create(ctx context.Context, persona domain.Persona) (domain.Persona, error)
+Update(ctx context.Context, id string, data map[string]interface{}) (domain.Persona, error)
+Delete(ctx context.Context, id string) error
+AddAntecedente(ctx context.Context, personaID string, entry domain.AntecedenteEntry) error
+DeleteAntecedente(ctx context.Context, personaID string, entryID string) error
+AddInfoMedica(ctx context.Context, personaID string, entry domain.AntecedenteEntry) error
+DeleteInfoMedica(ctx context.Context, personaID string, entryID string) error
 }
 
 type personaRepository struct {
@@ -31,8 +31,8 @@ func NewPersonaRepository(collection *mongo.Collection) PersonaRepository {
 	return &personaRepository{collection: collection}
 }
 
-func (r *personaRepository) GetAll() ([]domain.Persona, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *personaRepository) GetAll(ctx context.Context) ([]domain.Persona, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	cursor, err := r.collection.Find(ctx, bson.M{})
 	if err != nil {
@@ -51,8 +51,8 @@ func (r *personaRepository) GetAll() ([]domain.Persona, error) {
 	return personas, nil
 }
 
-func (r *personaRepository) GetByID(id string) (domain.Persona, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *personaRepository) GetByID(ctx context.Context, id string) (domain.Persona, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
@@ -70,8 +70,8 @@ func (r *personaRepository) GetByID(id string) (domain.Persona, error) {
 	return p, nil
 }
 
-func (r *personaRepository) GetByRut(rut string) (domain.Persona, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *personaRepository) GetByRut(ctx context.Context, rut string) (domain.Persona, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	var p domain.Persona
 	err := r.collection.FindOne(ctx, bson.M{"rut": rut}).Decode(&p)
@@ -84,8 +84,8 @@ func (r *personaRepository) GetByRut(rut string) (domain.Persona, error) {
 	return p, nil
 }
 
-func (r *personaRepository) Search(query string) ([]domain.Persona, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *personaRepository) Search(ctx context.Context, query string) ([]domain.Persona, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	filter := bson.M{
 		"$or": []bson.M{
@@ -110,8 +110,8 @@ func (r *personaRepository) Search(query string) ([]domain.Persona, error) {
 	return personas, nil
 }
 
-func (r *personaRepository) Create(persona domain.Persona) (domain.Persona, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *personaRepository) Create(ctx context.Context, persona domain.Persona) (domain.Persona, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	persona.ID = bson.NewObjectID()
 	persona.FechaCreacion = time.Now()
@@ -129,8 +129,8 @@ func (r *personaRepository) Create(persona domain.Persona) (domain.Persona, erro
 	return persona, nil
 }
 
-func (r *personaRepository) Update(id string, data map[string]interface{}) (domain.Persona, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *personaRepository) Update(ctx context.Context, id string, data map[string]interface{}) (domain.Persona, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
@@ -152,8 +152,8 @@ func (r *personaRepository) Update(id string, data map[string]interface{}) (doma
 	return p, nil
 }
 
-func (r *personaRepository) Delete(id string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *personaRepository) Delete(ctx context.Context, id string) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
@@ -163,8 +163,8 @@ func (r *personaRepository) Delete(id string) error {
 	return err
 }
 
-func (r *personaRepository) addEntry(personaID string, field string, entry domain.AntecedenteEntry) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *personaRepository) addEntry(ctx context.Context, personaID string, field string, entry domain.AntecedenteEntry) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(personaID)
 	if err != nil {
@@ -182,8 +182,8 @@ func (r *personaRepository) addEntry(personaID string, field string, entry domai
 	return err
 }
 
-func (r *personaRepository) deleteEntry(personaID string, field string, entryID string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *personaRepository) deleteEntry(ctx context.Context, personaID string, field string, entryID string) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(personaID)
 	if err != nil {
@@ -202,18 +202,22 @@ func (r *personaRepository) deleteEntry(personaID string, field string, entryID 
 	return err
 }
 
-func (r *personaRepository) AddAntecedente(personaID string, entry domain.AntecedenteEntry) error {
-	return r.addEntry(personaID, "antecedentes", entry)
+func (r *personaRepository) AddAntecedente(ctx context.Context, personaID string, entry domain.AntecedenteEntry) error {
+	return r.addEntry(ctx, personaID, "antecedentes", entry)
 }
 
-func (r *personaRepository) DeleteAntecedente(personaID string, entryID string) error {
-	return r.deleteEntry(personaID, "antecedentes", entryID)
+func (r *personaRepository) DeleteAntecedente(ctx context.Context, personaID string, entryID string) error {
+	return r.deleteEntry(ctx, personaID, "antecedentes", entryID)
 }
 
-func (r *personaRepository) AddInfoMedica(personaID string, entry domain.AntecedenteEntry) error {
-	return r.addEntry(personaID, "info_medica", entry)
+func (r *personaRepository) AddInfoMedica(ctx context.Context, personaID string, entry domain.AntecedenteEntry) error {
+	return r.addEntry(ctx, personaID, "info_medica", entry)
 }
 
-func (r *personaRepository) DeleteInfoMedica(personaID string, entryID string) error {
-	return r.deleteEntry(personaID, "info_medica", entryID)
+func (r *personaRepository) DeleteInfoMedica(ctx context.Context, personaID string, entryID string) error {
+	return r.deleteEntry(ctx, personaID, "info_medica", entryID)
 }
+
+
+
+

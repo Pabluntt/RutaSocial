@@ -18,8 +18,7 @@ export async function MapNoticeFromBackend(data: TNoticeBackend): Promise<Notice
     try {
         const info = await UserService.GetPublicInfoByID(data.author_id as string)
         authorName = info.name
-    } catch(e) {
-        console.log(e)
+    } catch(_e) {
     }
     const notice: Partial<Notice> = {
         id: data._id,

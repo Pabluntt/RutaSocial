@@ -33,7 +33,7 @@ func NewPeopleHelpedUseCase(peopleHelpedRepository repository.PeopleHelpedReposi
 
 // GetAllPeopleHelped maneja la solicitud para obtener todas las personas ayudadas.
 func (p peopleHelpedUseCase) GetAllPeopleHelped(c *gin.Context) {
-	peopleHelped, err := p.peopleHelpedRepository.GetPeopleHelped()
+	peopleHelped, err := p.peopleHelpedRepository.GetPeopleHelped(c.Request.Context())
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener personas ayudadas"})
 		return
@@ -48,7 +48,7 @@ func (p peopleHelpedUseCase) CreatePersonHelped(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
-	err := p.peopleHelpedRepository.CreatePersonHelped(person)
+	err := p.peopleHelpedRepository.CreatePersonHelped(c.Request.Context(), person)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear la persona ayudada"})
 		return
@@ -59,7 +59,7 @@ func (p peopleHelpedUseCase) CreatePersonHelped(c *gin.Context) {
 // DeletePersonHelped maneja la solicitud para eliminar una persona ayudada por su ID.
 func (p peopleHelpedUseCase) DeletePersonHelped(c *gin.Context) {
 	id := c.Param("id")
-	err := p.peopleHelpedRepository.DeletePersonHelped(id)
+	err := p.peopleHelpedRepository.DeletePersonHelped(c.Request.Context(), id)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al eliminar la persona ayudada"})
 		return
@@ -86,10 +86,11 @@ func (p peopleHelpedUseCase) UpdatePersonHelped(c *gin.Context) {
 	}
 
 	updateData["_id"] = personID
-	updatedPerson, err := p.peopleHelpedRepository.UpdatePersonHelped(updateData)
+	updatedPerson, err := p.peopleHelpedRepository.UpdatePersonHelped(c.Request.Context(), updateData)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar la persona ayudada"})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": updatedPerson})
 }
+

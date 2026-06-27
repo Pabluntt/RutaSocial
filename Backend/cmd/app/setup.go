@@ -4,7 +4,7 @@ package app
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,6 +20,8 @@ import (
 // StartBackend inicia el backend de la aplicación.
 // Carga la configuración desde el archivo .env, inicia la conexión a la base de datos y configura las rutas del servidor.
 func StartBackend() error {
+
+	config.InitLogger()
 
 	if err := config.LoadEnv(); err != nil {
 		return err
@@ -44,24 +46,24 @@ func StartBackend() error {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		log.Println("Servidor iniciado en :8080")
+		slog.Info("Servidor iniciado", "port", ":8080")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Error en servidor HTTP: %v", err)
+			slog.Error("Error en servidor HTTP", "error", err)
 		}
 	}()
 
 	<-quit
-	log.Println("Apagando servidor...")
+	slog.Info("Apagando servidor...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Printf("Error al apagar servidor: %v", err)
+		slog.Error("Error al apagar servidor", "error", err)
 	}
 
 	if err := database.Client.Disconnect(ctx); err != nil {
-		log.Printf("Error al desconectar MongoDB: %v", err)
+		slog.Error("Error al desconectar MongoDB", "error", err)
 	}
 
 	return nil

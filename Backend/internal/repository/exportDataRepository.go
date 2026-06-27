@@ -11,7 +11,7 @@ import (
 // ExportDataRepository define la interfaz para las operaciones de exportación de datos.
 // Contiene el metodo para obtener datos de personas ayudadas que son utilizados para la exportación de datos en formato excel.
 type ExportDataRepository interface {
-	GetPeopleHelpedData() ([]domain.PersonaAyudada, error)
+GetPeopleHelpedData(ctx context.Context) ([]domain.PersonaAyudada, error)
 }
 
 // exportDataRepository implementa la interfaz ExportDataRepository.
@@ -30,8 +30,8 @@ func NewExportDataRepository(collection *mongo.Collection) ExportDataRepository 
 
 // GetPeopleHelpedData obtiene los datos de personas ayudadas de la base de datos.
 // Retorna un slice de personas ayudadas o un error si ocurre algún problema.
-func (ed *exportDataRepository) GetPeopleHelpedData() ([]domain.PersonaAyudada, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (ed *exportDataRepository) GetPeopleHelpedData(ctx context.Context) ([]domain.PersonaAyudada, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	cursor, err := ed.PeopleHelpedCollection.Find(ctx, bson.M{})
 	if err != nil {
@@ -49,3 +49,7 @@ func (ed *exportDataRepository) GetPeopleHelpedData() ([]domain.PersonaAyudada, 
 	}
 	return peopleHelped, nil
 }
+
+
+
+

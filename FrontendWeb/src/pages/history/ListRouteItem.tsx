@@ -60,7 +60,6 @@ export default function ListRouteItem({ route, stateHelpPoints, stateShowLocatio
     }, [])
 
     useEffect(() => {
-        console.log(open, openRoot)
         setHelpPoints(prev => prev.map((hp) => {
             if( route.id === hp.routeID) {
                 hp.disabled = !open || !openRoot

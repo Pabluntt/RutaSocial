@@ -7,7 +7,6 @@ import (
 	"github.com/SebaVCH/hdcProject/internal/repository"
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 // HelpingPointUseCase define la interfaz para las operaciones relacionadas con puntos de ayuda.
@@ -36,7 +35,7 @@ func NewHelpingPointUseCase(helpingPointRepository repository.HelpPointRepositor
 
 // GetAllPoints maneja la solicitud para obtener todos los puntos de ayuda.
 func (h helpingPointUseCase) GetAllPoints(c *gin.Context) {
-	helpPoints, err := h.helpingPointRepository.GetAllPoints()
+	helpPoints, err := h.helpingPointRepository.GetAllPoints(c.Request.Context())
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener puntos de ayuda"})
 		return
@@ -49,9 +48,10 @@ func (h helpingPointUseCase) GetAllPoints(c *gin.Context) {
 func (h helpingPointUseCase) CreateHelpingPoint(c *gin.Context) {
 	var helpPoint domain.PuntoAyuda
 
-	claims, _ := c.Get("user")
-	userClaims := claims.(jwt.MapClaims)
-	userID := userClaims["user_id"].(string)
+	userID, ok := getAuthenticatedUserID(c)
+	if !ok {
+		return
+	}
 
 	if err := c.ShouldBindJSON(&helpPoint); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
@@ -82,7 +82,7 @@ func (h helpingPointUseCase) CreateHelpingPoint(c *gin.Context) {
 		return
 	}
 
-	createdHelpPoint, err := h.helpingPointRepository.CreateHelpingPoint(helpPoint, userID)
+	createdHelpPoint, err := h.helpingPointRepository.CreateHelpingPoint(c.Request.Context(), helpPoint, userID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear punto de ayuda"})
 		return
@@ -100,11 +100,12 @@ func (h helpingPointUseCase) UpdateHelpingPoint(c *gin.Context) {
 		return
 	}
 
-	claims, _ := c.Get("user")
-	userClaims := claims.(jwt.MapClaims)
-	userID := userClaims["user_id"].(string)
+	userID, ok := getAuthenticatedUserID(c)
+	if !ok {
+		return
+	}
 
-	if err := h.helpingPointRepository.FindByIDAndUserID(helpingPointID, userID); err != nil {
+	if err := h.helpingPointRepository.FindByIDAndUserID(c.Request.Context(), helpingPointID, userID); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -120,7 +121,7 @@ func (h helpingPointUseCase) UpdateHelpingPoint(c *gin.Context) {
 	}
 
 	updateData["_id"] = helpingPointID
-	updatedHelpingPoint, err := h.helpingPointRepository.UpdateHelpingPoint(updateData)
+	updatedHelpingPoint, err := h.helpingPointRepository.UpdateHelpingPoint(c.Request.Context(), updateData)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar el punto de ayuda"})
 		return
@@ -138,16 +139,17 @@ func (h helpingPointUseCase) LinkPersonaToHelpPoint(c *gin.Context) {
 		return
 	}
 
-	claims, _ := c.Get("user")
-	userClaims := claims.(jwt.MapClaims)
-	userID := userClaims["user_id"].(string)
+	userID, ok := getAuthenticatedUserID(c)
+	if !ok {
+		return
+	}
 
-	if err := h.helpingPointRepository.FindByIDAndUserID(helpPointID, userID); err != nil {
+	if err := h.helpingPointRepository.FindByIDAndUserID(c.Request.Context(), helpPointID, userID); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	err := h.helpingPointRepository.LinkPersonaToHelpPoint(helpPointID, personaID)
+	err := h.helpingPointRepository.LinkPersonaToHelpPoint(c.Request.Context(), helpPointID, personaID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al vincular persona"})
 		return
@@ -165,16 +167,17 @@ func (h helpingPointUseCase) DeleteHelpingPoint(c *gin.Context) {
 		return
 	}
 
-	claims, _ := c.Get("user")
-	userClaims := claims.(jwt.MapClaims)
-	userID := userClaims["user_id"].(string)
+	userID, ok := getAuthenticatedUserID(c)
+	if !ok {
+		return
+	}
 
-	if err := h.helpingPointRepository.FindByIDAndUserID(helpingPointID, userID); err != nil {
+	if err := h.helpingPointRepository.FindByIDAndUserID(c.Request.Context(), helpingPointID, userID); err != nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
-	err := h.helpingPointRepository.DeleteHelpingPoint(helpingPointID)
+	err := h.helpingPointRepository.DeleteHelpingPoint(c.Request.Context(), helpingPointID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al eliminar punto de ayuda"})
 		return

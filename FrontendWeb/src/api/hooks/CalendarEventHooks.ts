@@ -25,9 +25,7 @@ export function useUserCalendarEvents(userId: string, enabled?: boolean) {
 export function useCreateCalendarEvent() {
     return useMutation({
         mutationFn : ( event : Omit<CalendarEvent, 'id' | 'authorName' | 'colorInstitution'>) => CalendarService.AddEvent(MapCalendarEventToCreateRequest(event)),
-        onError(error, variables, context) {
-            console.log(error)
-            console.log(context)
+        onError(_error, _variables, _context) {
         },
     })
 }

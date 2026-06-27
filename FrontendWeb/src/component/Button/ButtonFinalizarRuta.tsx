@@ -41,7 +41,7 @@ export default function ButtonFinalizarRuta() {
     return (
         <div className="flex absolute w-full h-11 items-center bg-orange-500 px-2 gap-2">
             <Typography className="grow text-white text-sm text-center font-medium">
-                El administrador debe de finalizar la ruta
+                El líder debe finalizar la ruta
             </Typography>
             <Button 
                 size="small" 

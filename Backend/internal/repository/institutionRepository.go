@@ -12,11 +12,11 @@ import (
 // InstitutionRepository define la interfaz para las operaciones relacionadas con instituciones.
 // Contiene métodos para obtener, crear, actualizar y eliminar instituciones.
 type InstitutionRepository interface {
-	GetAllInstitutions() ([]domain.Institution, error)
-	GetInstitutionByID(id string) (domain.Institution, error)
-	CreateInstitution(institution domain.Institution) error
-	UpdateInstitution(id string, updateData map[string]interface{}) error
-	DeleteInstitution(id string) error
+	GetAllInstitutions(ctx context.Context) ([]domain.Institution, error)
+	GetInstitutionByID(ctx context.Context, id string) (domain.Institution, error)
+	CreateInstitution(ctx context.Context, institution domain.Institution) error
+	UpdateInstitution(ctx context.Context, id string, updateData map[string]interface{}) error
+	DeleteInstitution(ctx context.Context, id string) error
 }
 
 // institutionRepository implementa la interfaz InstitutionRepository.
@@ -35,8 +35,8 @@ func NewInstitutionRepository(InstitutionCollection *mongo.Collection) Instituti
 
 // GetAllInstitutions obtiene todas las instituciones de la base de datos.
 // Retorna un slice de instituciones o un error si ocurre algún problema.
-func (i *institutionRepository) GetAllInstitutions() ([]domain.Institution, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (i *institutionRepository) GetAllInstitutions(ctx context.Context) ([]domain.Institution, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	var institutions []domain.Institution
 
@@ -55,8 +55,8 @@ func (i *institutionRepository) GetAllInstitutions() ([]domain.Institution, erro
 
 // GetInstitutionByID obtiene una institución por su ID.
 // Recibe el ID como string, lo convierte a ObjectID y busca en la colección.
-func (i *institutionRepository) GetInstitutionByID(id string) (domain.Institution, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (i *institutionRepository) GetInstitutionByID(ctx context.Context, id string) (domain.Institution, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	var institution domain.Institution
 
@@ -65,7 +65,7 @@ func (i *institutionRepository) GetInstitutionByID(id string) (domain.Institutio
 		return institution, err
 	}
 
-	filter := bson.D{{"_id", objectID}}
+	filter := bson.D{{Key: "_id", Value: objectID}}
 	err = i.InstitutionCollection.FindOne(ctx, filter).Decode(&institution)
 	if err != nil {
 		return institution, err
@@ -76,8 +76,8 @@ func (i *institutionRepository) GetInstitutionByID(id string) (domain.Institutio
 
 // CreateInstitution crea una nueva institución en la base de datos.
 // Asigna un nuevo ID a la institución y la inserta en la colección.
-func (i *institutionRepository) CreateInstitution(institution domain.Institution) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (i *institutionRepository) CreateInstitution(ctx context.Context, institution domain.Institution) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	institution.ID = bson.NewObjectID()
 	_, err := i.InstitutionCollection.InsertOne(ctx, institution)
@@ -86,8 +86,8 @@ func (i *institutionRepository) CreateInstitution(institution domain.Institution
 
 // UpdateInstitution actualiza una institución existente en la base de datos.
 // Recibe el ID de la institución y un mapa de datos a actualizar.
-func (i *institutionRepository) UpdateInstitution(id string, updateData map[string]interface{}) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (i *institutionRepository) UpdateInstitution(ctx context.Context, id string, updateData map[string]interface{}) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objectID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
@@ -111,15 +111,15 @@ func (i *institutionRepository) UpdateInstitution(id string, updateData map[stri
 
 // DeleteInstitution elimina una institución por su ID.
 // Convierte el ID de cadena a ObjectID y elimina el documento correspondiente de la colección.
-func (i *institutionRepository) DeleteInstitution(id string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (i *institutionRepository) DeleteInstitution(ctx context.Context, id string) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objectID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
 
-	filter := bson.D{{"_id", objectID}}
+	filter := bson.D{{Key: "_id", Value: objectID}}
 	_, err = i.InstitutionCollection.DeleteOne(ctx, filter)
 	return err
 }

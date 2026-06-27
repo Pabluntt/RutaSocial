@@ -15,12 +15,12 @@ var ErrPersonaNotFound = errors.New("persona no encontrada")
 // HelpPointRepository define la interfaz para las operaciones relacionadas con puntos de ayuda.
 // Contiene métodos para obtener, crear, actualizar y eliminar puntos de ayuda, así como buscar por ID y usuario.
 type HelpPointRepository interface {
-	GetAllPoints() ([]domain.PuntoAyuda, error)
-	CreateHelpingPoint(helpPoint domain.PuntoAyuda, userID string) (domain.PuntoAyuda, error)
-	UpdateHelpingPoint(data map[string]interface{}) (domain.PuntoAyuda, error)
-	DeleteHelpingPoint(id string) error
-	FindByIDAndUserID(id string, userID string) error
-	LinkPersonaToHelpPoint(helpPointID string, personaID string) error
+GetAllPoints(ctx context.Context) ([]domain.PuntoAyuda, error)
+CreateHelpingPoint(ctx context.Context, helpPoint domain.PuntoAyuda, userID string) (domain.PuntoAyuda, error)
+UpdateHelpingPoint(ctx context.Context, data map[string]interface{}) (domain.PuntoAyuda, error)
+DeleteHelpingPoint(ctx context.Context, id string) error
+FindByIDAndUserID(ctx context.Context, id string, userID string) error
+LinkPersonaToHelpPoint(ctx context.Context, helpPointID string, personaID string) error
 }
 
 // helpPointRepository implementa la interfaz HelpPointRepository.
@@ -45,8 +45,8 @@ func NewHelpPointRepository(helpPointCollection *mongo.Collection, peopleHelpedC
 // Asigna un ID nuevo, la fecha de registro y el ID del autor antes de insertar el documento.
 // Tambien guarda una copia de cada persona en la coleccion people_helped para mantener compatibilidad.
 // Crea o vincula personas en la coleccion personas segun corresponda.
-func (h *helpPointRepository) CreateHelpingPoint(helpPoint domain.PuntoAyuda, userID string) (domain.PuntoAyuda, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+func (h *helpPointRepository) CreateHelpingPoint(ctx context.Context, helpPoint domain.PuntoAyuda, userID string) (domain.PuntoAyuda, error) {
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 	helpPoint.ID = bson.NewObjectID()
 	helpPoint.DateRegister = time.Now()
@@ -122,8 +122,8 @@ func (h *helpPointRepository) CreateHelpingPoint(helpPoint domain.PuntoAyuda, us
 
 // UpdateHelpingPoint actualiza un punto de ayuda en la base de datos.
 // Recibe un mapa de datos a actualizar, verifica el ID del punto de ayuda y actualiza los campos correspondientes.
-func (h *helpPointRepository) UpdateHelpingPoint(data map[string]interface{}) (domain.PuntoAyuda, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (h *helpPointRepository) UpdateHelpingPoint(ctx context.Context, data map[string]interface{}) (domain.PuntoAyuda, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	idStr, ok := data["_id"].(string)
 	if !ok {
@@ -161,8 +161,8 @@ func (h *helpPointRepository) UpdateHelpingPoint(data map[string]interface{}) (d
 
 // DeleteHelpingPoint elimina un punto de ayuda por su ID.
 // Convierte el ID de cadena a ObjectID y elimina el documento correspondiente de la colección.
-func (h *helpPointRepository) DeleteHelpingPoint(id string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (h *helpPointRepository) DeleteHelpingPoint(ctx context.Context, id string) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
@@ -173,8 +173,8 @@ func (h *helpPointRepository) DeleteHelpingPoint(id string) error {
 }
 
 // GetAllPoints obtiene todos los puntos de ayuda de la base de datos.
-func (h *helpPointRepository) GetAllPoints() ([]domain.PuntoAyuda, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (h *helpPointRepository) GetAllPoints(ctx context.Context) ([]domain.PuntoAyuda, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	cursor, err := h.HelpPointCollection.Find(ctx, bson.M{})
 	if err != nil {
@@ -194,8 +194,8 @@ func (h *helpPointRepository) GetAllPoints() ([]domain.PuntoAyuda, error) {
 }
 
 // LinkPersonaToHelpPoint agrega un ID de persona a la lista persona_ids de un punto de ayuda.
-func (h *helpPointRepository) LinkPersonaToHelpPoint(helpPointID string, personaID string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (h *helpPointRepository) LinkPersonaToHelpPoint(ctx context.Context, helpPointID string, personaID string) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	hpObjID, err := bson.ObjectIDFromHex(helpPointID)
 	if err != nil {
@@ -216,8 +216,8 @@ func (h *helpPointRepository) LinkPersonaToHelpPoint(helpPointID string, persona
 
 // FindByIDAndUserID busca un punto de ayuda por su ID y el ID del usuario.
 // Convierte el ID de cadena a ObjectID y verifica si el punto de ayuda pertenece al usuario especificado.
-func (h *helpPointRepository) FindByIDAndUserID(id string, userID string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (h *helpPointRepository) FindByIDAndUserID(ctx context.Context, id string, userID string) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
@@ -239,3 +239,7 @@ func (h *helpPointRepository) FindByIDAndUserID(id string, userID string) error 
 	}
 	return nil
 }
+
+
+
+

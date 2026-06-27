@@ -13,7 +13,7 @@ export type UpdateAlojamientoRequest = {
     name?: string
 }
 
-const BASE_URL = `${import.meta.env.VITE_URL_BACKEND}/alojamiento`
+const BASE_URL = '/alojamiento'
 
 export async function getAllAlojamientos() {
     const response = await axiosInstance.get(BASE_URL)

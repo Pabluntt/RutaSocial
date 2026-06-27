@@ -18,6 +18,8 @@ type WeatherUseCase interface {
 
 type weatherUseCase struct{}
 
+var weatherClient = &http.Client{Timeout: 10 * time.Second}
+
 func NewWeatherUseCase() WeatherUseCase {
 	return &weatherUseCase{}
 }
@@ -196,7 +198,7 @@ func (u *weatherUseCase) GetWeather(c *gin.Context) {
 		req.Latitude, req.Longitude,
 	)
 
-	resp, err := http.Get(url)
+	resp, err := weatherClient.Get(url)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al consultar el clima"})
 		return

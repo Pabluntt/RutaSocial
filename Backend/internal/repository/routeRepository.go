@@ -14,17 +14,17 @@ import (
 // RouteRepository define la interfaz para las operaciones relacionadas con rutas.
 // Contiene métodos para obtener, crear, actualizar, eliminar y unirse a rutas.
 type RouteRepository interface {
-	FindAll() ([]domain.Route, error)
-	FindByID(routeId string) (domain.Route, error)
-	CreateRoute(route *domain.Route) error
-	UpdateRoute(data map[string]interface{}) (domain.Route, error)
-	DeleteRoute(routeId string) error
-	FinishRoute(id string) error
-	JoinRoute(code string, userID string) (domain.Route, error)
-	LeaveRoute(routeId string, userID string) error
-	GetMyParticipation(userID string) (map[string]int, error)
-	GetHelpPointsByRouteID(routeID string) ([]domain.PuntoAyuda, error)
-	GetRoutesByUserID(userID string) ([]domain.Route, error)
+	FindAll(ctx context.Context) ([]domain.Route, error)
+	FindByID(ctx context.Context, routeId string) (domain.Route, error)
+	CreateRoute(ctx context.Context, route *domain.Route) error
+	UpdateRoute(ctx context.Context, data map[string]interface{}) (domain.Route, error)
+	DeleteRoute(ctx context.Context, routeId string) error
+	FinishRoute(ctx context.Context, id string, leaderID string) error
+	JoinRoute(ctx context.Context, code string, userID string) (domain.Route, error)
+	LeaveRoute(ctx context.Context, routeId string, userID string) error
+	GetMyParticipation(ctx context.Context, userID string) (map[string]int, error)
+	GetHelpPointsByRouteID(ctx context.Context, routeID string) ([]domain.PuntoAyuda, error)
+	GetRoutesByUserID(ctx context.Context, userID string) ([]domain.Route, error)
 }
 
 // routeRepository implementa la interfaz RouteRepository.
@@ -47,8 +47,8 @@ func NewRouteRepository(routeCollection *mongo.Collection, helpPointCollection *
 
 // FindAll obtiene todas las rutas de la base de datos.
 // Retorna un slice de rutas o un error si ocurre algún problema.
-func (r *routeRepository) FindAll() ([]domain.Route, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *routeRepository) FindAll(ctx context.Context) ([]domain.Route, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	cursor, err := r.RouteCollection.Find(ctx, bson.M{})
 	if err != nil {
@@ -65,8 +65,8 @@ func (r *routeRepository) FindAll() ([]domain.Route, error) {
 
 // FindByID obtiene una ruta por su ID.
 // Recibe el ID como string, lo convierte a ObjectID y busca en la colección.
-func (r *routeRepository) FindByID(routeId string) (domain.Route, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *routeRepository) FindByID(ctx context.Context, routeId string) (domain.Route, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(routeId)
 	if err != nil {
@@ -83,8 +83,8 @@ func (r *routeRepository) FindByID(routeId string) (domain.Route, error) {
 
 // CreateRoute crea una nueva ruta en la base de datos.
 // Asigna un nuevo ID, establece la fecha de creación, el estado y el código de invitación.
-func (r *routeRepository) CreateRoute(route *domain.Route) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *routeRepository) CreateRoute(ctx context.Context, route *domain.Route) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	route.ID = bson.NewObjectID()
 	route.DateCreated = time.Now()
@@ -102,8 +102,8 @@ func (r *routeRepository) CreateRoute(route *domain.Route) error {
 
 // UpdateRoute actualiza una ruta existente en la base de datos.
 // Recibe un mapa de datos a actualizar y el ID de la ruta.
-func (r *routeRepository) UpdateRoute(data map[string]interface{}) (domain.Route, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *routeRepository) UpdateRoute(ctx context.Context, data map[string]interface{}) (domain.Route, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	idStr, ok := data["_id"].(string)
 	if !ok {
@@ -141,8 +141,8 @@ func (r *routeRepository) UpdateRoute(data map[string]interface{}) (domain.Route
 
 // DeleteRoute elimina una ruta de la base de datos por su ID.
 // Convierte el ID de cadena a ObjectID y elimina el documento correspondiente.
-func (r *routeRepository) DeleteRoute(routeId string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *routeRepository) DeleteRoute(ctx context.Context, routeId string) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(routeId)
 	if err != nil {
@@ -155,18 +155,25 @@ func (r *routeRepository) DeleteRoute(routeId string) error {
 
 // FinishRoute marca una ruta como finalizada.
 // Recibe el ID de la ruta, lo convierte a ObjectID y actualiza su estado y fecha de finalización.
-func (r *routeRepository) FinishRoute(id string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *routeRepository) FinishRoute(ctx context.Context, id string, leaderID string) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
 		return errors.New("ID de ruta inválido")
 	}
+	leaderObjID, err := bson.ObjectIDFromHex(leaderID)
+	if err != nil {
+		return errors.New("ID de líder inválido")
+	}
 
 	update := bson.M{"$set": bson.M{"status": "Finalizada", "date_finished": time.Now()}}
-	_, err = r.RouteCollection.UpdateOne(ctx, bson.M{"_id": objID}, update)
+	result, err := r.RouteCollection.UpdateOne(ctx, bson.M{"_id": objID, "route_leader": leaderObjID}, update)
 	if err != nil {
 		return err
+	}
+	if result.MatchedCount == 0 {
+		return errors.New("ruta no encontrada o no autorizada")
 	}
 
 	return nil
@@ -175,8 +182,8 @@ func (r *routeRepository) FinishRoute(id string) error {
 // JoinRoute permite a un usuario unirse a una ruta utilizando un código de invitación.
 // Verifica si la ruta existe, si no está finalizada y si el usuario ya es parte del equipo.
 // Si todas las condiciones se cumplen, agrega al usuario al equipo de la ruta y retorna la ruta actualizada.
-func (r *routeRepository) JoinRoute(code string, userID string) (domain.Route, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *routeRepository) JoinRoute(ctx context.Context, code string, userID string) (domain.Route, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	var route domain.Route
 	err := r.RouteCollection.FindOne(ctx, bson.M{"invite_code": code}).Decode(&route)
@@ -216,8 +223,8 @@ func (r *routeRepository) JoinRoute(code string, userID string) (domain.Route, e
 // LeaveRoute permite a un usuario salir de una ruta.
 // Recibe el ID de la ruta y el ID del usuario, verifica que ambos sean válidos
 // y elimina al usuario del equipo de la ruta usando $pull.
-func (r *routeRepository) LeaveRoute(routeId string, userID string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *routeRepository) LeaveRoute(ctx context.Context, routeId string, userID string) error {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	routeObjID, err := bson.ObjectIDFromHex(routeId)
 	if err != nil {
@@ -261,8 +268,8 @@ func (r *routeRepository) LeaveRoute(routeId string, userID string) error {
 
 // GetRoutesByUserID obtiene todas las rutas asociadas a un usuario (como líder o miembro del equipo).
 // Recibe el ID del usuario como string y retorna un slice de rutas.
-func (r *routeRepository) GetRoutesByUserID(userID string) ([]domain.Route, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *routeRepository) GetRoutesByUserID(ctx context.Context, userID string) ([]domain.Route, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	userObjID, err := bson.ObjectIDFromHex(userID)
 	if err != nil {
@@ -291,8 +298,8 @@ func (r *routeRepository) GetRoutesByUserID(userID string) ([]domain.Route, erro
 // GetHelpPointsByRouteID obtiene todos los puntos de ayuda asociados a una ruta.
 // Recibe el ID de la ruta como string y retorna un slice de PuntoAyuda.
 // Si un punto tiene persona_ids pero no people, busca las personas en la coleccion personas.
-func (r *routeRepository) GetHelpPointsByRouteID(routeID string) ([]domain.PuntoAyuda, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *routeRepository) GetHelpPointsByRouteID(ctx context.Context, routeID string) ([]domain.PuntoAyuda, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(routeID)
 	if err != nil {
@@ -338,8 +345,8 @@ func (r *routeRepository) GetHelpPointsByRouteID(routeID string) ([]domain.Punto
 
 // GetMyParticipation obtiene la participación de un usuario en rutas.
 // Recibe el ID del usuario, busca las rutas en las que participa y cuenta el total de rutas y puntos de ayuda.
-func (r *routeRepository) GetMyParticipation(userID string) (map[string]int, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (r *routeRepository) GetMyParticipation(ctx context.Context, userID string) (map[string]int, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	userObjID, err := bson.ObjectIDFromHex(userID)
 	if err != nil {

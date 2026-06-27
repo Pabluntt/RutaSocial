@@ -33,7 +33,7 @@ func NewRiskUseCase(riskRepository repository.RiskRepository) RiskUseCase {
 
 // GetAllRisks maneja la solicitud para obtener todos los riesgos.
 func (r riskUseCase) GetAllRisks(c *gin.Context) {
-	risks, err := r.riskRepository.GetRisks()
+	risks, err := r.riskRepository.GetRisks(c.Request.Context())
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener riesgos"})
 		return
@@ -55,7 +55,7 @@ func (r riskUseCase) CreateRisk(c *gin.Context) {
 		return
 	}
 
-	err := r.riskRepository.CreateRisk(risk)
+	err := r.riskRepository.CreateRisk(c.Request.Context(), risk)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear el riesgo"})
 		return
@@ -67,7 +67,7 @@ func (r riskUseCase) CreateRisk(c *gin.Context) {
 // Si el ID no se proporciona, retorna un error 400 Bad Request.
 func (r riskUseCase) DeleteRisk(c *gin.Context) {
 	id := c.Param("id")
-	err := r.riskRepository.DeleteRisk(id)
+	err := r.riskRepository.DeleteRisk(c.Request.Context(), id)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al eliminar el riesgo"})
 		return
@@ -95,7 +95,7 @@ func (r riskUseCase) UpdateRisk(c *gin.Context) {
 	}
 
 	updateData["_id"] = riskID
-	updatedRisk, err := r.riskRepository.UpdateRisk(updateData)
+	updatedRisk, err := r.riskRepository.UpdateRisk(c.Request.Context(), updateData)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar el riesgo"})
 		return
@@ -103,3 +103,4 @@ func (r riskUseCase) UpdateRisk(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": updatedRisk})
 
 }
+

@@ -56,10 +56,6 @@ export default function DialogUpdateRisk() {
         }
     }, [isSuccess])
 
-    useEffect(() => {
-        console.log(risk)
-    }, [risk])
-
     if(risk === undefined) {
         return null
     }

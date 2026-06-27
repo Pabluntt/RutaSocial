@@ -31,7 +31,7 @@ func NewPersonaUseCase(repo repository.PersonaRepository) PersonaUseCase {
 }
 
 func (uc *personaUseCase) GetAll(c *gin.Context) {
-	personas, err := uc.repo.GetAll()
+	personas, err := uc.repo.GetAll(c.Request.Context())
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener personas"})
 		return
@@ -46,7 +46,7 @@ func (uc *personaUseCase) GetByID(c *gin.Context) {
 		return
 	}
 
-	persona, err := uc.repo.GetByID(id)
+	persona, err := uc.repo.GetByID(c.Request.Context(), id)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -61,7 +61,7 @@ func (uc *personaUseCase) Search(c *gin.Context) {
 		return
 	}
 
-	personas, err := uc.repo.Search(query)
+	personas, err := uc.repo.Search(c.Request.Context(), query)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al buscar personas"})
 		return
@@ -92,7 +92,7 @@ func (uc *personaUseCase) Create(c *gin.Context) {
 	}
 
 	if persona.Rut != "" {
-		existing, err := uc.repo.GetByRut(persona.Rut)
+		existing, err := uc.repo.GetByRut(c.Request.Context(), persona.Rut)
 		if err != nil {
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al verificar RUT"})
 			return
@@ -103,7 +103,7 @@ func (uc *personaUseCase) Create(c *gin.Context) {
 		}
 	}
 
-	created, err := uc.repo.Create(persona)
+	created, err := uc.repo.Create(c.Request.Context(), persona)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear persona"})
 		return
@@ -133,7 +133,7 @@ func (uc *personaUseCase) Update(c *gin.Context) {
 		return
 	}
 
-	updated, err := uc.repo.Update(id, updateData)
+	updated, err := uc.repo.Update(c.Request.Context(), id, updateData)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -148,7 +148,7 @@ func (uc *personaUseCase) Delete(c *gin.Context) {
 		return
 	}
 
-		err := uc.repo.Delete(id)
+		err := uc.repo.Delete(c.Request.Context(), id)
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -179,13 +179,13 @@ func (uc *personaUseCase) AddAntecedente(c *gin.Context) {
 		return
 	}
 
-	err := uc.repo.AddAntecedente(id, entry)
+	err := uc.repo.AddAntecedente(c.Request.Context(), id, entry)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	persona, err := uc.repo.GetByID(id)
+	persona, err := uc.repo.GetByID(c.Request.Context(), id)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -201,13 +201,13 @@ func (uc *personaUseCase) DeleteAntecedente(c *gin.Context) {
 		return
 	}
 
-	err := uc.repo.DeleteAntecedente(id, entryID)
+	err := uc.repo.DeleteAntecedente(c.Request.Context(), id, entryID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	persona, err := uc.repo.GetByID(id)
+	persona, err := uc.repo.GetByID(c.Request.Context(), id)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -238,13 +238,13 @@ func (uc *personaUseCase) AddInfoMedica(c *gin.Context) {
 		return
 	}
 
-	err := uc.repo.AddInfoMedica(id, entry)
+	err := uc.repo.AddInfoMedica(c.Request.Context(), id, entry)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	persona, err := uc.repo.GetByID(id)
+	persona, err := uc.repo.GetByID(c.Request.Context(), id)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -260,16 +260,17 @@ func (uc *personaUseCase) DeleteInfoMedica(c *gin.Context) {
 		return
 	}
 
-	err := uc.repo.DeleteInfoMedica(id, entryID)
+	err := uc.repo.DeleteInfoMedica(c.Request.Context(), id, entryID)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	persona, err := uc.repo.GetByID(id)
+	persona, err := uc.repo.GetByID(c.Request.Context(), id)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": persona})
 }
+

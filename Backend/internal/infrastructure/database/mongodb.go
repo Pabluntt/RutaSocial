@@ -4,7 +4,7 @@ package database
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"os"
 	"time"
 
@@ -22,7 +22,8 @@ func StartDB() error {
 	var uri string
 
 	if uri = os.Getenv("MONGODB_URI"); uri == "" {
-		log.Fatal("Error al obtener la URI del la DB")
+		slog.Error("Error al obtener la URI del la DB")
+		os.Exit(1)
 	}
 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
@@ -42,6 +43,6 @@ func StartDB() error {
 	}
 
 	Client = client
-	log.Println("Conectado a MongoDB correctamente")
+	slog.Info("Conectado a MongoDB correctamente")
 	return nil
 }

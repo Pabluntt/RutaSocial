@@ -105,7 +105,7 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
             description,
             coords,
             authorID: authorID,
-            status : RiskStatus.Enviroment
+            status : RiskStatus.Environment
         })
     }
 
