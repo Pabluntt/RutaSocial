@@ -1,13 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { StyleSheet, View, TouchableOpacity, Text, Modal, Platform, ActivityIndicator, Alert } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Modal, ActivityIndicator, Alert } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Region, Circle } from 'react-native-maps';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import Constants from 'expo-constants';
 import * as Location from 'expo-location'; 
-
-const rawUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_URL_BACKEND || '';
-const backendUrl = Platform.OS === 'android' ? rawUrl.replace('localhost', '10.0.2.2') : rawUrl;
+import { backendUrl } from '../config/api';
 
 type RiskMarker = {
   latitude: number;

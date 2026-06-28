@@ -9,7 +9,7 @@ export class NoticeService {
     private static readonly RESOURCE_NAME = 'notification'
 
     static async MarkAsReadNotices( unreadNotices: Notice[] ) : Promise<boolean> {
-        Promise.all(unreadNotices.map(async (notice , _ ) => (
+        await Promise.all(unreadNotices.map(async (notice , _ ) => (
             await axiosInstance.put(`/${NoticeService.RESOURCE_NAME}/read/${notice.id}`)
         )))
         return true
@@ -18,8 +18,9 @@ export class NoticeService {
     static async GetReadNotices() : Promise<Notice[]> {
         const { data } = await axiosInstance.get(`/${NoticeService.RESOURCE_NAME}/read`)
         if( data?.message === null) return []
+        const cache = { users: new Map() }
         const notices : Notice[] = await Promise.all((data?.message as TNoticeBackend[]).map(async (notice, _) => (
-            await MapNoticeFromBackend(notice)
+            await MapNoticeFromBackend(notice, cache)
         )))
         return notices.sort(compareSortNotices)
     }
@@ -27,8 +28,9 @@ export class NoticeService {
     static async GetUnReadNotices() : Promise<Notice[]> {
         const { data } = await axiosInstance.get(`/${NoticeService.RESOURCE_NAME}/unread`)
         if( data?.message === null) return []
+        const cache = { users: new Map() }
         const notices : Notice[] = await Promise.all((data?.message as TNoticeBackend[]).map(async (notice, _) => (
-            await MapNoticeFromBackend(notice)
+            await MapNoticeFromBackend(notice, cache)
         )))
         return notices.sort(compareSortNotices)
     }
@@ -36,8 +38,9 @@ export class NoticeService {
     static async GetNotices() : Promise<Notice[]>{
         const { data } = await axiosInstance.get(`/${NoticeService.RESOURCE_NAME}`) 
         if( data?.message === null) return []
+        const cache = { users: new Map() }
         const notices : Notice[] = await Promise.all((data?.message as TNoticeBackend[]).map(async (notice, _) => (
-            await MapNoticeFromBackend(notice)
+            await MapNoticeFromBackend(notice, cache)
         )))
         return notices.sort(compareSortNotices)
     }

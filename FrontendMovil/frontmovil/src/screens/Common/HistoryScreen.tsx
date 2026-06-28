@@ -5,21 +5,17 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
-  Platform,
   TouchableOpacity,
   Modal,
   Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import Constants from 'expo-constants';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/RootStack';
 import Icon from 'react-native-vector-icons/FontAwesome'; // <--- IMPORTANTE
-
-const rawUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_URL_BACKEND || '';
-const backendUrl = Platform.OS === 'android' ? rawUrl.replace('localhost', '10.0.2.2') : rawUrl;
+import { backendUrl } from '../../config/api';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'History'>;
 

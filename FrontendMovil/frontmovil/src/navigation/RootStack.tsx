@@ -27,7 +27,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const RootStackNavigation = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Initial">
+      <Stack.Navigator id={undefined} initialRouteName="Initial">
         <Stack.Group screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Initial" component={InitialScreen} />
         </Stack.Group>

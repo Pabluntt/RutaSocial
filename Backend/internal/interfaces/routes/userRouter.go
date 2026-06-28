@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/SebaVCH/hdcProject/internal/config"
+	"github.com/SebaVCH/hdcProject/internal/domain"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -22,9 +23,9 @@ func SetupUserRouter(r *gin.Engine) {
 	protected.GET("/profile", userController.GetUserProfile)
 	protected.GET("/public-info/:id", userController.GetPublicInfoByID)
 	protected.PUT("/update", userController.UpdateUserInfo)
-	protected.GET("/", middleware.RoleMiddleware("admin"), userController.GetAllUsers)
-	protected.POST("/", middleware.RoleMiddleware("admin"), userController.CreateUserByAdmin)
-	protected.GET("/:id", middleware.RoleMiddleware("admin"), userController.GetUserByID)
-	protected.PUT("/:id", middleware.RoleMiddleware("admin"), userController.UpdateUserByAdmin)
-	protected.DELETE("/:id", middleware.RoleMiddleware("admin"), userController.DeleteUser)
+	protected.GET("/", middleware.RoleMiddleware(domain.RoleAdmin), userController.GetAllUsers)
+	protected.POST("/", middleware.RoleMiddleware(domain.RoleAdmin), userController.CreateUserByAdmin)
+	protected.GET("/:id", middleware.RoleMiddleware(domain.RoleAdmin), userController.GetUserByID)
+	protected.PUT("/:id", middleware.RoleMiddleware(domain.RoleAdmin), userController.UpdateUserByAdmin)
+	protected.DELETE("/:id", middleware.RoleMiddleware(domain.RoleAdmin), userController.DeleteUser)
 }

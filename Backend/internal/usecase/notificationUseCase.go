@@ -56,7 +56,7 @@ func (n notificationUseCase) CreateNotification(c *gin.Context) {
 		return
 	}
 
-	if notification.SendToAll && userRole != "admin" {
+	if notification.SendToAll && userRole != domain.RoleAdmin {
 		c.IndentedJSON(http.StatusForbidden, gin.H{"error": "No tienes permiso para enviar avisos a todos"})
 		return
 	}
@@ -92,7 +92,7 @@ func (n notificationUseCase) DeleteNotification(c *gin.Context) {
 		return
 	}
 
-	if userRole != "admin" {
+	if userRole != domain.RoleAdmin {
 		if err := n.notificationRepository.FindByIDAndUserID(c.Request.Context(), notificationID, userID); err != nil {
 			logUseCaseWarn(c, "notification.delete.authorize", http.StatusForbidden, err, "notification_id", notificationID)
 			c.IndentedJSON(http.StatusForbidden, gin.H{"error": "No tienes permiso para eliminar este aviso"})
@@ -124,7 +124,7 @@ func (n notificationUseCase) UpdateNotification(c *gin.Context) {
 		return
 	}
 
-	if userRole != "admin" {
+	if userRole != domain.RoleAdmin {
 		if err := n.notificationRepository.FindByIDAndUserID(c.Request.Context(), notificationID, userID); err != nil {
 			logUseCaseWarn(c, "notification.update.authorize", http.StatusBadRequest, err, "notification_id", notificationID)
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})

@@ -11,19 +11,16 @@ import {
   TextInput,
   Alert as RNAlert,
   ScrollView,
-  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import Constants from 'expo-constants';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/RootStack';
 import MapComponent from '../../components/MapComponent';
 import { useFocusEffect } from '@react-navigation/native';
-
-const rawUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_URL_BACKEND || '';
-const backendUrl = Platform.OS === 'android' ? rawUrl.replace('localhost', '10.0.2.2') : rawUrl;
+import { backendUrl } from '../../config/api';
+import { Role } from '../../config/roles';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -146,11 +143,11 @@ export default function HomeScreen({ navigation }: Props) {
       const authorIds = [...new Set(notificationsArr.map(n => n.author_id))];
       const idToName: any = {};
 
-      for (const id of authorIds) {
+      await Promise.all(authorIds.map(async (id) => {
         const idStr = getAuthorIdString(id);
-        if (!idStr) continue;
+        if (!idStr) return;
         idToName[idStr] = await getUserNameById(idStr, token, nameCache);
-      }
+      }));
 
       const notificationsWithNames = notificationsArr.map((n: any) => ({
         ...n,
@@ -282,7 +279,7 @@ export default function HomeScreen({ navigation }: Props) {
     { label: 'Eventos', route: 'Event' },
     { label: 'Rutas', route: 'Route' },
     { label: 'Historial', route: 'History' },
-     ...(userRole === 'admin' ? [{ label: 'Usuarios', route: 'Users' }] : []),
+     ...(userRole === Role.Admin ? [{ label: 'Usuarios', route: 'Users' }] : []),
   ];
 
   const handleNavigate = (route: keyof RootStackParamList) => {

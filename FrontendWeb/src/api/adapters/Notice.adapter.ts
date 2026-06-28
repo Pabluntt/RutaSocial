@@ -1,5 +1,5 @@
 import { Notice } from "../models/Notice";
-import { UserService } from "../services/UserService";
+import { TPublicUserInfo, UserService } from "../services/UserService";
 
 export type TNoticeBackend = {
     _id: string;
@@ -12,11 +12,20 @@ export type TNoticeBackend = {
 export type TNoticeCreateRequest = Omit<TNoticeBackend, '_id' | 'created_at'>;
 export type TNoticeUpdateRequest = TNoticeBackend;
 
-export async function MapNoticeFromBackend(data: TNoticeBackend): Promise<Notice> {
+export type TNoticeMapCache = {
+    users?: Map<string, Promise<TPublicUserInfo>>
+}
+
+export async function MapNoticeFromBackend(data: TNoticeBackend, cache?: TNoticeMapCache): Promise<Notice> {
 
     let authorName = 'Usuario Eliminado'
     try {
-        const info = await UserService.GetPublicInfoByID(data.author_id as string)
+        let userPromise = cache?.users?.get(data.author_id)
+        if (!userPromise) {
+            userPromise = UserService.GetPublicInfoByID(data.author_id)
+            cache?.users?.set(data.author_id, userPromise)
+        }
+        const info = await userPromise
         authorName = info.name
     } catch(_e) {
     }

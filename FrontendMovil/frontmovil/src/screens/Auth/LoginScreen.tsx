@@ -7,19 +7,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
-  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { NavigationProp } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import Constants from 'expo-constants';
-
-const rawUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_URL_BACKEND || '';
-const backendUrl =
-  Platform.OS === 'android'
-    ? rawUrl.replace('localhost', '10.0.2.2')
-    : rawUrl;
+import { backendUrl } from '../../config/api';
 
 type LoginScreenProps = {
   navigation: NavigationProp<any>;

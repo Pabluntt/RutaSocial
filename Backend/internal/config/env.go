@@ -16,6 +16,12 @@ var JwtSecret []byte
 // Se lee de la variable de entorno MONGODB_DB_NAME, con "pip" como valor por defecto.
 var DBName string
 
+// HTTPPort es el puerto donde escucha el servidor HTTP.
+var HTTPPort string
+
+// AppEnv indica el ambiente de ejecución, por ejemplo "production".
+var AppEnv string
+
 // LoadEnv carga las variables de entorno necesarias para la aplicación.
 // Primero intenta cargar desde el archivo .env, luego carga la clave secreta para JWT desde la variable de entorno
 func LoadEnv() error {
@@ -37,6 +43,13 @@ func LoadEnv() error {
 	if DBName == "" {
 		DBName = "pip"
 	}
+
+	HTTPPort = os.Getenv("PORT")
+	if HTTPPort == "" {
+		HTTPPort = "8080"
+	}
+
+	AppEnv = os.Getenv("APP_ENV")
 
 	return nil
 }

@@ -1,6 +1,7 @@
 import { CalendarEvent } from "../models/Calendar"
+import { Institution } from "../models/Institution"
 import { InstitutionService } from "../services/InstitutionService"
-import { UserService } from "../services/UserService"
+import { TPublicUserInfo, UserService } from "../services/UserService"
 
 export type TCalendarEventBackend = {
     _id: string
@@ -21,15 +22,33 @@ export type TCalendarEventCreateRequest = Omit<
 
 export type TCalendarEventUpdateRequest = TCalendarEventBackend
 
+export type TCalendarEventMapCache = {
+    users?: Map<string, Promise<TPublicUserInfo>>
+    institutions?: Map<string, Promise<Institution>>
+}
+
 export async function MapCalendarEventFromBackend(
-    data: Partial<TCalendarEventBackend>
+    data: Partial<TCalendarEventBackend>,
+    cache?: TCalendarEventMapCache
 ): Promise<CalendarEvent> {
 
     let authorName = 'Usuario Eliminado'
     let colorInstitution = '#000000'
     try {
-        const user = (await UserService.GetPublicInfoByID(data.author_id as string))
-        colorInstitution = (await InstitutionService.FindByID(user.institutionID)).color
+        const authorID = data.author_id as string
+        let userPromise = cache?.users?.get(authorID)
+        if (!userPromise) {
+            userPromise = UserService.GetPublicInfoByID(authorID)
+            cache?.users?.set(authorID, userPromise)
+        }
+        const user = await userPromise
+
+        let institutionPromise = cache?.institutions?.get(user.institutionID)
+        if (!institutionPromise) {
+            institutionPromise = InstitutionService.FindByID(user.institutionID)
+            cache?.institutions?.set(user.institutionID, institutionPromise)
+        }
+        colorInstitution = (await institutionPromise).color
         authorName = user.name
     } catch(_e) {
     }

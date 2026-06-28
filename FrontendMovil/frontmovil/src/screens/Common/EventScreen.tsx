@@ -2,22 +2,19 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, Alert,
-  ScrollView, Modal, Platform,
+  ScrollView, Modal,
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/RootStack';
+import { backendUrl } from '../../config/api';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Event'>;
 };
-
-const rawUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_URL_BACKEND || '';
-const backendUrl = Platform.OS === 'android' ? rawUrl.replace('localhost', '10.0.2.2') : rawUrl;
 
 export default function EventScreen({ navigation }: Props) {
   const [selectedDate, setSelectedDate] = useState('');

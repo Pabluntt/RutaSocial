@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/SebaVCH/hdcProject/internal/config"
+	"github.com/SebaVCH/hdcProject/internal/domain"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -20,9 +21,9 @@ func SetupInstitutionRouter(r *gin.Engine) {
 
 	protected := r.Group("/institution")
 	protected.Use(middleware.AuthMiddleware())
-	protected.GET("/", middleware.RoleMiddleware("admin"), institutionController.GetAllInstitutions)
+	protected.GET("/", middleware.RoleMiddleware(domain.RoleAdmin), institutionController.GetAllInstitutions)
 	protected.GET("/:id", institutionController.GetInstitutionByID)
-	protected.POST("/", middleware.RoleMiddleware("admin"), institutionController.CreateInstitution)
-	protected.PUT("/:id", middleware.RoleMiddleware("admin"), institutionController.UpdateInstitution)
-	protected.DELETE("/:id", middleware.RoleMiddleware("admin"), institutionController.DeleteInstitution)
+	protected.POST("/", middleware.RoleMiddleware(domain.RoleAdmin), institutionController.CreateInstitution)
+	protected.PUT("/:id", middleware.RoleMiddleware(domain.RoleAdmin), institutionController.UpdateInstitution)
+	protected.DELETE("/:id", middleware.RoleMiddleware(domain.RoleAdmin), institutionController.DeleteInstitution)
 }

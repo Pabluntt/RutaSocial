@@ -5,7 +5,6 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
-  Platform,
   TouchableOpacity,
   Modal,
   TextInput,
@@ -13,24 +12,27 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import Constants from 'expo-constants';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/RootStack';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Picker } from '@react-native-picker/picker';
+import { backendUrl } from '../../config/api';
+import { Role } from '../../config/roles';
 
 const primaryColor = '#2B7A78';
 const secondaryColor = '#3AAFA9';
 const textColor = '#17252A';
 const backgroundColor = '#DEF2F1';
 
-const rawUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_URL_BACKEND || '';
-const backendUrl = Platform.OS === 'android' ? rawUrl.replace('localhost', '10.0.2.2') : rawUrl;
-
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Users'>;
+};
+
+type Institution = {
+  _id: string;
+  name: string;
 };
 
 export default function UsersScreen({ navigation }: Props) {
@@ -41,13 +43,8 @@ export default function UsersScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('voluntario'); // Default
-  const [institutions, setInstitutions] = useState([
-    'Hogar de cristo', 
-    'UCN Pastoral', 
-    'RED CALLE', 
-    'Otra institución'
-  ]);
+  const [role, setRole] = useState(Role.Volunteer);
+  const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [selectedInstitution, setSelectedInstitution] = useState('');
 
   const fetchUsers = async () => {
@@ -67,6 +64,18 @@ export default function UsersScreen({ navigation }: Props) {
   }
 };
 
+  const fetchInstitutions = async () => {
+    try {
+      const token = await AsyncStorage.getItem('accessToken');
+      const res = await axios.get(`${backendUrl}/institution/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setInstitutions(res.data.message || []);
+    } catch {
+      Alert.alert('Error al cargar instituciones');
+    }
+  };
+
   const handleRegisterUser = async () => {
   // Validaciones front
   if (!email || !password || !name || !phone || !selectedInstitution || !role) {
@@ -79,13 +88,16 @@ export default function UsersScreen({ navigation }: Props) {
   }
 
   try {
-    await axios.post(`${backendUrl}/register`, {
+    const token = await AsyncStorage.getItem('accessToken');
+    await axios.post(`${backendUrl}/user`, {
       name,
       email,
       password,
       phone,
-      institution: selectedInstitution,
+      institutionID: selectedInstitution,
       role,
+    }, {
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     Alert.alert('Usuario registrado correctamente');
@@ -95,7 +107,7 @@ export default function UsersScreen({ navigation }: Props) {
     setPhone('');
     setPassword('');
     setSelectedInstitution('');
-    setRole('voluntario');
+    setRole(Role.Volunteer);
     fetchUsers();
   } catch (err: any) {
     // Si es error de email duplicado, muestra mensaje especial
@@ -138,6 +150,7 @@ export default function UsersScreen({ navigation }: Props) {
 
   useEffect(() => {
   fetchUsers();
+  fetchInstitutions();
 }, []);
 
   const renderItem = ({ item }: { item: any }) => {
@@ -219,8 +232,8 @@ export default function UsersScreen({ navigation }: Props) {
                 prompt="Selecciona institución"
               >
                 <Picker.Item label="Selecciona institución..." value="" />
-                {institutions.map((inst, idx) => (
-                  <Picker.Item key={idx} label={inst} value={inst} />
+                {institutions.map((inst) => (
+                  <Picker.Item key={inst._id} label={inst.name} value={inst._id} />
                 ))}
               </Picker>
             </View>
@@ -233,8 +246,8 @@ export default function UsersScreen({ navigation }: Props) {
                 style={styles.picker}
                 prompt="Selecciona rol"
               >
-                <Picker.Item label="Voluntario" value="voluntario" />
-                <Picker.Item label="Admin" value="admin" />
+                <Picker.Item label="Voluntario" value={Role.Volunteer} />
+                <Picker.Item label="Admin" value={Role.Admin} />
               </Picker>
             </View>
 

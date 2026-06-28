@@ -105,7 +105,7 @@ func (ce calendarEventUseCase) DeleteCalendarEvent(c *gin.Context) {
 		return
 	}
 
-	if userRole != "admin" {
+	if userRole != domain.RoleAdmin {
 		if err := ce.calendarRepository.FindByIDAndUserID(c.Request.Context(), eventID, userID); err != nil {
 			logUseCaseWarn(c, "calendar_event.delete.authorize", http.StatusBadRequest, err, "event_id", eventID)
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -136,7 +136,7 @@ func (ce calendarEventUseCase) UpdateCalendarEvent(c *gin.Context) {
 		return
 	}
 
-	if userRole != "admin" {
+	if userRole != domain.RoleAdmin {
 		if err := ce.calendarRepository.FindByIDAndUserID(c.Request.Context(), eventID, userID); err != nil {
 			logUseCaseWarn(c, "calendar_event.update.authorize", http.StatusBadRequest, err, "event_id", eventID)
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})

@@ -12,16 +12,14 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import Constants from 'expo-constants';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/RootStack';
+import { backendUrl } from '../../config/api';
+import { Role } from '../../config/roles';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Profile'>;
 };
-
-const rawUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_URL_BACKEND || '';
-const backendUrl = Platform.OS === 'android' ? rawUrl.replace('localhost', '10.0.2.2') : rawUrl;
 
 export default function ProfileScreen({ navigation }: Props) {
   const [isEditing, setIsEditing] = useState(false);
@@ -165,7 +163,7 @@ export default function ProfileScreen({ navigation }: Props) {
           <Text style={styles.label}>Rol:</Text>
           <TextInput
             style={[styles.input, styles.readOnly]}
-            value={role === 'admin' ? 'Admin' : 'Voluntario'}
+            value={role === Role.Admin ? 'Admin' : 'Voluntario'}
             editable={false}
           />
 

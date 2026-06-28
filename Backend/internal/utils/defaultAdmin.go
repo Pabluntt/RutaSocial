@@ -2,10 +2,10 @@ package utils
 
 import (
 	"context"
-	"log/slog"
 	"github.com/SebaVCH/hdcProject/internal/domain"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"log/slog"
 	"os"
 	"time"
 )
@@ -32,7 +32,7 @@ func CreateDefaultAdmin(userCollection *mongo.Collection) error {
 		Phone:         "+56900000000",
 		Email:         adminEmail,
 		Password:      passwordHashed,
-		Role:          "admin",
+		Role:          domain.RoleAdmin,
 		InstitutionID: bson.NilObjectID,
 	}
 

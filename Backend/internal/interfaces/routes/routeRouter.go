@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/SebaVCH/hdcProject/internal/config"
+	"github.com/SebaVCH/hdcProject/internal/domain"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -23,12 +24,12 @@ func SetupRouteRouter(r *gin.Engine) {
 	protected.GET("", routeController.FindAll)
 	protected.GET("/:id", routeController.FindByID)
 	protected.POST("", routeController.CreateRoute)
-	protected.PUT("/:id", middleware.RoleMiddleware("admin"), routeController.UpdateRoute)
-	protected.DELETE("/:id", middleware.RoleMiddleware("admin"), routeController.DeleteRoute)
+	protected.PUT("/:id", middleware.RoleMiddleware(domain.RoleAdmin), routeController.UpdateRoute)
+	protected.DELETE("/:id", middleware.RoleMiddleware(domain.RoleAdmin), routeController.DeleteRoute)
 	protected.PATCH("/:id", routeController.FinishRoute)
 	protected.POST("/join/:code", routeController.JoinRoute)
 	protected.POST("/leave/:id", routeController.LeaveRoute)
 	protected.GET("/participation/:id", routeController.GetMyParticipation)
 	protected.GET("/:id/report", routeController.ExportReport)
-	protected.GET("/user/:id", middleware.RoleMiddleware("admin"), routeController.GetUserRoutes)
+	protected.GET("/user/:id", middleware.RoleMiddleware(domain.RoleAdmin), routeController.GetUserRoutes)
 }

@@ -36,9 +36,10 @@ func StartBackend() error {
 	}
 
 	router := routes.SetupRouter()
+	addr := ":" + config.HTTPPort
 
 	srv := &http.Server{
-		Addr:    ":8080",
+		Addr:    addr,
 		Handler: router,
 	}
 
@@ -46,7 +47,7 @@ func StartBackend() error {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		slog.Info("Servidor iniciado", "port", ":8080")
+		slog.Info("Servidor iniciado", "port", addr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("Error en servidor HTTP", "error", err)
 		}

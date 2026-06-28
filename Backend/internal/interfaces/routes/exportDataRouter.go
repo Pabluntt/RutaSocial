@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/SebaVCH/hdcProject/internal/config"
+	"github.com/SebaVCH/hdcProject/internal/domain"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -19,5 +20,5 @@ func SetupExportDataRouter(r *gin.Engine) {
 
 	protected := r.Group("/export-data")
 	protected.Use(middleware.AuthMiddleware())
-	protected.GET("/people-helped", middleware.RoleMiddleware("admin"), exportDataController.ExportPeopleHelped)
+	protected.GET("/people-helped", middleware.RoleMiddleware(domain.RoleAdmin), exportDataController.ExportPeopleHelped)
 }

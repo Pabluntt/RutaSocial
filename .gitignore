@@ -7,3 +7,6 @@ FrontendMovil/frontmovil/.env
 !.env.example
 !*.env.example
 .idea/
+Backend/coverage*
+FrontendWeb/playwright-report/
+FrontendWeb/test-results/

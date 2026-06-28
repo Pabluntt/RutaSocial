@@ -15,6 +15,7 @@ import { useState, useEffect } from "react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { RouteStatus } from "../../../Enums/RouteStatus"
+import { Role } from "../../../Enums/Role"
 
 export default function UserDetail() {
     const { id } = useParams<{ id: string }>()
@@ -121,7 +122,7 @@ export default function UserDetail() {
                             </Avatar>
                             <div>
                                 <Typography variant="h6">{user.name}</Typography>
-                                <Chip label={user.role === 'admin' ? 'Administrador' : 'Voluntario'} size="small" color={user.role === 'admin' ? 'warning' : 'default'} />
+                                <Chip label={user.role === Role.admin ? 'Administrador' : 'Voluntario'} size="small" color={user.role === Role.admin ? 'warning' : 'default'} />
                             </div>
                         </div>
                         <div className="flex gap-2">
@@ -169,19 +170,16 @@ export default function UserDetail() {
                         />
                         <TextField
                             label="Rol"
-                            value={formData.role === 'admin' ? 'Administrador' : 'Voluntario'}
-                            onChange={(e) => {
-                                const val = e.target.value === 'Administrador' ? 'admin' : 'voluntario'
-                                setFormData({ ...formData, role: val })
-                            }}
+                            value={formData.role}
+                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                             disabled={!editing}
                             select
                             size="small"
                             fullWidth
                             SelectProps={{ native: true }}
                         >
-                            <option value="voluntario">Voluntario</option>
-                            <option value="admin">Administrador</option>
+                            <option value={Role.volunteer}>Voluntario</option>
+                            <option value={Role.admin}>Administrador</option>
                         </TextField>
                     </div>
                 </Paper>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, Alert, Platform, Modal, TextInput
+  View, Text, StyleSheet, TouchableOpacity, Alert, Modal, TextInput
 } from 'react-native';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,12 +9,9 @@ import MapComponent from '../../components/MapComponent';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import Constants from 'expo-constants';
 import { Picker } from '@react-native-picker/picker';
 import * as Location from 'expo-location';
-
-const rawUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_URL_BACKEND || '';
-const backendUrl = Platform.OS === 'android' ? rawUrl.replace('localhost', '10.0.2.2') : rawUrl;
+import { backendUrl } from '../../config/api';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'FullMap'>;
 

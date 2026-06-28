@@ -317,27 +317,56 @@ func (r *routeRepository) GetHelpPointsByRouteID(ctx context.Context, routeID st
 		return nil, err
 	}
 
+	personaIDSet := make(map[bson.ObjectID]struct{})
+	personaIDs := make([]bson.ObjectID, 0)
+	for _, hp := range helpPoints {
+		if len(hp.People) > 0 || len(hp.PersonaIDs) == 0 {
+			continue
+		}
+		for _, personaID := range hp.PersonaIDs {
+			if _, exists := personaIDSet[personaID]; exists {
+				continue
+			}
+			personaIDSet[personaID] = struct{}{}
+			personaIDs = append(personaIDs, personaID)
+		}
+	}
+
+	if len(personaIDs) == 0 {
+		return helpPoints, nil
+	}
+
+	pCursor, err := r.PersonaCollection.Find(ctx, bson.M{"_id": bson.M{"$in": personaIDs}})
+	if err != nil {
+		return helpPoints, nil
+	}
+	defer pCursor.Close(ctx)
+
+	var personas []domain.Persona
+	if err := pCursor.All(ctx, &personas); err != nil {
+		return helpPoints, nil
+	}
+
+	personasByID := make(map[bson.ObjectID]domain.Persona, len(personas))
+	for _, persona := range personas {
+		personasByID[persona.ID] = persona
+	}
+
 	for i, hp := range helpPoints {
-		if len(hp.People) == 0 && len(hp.PersonaIDs) > 0 {
-			var personas []domain.Persona
-			filter := bson.M{"_id": bson.M{"$in": hp.PersonaIDs}}
-			pCursor, err := r.PersonaCollection.Find(ctx, filter)
-			if err != nil {
+		if len(hp.People) > 0 || len(hp.PersonaIDs) == 0 {
+			continue
+		}
+		for _, personaID := range hp.PersonaIDs {
+			persona, exists := personasByID[personaID]
+			if !exists {
 				continue
 			}
-			if err := pCursor.All(ctx, &personas); err != nil {
-				pCursor.Close(ctx)
-				continue
-			}
-			pCursor.Close(ctx)
-			for _, persona := range personas {
-				helpPoints[i].People = append(helpPoints[i].People, domain.PersonaAyudada{
-					Name:   persona.Nombre,
-					Age:    persona.Edad,
-					Gender: persona.Genero,
-					Rut:    persona.Rut,
-				})
-			}
+			helpPoints[i].People = append(helpPoints[i].People, domain.PersonaAyudada{
+				Name:   persona.Nombre,
+				Age:    persona.Edad,
+				Gender: persona.Genero,
+				Rut:    persona.Rut,
+			})
 		}
 	}
 	return helpPoints, nil

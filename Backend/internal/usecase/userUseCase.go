@@ -174,10 +174,10 @@ func (u userUseCase) CreateUserByAdmin(c *gin.Context) {
 	// Validar y establecer rol
 	role := req.Role
 	if role == "" {
-		role = "voluntario"
+		role = domain.RoleVolunteer
 	}
 	// Solo permitir roles conocidos
-	if role != "admin" && role != "voluntario" {
+	if role != domain.RoleAdmin && role != domain.RoleVolunteer {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "El rol debe ser 'admin' o 'voluntario'"})
 		return
 	}
@@ -239,7 +239,7 @@ func (u userUseCase) UpdateUserByAdmin(c *gin.Context) {
 	}
 
 	if role, ok := updateData["role"].(string); ok && role != "" {
-		if role != "admin" && role != "voluntario" {
+		if role != domain.RoleAdmin && role != domain.RoleVolunteer {
 			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "El rol debe ser 'admin' o 'voluntario'"})
 			return
 		}

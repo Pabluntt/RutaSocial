@@ -9,6 +9,8 @@ export type TParticipationRespone = {
     total_helpingpoints : number
 }
 
+export type TPublicUserInfo = { name: string; institutionID: string; phone: string }
+
 
 export class UserService {
 
@@ -44,9 +46,9 @@ export class UserService {
         ))
     }
 
-    static async GetPublicInfoByID(id: string): Promise<{ name: string; institutionID: string; phone: string }> {
+    static async GetPublicInfoByID(id: string): Promise<TPublicUserInfo> {
         const { data } = await axiosInstance.get(`/user/public-info/${id}`)
-        return data?.message as { name: string; institutionID: string; phone: string }
+        return data?.message as TPublicUserInfo
     }
 
     static async FindUserById(id : string) : Promise<IUser> {

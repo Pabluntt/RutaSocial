@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/SebaVCH/hdcProject/internal/config"
+	"github.com/SebaVCH/hdcProject/internal/domain"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -23,5 +24,5 @@ func SetupCalendarEventRouter(r *gin.Engine) {
 	protected.GET("", calendarEventController.GetAllCalendarEvents)
 	protected.PUT("/:id", calendarEventController.UpdateCalendarEvent)
 	protected.DELETE("/:id", calendarEventController.DeleteCalendarEvent)
-	protected.GET("/user/:id", middleware.RoleMiddleware("admin"), calendarEventController.GetUserCalendarEvents)
+	protected.GET("/user/:id", middleware.RoleMiddleware(domain.RoleAdmin), calendarEventController.GetUserCalendarEvents)
 }
