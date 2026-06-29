@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import useSessionStore from "../../stores/useSessionStore";
 import { Box, Button, Card, CircularProgress, Divider, FormControl, FormLabel, TextField, Typography } from "@mui/material";
 import { isValidEmail } from "../../utils/verifyInput";
 import { sxInput } from "../../style/sxInput";
@@ -15,7 +14,6 @@ export default function Login() {
     const [ emailError, setEmailError ] = useState<string>('')
     const [ password, setPassword ] = useState<string>('')
     const [ passwordError, setPasswordError ] = useState<string>('')
-    const { accessToken } = useSessionStore()
     const { mutate, error, isPending } = useLogin()
 
     const onSubmitForm = (e :React.FormEvent) => {
@@ -38,14 +36,10 @@ export default function Login() {
       }
 
       if (hasError) return
-      mutate({ email, password })
+      mutate({ email, password }, {
+        onSuccess: () => navigate(`${import.meta.env.VITE_BASE_URL}/calendario`, { replace: true })
+      })
     }
-    
-    useEffect(() => {
-      if (accessToken) {
-        navigate(`${import.meta.env.VITE_BASE_URL}/calendario`, { replace: true })
-      }
-    }, [accessToken])
 
 
     return (

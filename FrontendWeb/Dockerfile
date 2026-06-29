@@ -2,7 +2,10 @@
 FROM node:23.8-alpine AS build
 WORKDIR /app
 
-ENV VITE_URL_BACKEND=http://localhost:8080
+ARG VITE_URL_BACKEND=http://localhost:8080
+ARG VITE_BASE_URL=
+ENV VITE_URL_BACKEND=$VITE_URL_BACKEND
+ENV VITE_BASE_URL=$VITE_BASE_URL
 
 COPY package*.json ./
 RUN npm ci

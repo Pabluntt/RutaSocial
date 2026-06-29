@@ -68,6 +68,7 @@ func (h *helpPointRepository) CreateHelpingPoint(ctx context.Context, helpPoint 
 		personHelped.ID = bson.NewObjectID()
 		_, err = h.PeopleHelpedCollections.InsertOne(ctx, personHelped)
 		if err != nil {
+			logRepositoryError(ctx, "help_point", "create.insert_people_helped", err, "collection", "people_helped", "user_id", userID)
 			return domain.PuntoAyuda{}, err
 		}
 
@@ -91,7 +92,11 @@ func (h *helpPointRepository) CreateHelpingPoint(ctx context.Context, helpPoint 
 				_, err = h.PersonaCollection.InsertOne(ctx, newPersona)
 				if err == nil {
 					personaID = newPersona.ID
+				} else {
+					logRepositoryError(ctx, "help_point", "create.insert_persona_with_rut", err, "collection", "personas", "user_id", userID)
 				}
+			} else {
+				logRepositoryError(ctx, "help_point", "create.find_persona_by_rut", err, "collection", "personas", "user_id", userID)
 			}
 		} else {
 			newPersona := domain.Persona{
@@ -107,6 +112,8 @@ func (h *helpPointRepository) CreateHelpingPoint(ctx context.Context, helpPoint 
 			_, err := h.PersonaCollection.InsertOne(ctx, newPersona)
 			if err == nil {
 				personaID = newPersona.ID
+			} else {
+				logRepositoryError(ctx, "help_point", "create.insert_persona_without_rut", err, "collection", "personas", "user_id", userID)
 			}
 		}
 
@@ -118,6 +125,7 @@ func (h *helpPointRepository) CreateHelpingPoint(ctx context.Context, helpPoint 
 
 	_, err = h.HelpPointCollection.InsertOne(ctx, helpPoint)
 	if err != nil {
+		logRepositoryError(ctx, "help_point", "create.insert_help_point", err, "collection", "help_points", "user_id", userID, "people_count", len(helpPoint.People))
 		return domain.PuntoAyuda{}, err
 	}
 
@@ -152,12 +160,14 @@ func (h *helpPointRepository) UpdateHelpingPoint(ctx context.Context, data map[s
 	update := bson.M{"$set": filtered}
 	_, err = h.HelpPointCollection.UpdateOne(ctx, bson.M{"_id": objID}, update)
 	if err != nil {
+		logRepositoryError(ctx, "help_point", "update.update_one", err, "collection", "help_points", "help_point_id", idStr)
 		return domain.PuntoAyuda{}, err
 	}
 
 	var updatedHelpPoint domain.PuntoAyuda
 	err = h.HelpPointCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&updatedHelpPoint)
 	if err != nil {
+		logRepositoryError(ctx, "help_point", "update.find_updated", err, "collection", "help_points", "help_point_id", idStr)
 		return domain.PuntoAyuda{}, err
 	}
 	return updatedHelpPoint, nil
@@ -173,6 +183,9 @@ func (h *helpPointRepository) DeleteHelpingPoint(ctx context.Context, id string)
 		return errors.New("ID de punto de ayuda inválido")
 	}
 	_, err = h.HelpPointCollection.DeleteOne(ctx, bson.M{"_id": objID})
+	if err != nil {
+		logRepositoryError(ctx, "help_point", "delete.delete_one", err, "collection", "help_points", "help_point_id", id)
+	}
 	return err
 }
 
@@ -182,6 +195,7 @@ func (h *helpPointRepository) GetAllPoints(ctx context.Context) ([]domain.PuntoA
 	defer cancel()
 	cursor, err := h.HelpPointCollection.Find(ctx, bson.M{})
 	if err != nil {
+		logRepositoryError(ctx, "help_point", "get_all.find", err, "collection", "help_points")
 		return nil, err
 	}
 	defer cursor.Close(ctx)
@@ -190,9 +204,14 @@ func (h *helpPointRepository) GetAllPoints(ctx context.Context) ([]domain.PuntoA
 	for cursor.Next(ctx) {
 		var helpPoint domain.PuntoAyuda
 		if err := cursor.Decode(&helpPoint); err != nil {
+			logRepositoryError(ctx, "help_point", "get_all.decode", err, "collection", "help_points")
 			return nil, err
 		}
 		helpPoints = append(helpPoints, helpPoint)
+	}
+	if err := cursor.Err(); err != nil {
+		logRepositoryError(ctx, "help_point", "get_all.cursor", err, "collection", "help_points")
+		return nil, err
 	}
 	return helpPoints, nil
 }
@@ -215,6 +234,9 @@ func (h *helpPointRepository) LinkPersonaToHelpPoint(ctx context.Context, helpPo
 		bson.M{"_id": hpObjID},
 		bson.M{"$addToSet": bson.M{"persona_ids": pObjID}},
 	)
+	if err != nil {
+		logRepositoryError(ctx, "help_point", "link_persona.update_one", err, "collection", "help_points", "help_point_id", helpPointID, "persona_id", personaID)
+	}
 	return err
 }
 
@@ -239,6 +261,7 @@ func (h *helpPointRepository) FindByIDAndUserID(ctx context.Context, id string, 
 		if err == mongo.ErrNoDocuments {
 			return errors.New("Punto no encontrado o no autorizado")
 		}
+		logRepositoryError(ctx, "help_point", "find_by_id_and_user.find_one", err, "collection", "help_points", "help_point_id", id, "user_id", userID)
 		return err
 	}
 	return nil

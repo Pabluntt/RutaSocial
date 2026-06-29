@@ -42,11 +42,13 @@ func (i *institutionRepository) GetAllInstitutions(ctx context.Context) ([]domai
 
 	cursor, err := i.InstitutionCollection.Find(ctx, bson.D{})
 	if err != nil {
+		logRepositoryError(ctx, "institution", "get_all.find", err, "collection", "institutions")
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
 	if err = cursor.All(ctx, &institutions); err != nil {
+		logRepositoryError(ctx, "institution", "get_all.cursor_all", err, "collection", "institutions")
 		return nil, err
 	}
 
@@ -68,6 +70,9 @@ func (i *institutionRepository) GetInstitutionByID(ctx context.Context, id strin
 	filter := bson.D{{Key: "_id", Value: objectID}}
 	err = i.InstitutionCollection.FindOne(ctx, filter).Decode(&institution)
 	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			logRepositoryError(ctx, "institution", "get_by_id.find_one", err, "collection", "institutions", "institution_id", id)
+		}
 		return institution, err
 	}
 
@@ -81,6 +86,9 @@ func (i *institutionRepository) CreateInstitution(ctx context.Context, instituti
 	defer cancel()
 	institution.ID = bson.NewObjectID()
 	_, err := i.InstitutionCollection.InsertOne(ctx, institution)
+	if err != nil {
+		logRepositoryError(ctx, "institution", "create.insert_one", err, "collection", "institutions", "institution_id", institution.ID.Hex())
+	}
 	return err
 }
 
@@ -106,6 +114,9 @@ func (i *institutionRepository) UpdateInstitution(ctx context.Context, id string
 
 	update := bson.M{"$set": filtered}
 	_, err = i.InstitutionCollection.UpdateOne(ctx, bson.M{"_id": objectID}, update)
+	if err != nil {
+		logRepositoryError(ctx, "institution", "update.update_one", err, "collection", "institutions", "institution_id", id)
+	}
 	return err
 }
 
@@ -121,5 +132,8 @@ func (i *institutionRepository) DeleteInstitution(ctx context.Context, id string
 
 	filter := bson.D{{Key: "_id", Value: objectID}}
 	_, err = i.InstitutionCollection.DeleteOne(ctx, filter)
+	if err != nil {
+		logRepositoryError(ctx, "institution", "delete.delete_one", err, "collection", "institutions", "institution_id", id)
+	}
 	return err
 }

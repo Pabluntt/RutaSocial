@@ -46,12 +46,14 @@ func (c calendarEventRepository) GetCalendarEventsByUserID(ctx context.Context, 
 
 	cursor, err := c.CalendarEventCollection.Find(ctx, bson.M{"author_id": userObjID})
 	if err != nil {
+		logRepositoryError(ctx, "calendar_event", "get_by_user.find", err, "collection", "calendar_events", "user_id", userID)
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
 	var events []domain.EventoCalendario
 	if err := cursor.All(ctx, &events); err != nil {
+		logRepositoryError(ctx, "calendar_event", "get_by_user.cursor_all", err, "collection", "calendar_events", "user_id", userID)
 		return nil, err
 	}
 	return events, nil
@@ -65,6 +67,7 @@ func (c calendarEventRepository) GetAllCalendarEvents(ctx context.Context) ([]do
 	var events []domain.EventoCalendario
 	cursor, err := c.CalendarEventCollection.Find(ctx, bson.M{})
 	if err != nil {
+		logRepositoryError(ctx, "calendar_event", "get_all.find", err, "collection", "calendar_events")
 		return nil, err
 	}
 	defer cursor.Close(ctx)
@@ -72,12 +75,14 @@ func (c calendarEventRepository) GetAllCalendarEvents(ctx context.Context) ([]do
 	for cursor.Next(ctx) {
 		var event domain.EventoCalendario
 		if err := cursor.Decode(&event); err != nil {
+			logRepositoryError(ctx, "calendar_event", "get_all.decode", err, "collection", "calendar_events")
 			return nil, err
 		}
 		events = append(events, event)
 	}
 
 	if err := cursor.Err(); err != nil {
+		logRepositoryError(ctx, "calendar_event", "get_all.cursor", err, "collection", "calendar_events")
 		return nil, err
 	}
 
@@ -100,12 +105,14 @@ func (c calendarEventRepository) CreateCalendarEvent(ctx context.Context, event 
 
 	data, err := bson.Marshal(event)
 	if err != nil {
+		logRepositoryError(ctx, "calendar_event", "create.marshal", err, "user_id", userID, "event_id", event.ID.Hex())
 		return domain.EventoCalendario{}, err
 	}
 
 	var doc bson.M
 	err = bson.Unmarshal(data, &doc)
 	if err != nil {
+		logRepositoryError(ctx, "calendar_event", "create.unmarshal", err, "user_id", userID, "event_id", event.ID.Hex())
 		return domain.EventoCalendario{}, err
 	}
 
@@ -115,12 +122,14 @@ func (c calendarEventRepository) CreateCalendarEvent(ctx context.Context, event 
 
 	_, err = c.CalendarEventCollection.InsertOne(ctx, doc)
 	if err != nil {
+		logRepositoryError(ctx, "calendar_event", "create.insert_one", err, "collection", "calendar_events", "user_id", userID, "event_id", event.ID.Hex())
 		return domain.EventoCalendario{}, err
 	}
 
 	var created domain.EventoCalendario
 	err = c.CalendarEventCollection.FindOne(ctx, bson.M{"_id": event.ID}).Decode(&created)
 	if err != nil {
+		logRepositoryError(ctx, "calendar_event", "create.find_created", err, "collection", "calendar_events", "user_id", userID, "event_id", event.ID.Hex())
 		return domain.EventoCalendario{}, err
 	}
 
@@ -137,6 +146,9 @@ func (c calendarEventRepository) DeleteCalendarEvent(ctx context.Context, id str
 		return errors.New("ID de punto de ayuda inválido")
 	}
 	_, err = c.CalendarEventCollection.DeleteOne(ctx, bson.M{"_id": objID})
+	if err != nil {
+		logRepositoryError(ctx, "calendar_event", "delete.delete_one", err, "collection", "calendar_events", "event_id", id)
+	}
 	return err
 }
 
@@ -169,12 +181,14 @@ func (c calendarEventRepository) UpdateCalendarEvent(ctx context.Context, update
 	update := bson.M{"$set": filtered}
 	_, err = c.CalendarEventCollection.UpdateOne(ctx, bson.M{"_id": objID}, update)
 	if err != nil {
+		logRepositoryError(ctx, "calendar_event", "update.update_one", err, "collection", "calendar_events", "event_id", idStr)
 		return domain.EventoCalendario{}, err
 	}
 
 	var updatedEvent domain.EventoCalendario
 	err = c.CalendarEventCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&updatedEvent)
 	if err != nil {
+		logRepositoryError(ctx, "calendar_event", "update.find_updated", err, "collection", "calendar_events", "event_id", idStr)
 		return domain.EventoCalendario{}, err
 	}
 	return updatedEvent, nil
@@ -201,6 +215,7 @@ func (c calendarEventRepository) FindByIDAndUserID(ctx context.Context, id strin
 		if err == mongo.ErrNoDocuments {
 			return errors.New("evento no encontrado o no autorizado")
 		}
+		logRepositoryError(ctx, "calendar_event", "find_by_id_and_user.find_one", err, "collection", "calendar_events", "event_id", id, "user_id", userID)
 		return err
 	}
 	return nil

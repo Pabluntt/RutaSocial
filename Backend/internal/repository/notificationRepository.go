@@ -55,6 +55,7 @@ func (n *notificationRepository) CreateNotification(ctx context.Context, notific
 
 	session, err := n.NotificationsCollection.Database().Client().StartSession()
 	if err != nil {
+		logRepositoryError(ctx, "notification", "create.start_session", err, "collection", "notifications")
 		return err
 	}
 	defer session.EndSession(ctx)
@@ -70,10 +71,13 @@ func (n *notificationRepository) CreateNotification(ctx context.Context, notific
 	})
 	if err != nil {
 		if !isTransactionUnsupported(err) {
+			logRepositoryError(ctx, "notification", "create.transaction", err, "collection", "notifications", "notification_id", notification.ID.Hex())
 			return err
 		}
+		logRepositoryWarn(ctx, "notification", "create.transaction_unsupported", err, "collection", "notifications", "notification_id", notification.ID.Hex())
 		users, fallbackErr := n.insertNotificationWithRelations(ctx, notification)
 		if fallbackErr != nil {
+			logRepositoryError(ctx, "notification", "create.fallback_insert", fallbackErr, "collection", "notifications", "notification_id", notification.ID.Hex())
 			return fallbackErr
 		}
 		recipients = users
@@ -95,6 +99,9 @@ func (n *notificationRepository) insertNotificationWithRelations(ctx context.Con
 		var author domain.Usuario
 		err := n.UserCollection.FindOne(ctx, bson.M{"_id": notification.AuthorID}).Decode(&author)
 		if err != nil {
+			if err != mongo.ErrNoDocuments {
+				logRepositoryError(ctx, "notification", "create.find_author", err, "collection", "usuarios", "author_id", notification.AuthorID.Hex(), "notification_id", notification.ID.Hex())
+			}
 			return nil, err
 		}
 		userFilter = bson.M{
@@ -118,6 +125,7 @@ func (n *notificationRepository) insertNotificationWithRelations(ctx context.Con
 
 	cursor, err := n.UserCollection.Find(ctx, userFilter)
 	if err != nil {
+		logRepositoryError(ctx, "notification", "create.find_recipients", err, "collection", "usuarios", "notification_id", notification.ID.Hex())
 		return nil, err
 	}
 	defer cursor.Close(ctx)
@@ -127,6 +135,7 @@ func (n *notificationRepository) insertNotificationWithRelations(ctx context.Con
 	for cursor.Next(ctx) {
 		var user domain.Usuario
 		if err := cursor.Decode(&user); err != nil {
+			logRepositoryError(ctx, "notification", "create.decode_recipient", err, "collection", "usuarios", "notification_id", notification.ID.Hex())
 			return nil, err
 		}
 		recipients = append(recipients, user)
@@ -142,17 +151,20 @@ func (n *notificationRepository) insertNotificationWithRelations(ctx context.Con
 
 	}
 	if err := cursor.Err(); err != nil {
+		logRepositoryError(ctx, "notification", "create.recipients_cursor", err, "collection", "usuarios", "notification_id", notification.ID.Hex())
 		return nil, err
 	}
 
 	_, err = n.NotificationsCollection.InsertOne(ctx, notification)
 	if err != nil {
+		logRepositoryError(ctx, "notification", "create.insert_notification", err, "collection", "notifications", "notification_id", notification.ID.Hex(), "recipients_count", len(recipients))
 		return nil, err
 	}
 
 	if len(relations) > 0 {
 		_, err = n.NotificationPersonRelationCollection.InsertMany(ctx, relations)
 		if err != nil {
+			logRepositoryError(ctx, "notification", "create.insert_relations", err, "collection", "notification_person_relations", "notification_id", notification.ID.Hex(), "relations_count", len(relations))
 			return nil, err
 		}
 	}
@@ -177,6 +189,9 @@ func (n *notificationRepository) DeleteNotification(ctx context.Context, notific
 		return errors.New("ID de notificación inválido")
 	}
 	_, err = n.NotificationsCollection.DeleteOne(ctx, bson.M{"_id": objID})
+	if err != nil {
+		logRepositoryError(ctx, "notification", "delete.delete_one", err, "collection", "notifications", "notification_id", notificationID)
+	}
 	return err
 }
 
@@ -208,12 +223,14 @@ func (n *notificationRepository) UpdateNotification(ctx context.Context, data ma
 	update := bson.M{"$set": filtered}
 	_, err = n.NotificationsCollection.UpdateOne(ctx, bson.M{"_id": objID}, update)
 	if err != nil {
+		logRepositoryError(ctx, "notification", "update.update_one", err, "collection", "notifications", "notification_id", idStr)
 		return domain.Aviso{}, err
 	}
 
 	var updatedNotification domain.Aviso
 	err = n.NotificationsCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&updatedNotification)
 	if err != nil {
+		logRepositoryError(ctx, "notification", "update.find_updated", err, "collection", "notifications", "notification_id", idStr)
 		return domain.Aviso{}, err
 	}
 	return updatedNotification, nil
@@ -225,6 +242,7 @@ func (n *notificationRepository) GetNotifications(ctx context.Context) ([]domain
 	defer cancel()
 	cursor, err := n.NotificationsCollection.Find(ctx, bson.M{})
 	if err != nil {
+		logRepositoryError(ctx, "notification", "get_all.find", err, "collection", "notifications")
 		return nil, err
 	}
 	defer cursor.Close(ctx)
@@ -233,9 +251,14 @@ func (n *notificationRepository) GetNotifications(ctx context.Context) ([]domain
 	for cursor.Next(ctx) {
 		var notification domain.Aviso
 		if err := cursor.Decode(&notification); err != nil {
+			logRepositoryError(ctx, "notification", "get_all.decode", err, "collection", "notifications")
 			return nil, err
 		}
 		notifications = append(notifications, notification)
+	}
+	if err := cursor.Err(); err != nil {
+		logRepositoryError(ctx, "notification", "get_all.cursor", err, "collection", "notifications")
+		return nil, err
 	}
 	return notifications, nil
 }
@@ -261,6 +284,7 @@ func (n *notificationRepository) FindByIDAndUserID(ctx context.Context, id strin
 		if err == mongo.ErrNoDocuments {
 			return errors.New("evento no encontrado o no autorizado")
 		}
+		logRepositoryError(ctx, "notification", "find_by_id_and_user.find_one", err, "collection", "notifications", "notification_id", id, "user_id", userID)
 		return err
 	}
 	return nil
@@ -291,6 +315,7 @@ func (n *notificationRepository) getNotificationsByReadStatus(ctx context.Contex
 		bson.M{"person_id": userObjID, "read": read, "dismissed": false},
 	)
 	if err != nil {
+		logRepositoryError(ctx, "notification", "get_by_read_status.find_relations", err, "collection", "notification_person_relations", "user_id", userID, "read", read)
 		return nil, err
 	}
 	defer cursor.Close(ctx)
@@ -299,11 +324,13 @@ func (n *notificationRepository) getNotificationsByReadStatus(ctx context.Contex
 	for cursor.Next(ctx) {
 		var rel domain.NotificationPersonRelation
 		if err := cursor.Decode(&rel); err != nil {
+			logRepositoryWarn(ctx, "notification", "get_by_read_status.decode_relation", err, "collection", "notification_person_relations", "user_id", userID, "read", read)
 			continue
 		}
 		notificationIDs = append(notificationIDs, rel.NotificationID)
 	}
 	if err := cursor.Err(); err != nil {
+		logRepositoryError(ctx, "notification", "get_by_read_status.relations_cursor", err, "collection", "notification_person_relations", "user_id", userID, "read", read)
 		return nil, err
 	}
 	if len(notificationIDs) == 0 {
@@ -312,12 +339,14 @@ func (n *notificationRepository) getNotificationsByReadStatus(ctx context.Contex
 
 	notificationCursor, err := n.NotificationsCollection.Find(ctx, bson.M{"_id": bson.M{"$in": notificationIDs}})
 	if err != nil {
+		logRepositoryError(ctx, "notification", "get_by_read_status.find_notifications", err, "collection", "notifications", "user_id", userID, "read", read, "notification_ids_count", len(notificationIDs))
 		return nil, err
 	}
 	defer notificationCursor.Close(ctx)
 
 	var notifications []domain.Aviso
 	if err := notificationCursor.All(ctx, &notifications); err != nil {
+		logRepositoryError(ctx, "notification", "get_by_read_status.notifications_cursor_all", err, "collection", "notifications", "user_id", userID, "read", read, "notification_ids_count", len(notificationIDs))
 		return nil, err
 	}
 	return notifications, nil
@@ -348,6 +377,9 @@ func (n *notificationRepository) MarkNotificationAsRead(ctx context.Context, not
 		},
 	}
 	_, err = n.NotificationPersonRelationCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		logRepositoryError(ctx, "notification", "mark_read.update_one", err, "collection", "notification_person_relations", "notification_id", notificationID, "user_id", userID)
+	}
 	return err
 }
 
@@ -375,5 +407,8 @@ func (n *notificationRepository) DismissNotification(ctx context.Context, notifi
 		},
 	}
 	_, err = n.NotificationPersonRelationCollection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		logRepositoryError(ctx, "notification", "dismiss.update_one", err, "collection", "notification_person_relations", "notification_id", notificationID, "user_id", userID)
+	}
 	return err
 }

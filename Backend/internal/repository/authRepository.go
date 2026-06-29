@@ -5,7 +5,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"log/slog"
 	"github.com/SebaVCH/hdcProject/internal/domain"
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"time"
@@ -17,8 +16,8 @@ import (
 // AuthRepository define la interfaz para las operaciones de autenticación.
 // Contiene métodos para iniciar sesión y registrar usuarios.
 type AuthRepository interface {
-Login(ctx context.Context, email, password string) (string, error)
-Register(ctx context.Context, user domain.Usuario) (string, error)
+	Login(ctx context.Context, email, password string) (string, error)
+	Register(ctx context.Context, user domain.Usuario) (string, error)
 }
 
 // authRepository implementa la interfaz AuthRepository.
@@ -41,6 +40,9 @@ func (a *authRepository) Login(ctx context.Context, email, password string) (str
 	defer cancel()
 	err := a.UserCollection.FindOne(ctx, bson.M{"email": email}).Decode(&user)
 	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			logRepositoryError(ctx, "auth", "login.find_user", err, "collection", "usuarios")
+		}
 		return "", errors.New("error al iniciar sesión")
 	}
 
@@ -50,6 +52,7 @@ func (a *authRepository) Login(ctx context.Context, email, password string) (str
 
 	token, err := utils.GenerateToken(user.ID.Hex(), user.Role)
 	if err != nil {
+		logRepositoryError(ctx, "auth", "login.generate_token", err, "user_id", user.ID.Hex(), "role", user.Role)
 		return "", err
 	}
 
@@ -69,6 +72,7 @@ func (a *authRepository) Register(ctx context.Context, user domain.Usuario) (str
 
 	hashedPassword, err := utils.HashPassword(user.Password)
 	if err != nil {
+		logRepositoryError(ctx, "auth", "register.hash_password", err, "role", user.Role, "institution_id", user.InstitutionID.Hex())
 		return "", err
 	}
 
@@ -80,6 +84,7 @@ func (a *authRepository) Register(ctx context.Context, user domain.Usuario) (str
 
 	res, err := a.UserCollection.Database().Collection("usuarios").InsertOne(ctx, user)
 	if err != nil {
+		logRepositoryError(ctx, "auth", "register.insert_user", err, "collection", "usuarios", "role", user.Role, "institution_id", user.InstitutionID.Hex())
 		return "", err
 	}
 
@@ -87,17 +92,14 @@ func (a *authRepository) Register(ctx context.Context, user domain.Usuario) (str
 
 	token, err := utils.GenerateToken(usuarioID.Hex(), user.Role)
 	if err != nil {
+		logRepositoryError(ctx, "auth", "register.generate_token", err, "user_id", usuarioID.Hex(), "role", user.Role)
 		return "", err
 	}
 
 	err = utils.SendRegistrationMail(user)
 	if err != nil {
-		slog.Error("Error enviando correo de registro", "error", err)
+		logRepositoryError(ctx, "auth", "register.send_registration_mail", err, "user_id", usuarioID.Hex())
 	}
 
 	return token, nil
 }
-
-
-
-

@@ -52,12 +52,14 @@ func (r *routeRepository) FindAll(ctx context.Context) ([]domain.Route, error) {
 	defer cancel()
 	cursor, err := r.RouteCollection.Find(ctx, bson.M{})
 	if err != nil {
+		logRepositoryError(ctx, "route", "find_all.find", err, "collection", "routes")
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
 	var routes []domain.Route
 	if err := cursor.All(ctx, &routes); err != nil {
+		logRepositoryError(ctx, "route", "find_all.cursor_all", err, "collection", "routes")
 		return nil, err
 	}
 	return routes, nil
@@ -76,6 +78,9 @@ func (r *routeRepository) FindByID(ctx context.Context, routeId string) (domain.
 	var route domain.Route
 	err = r.RouteCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&route)
 	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			logRepositoryError(ctx, "route", "find_by_id.find_one", err, "collection", "routes", "route_id", routeId)
+		}
 		return domain.Route{}, err
 	}
 	return route, nil
@@ -95,6 +100,7 @@ func (r *routeRepository) CreateRoute(ctx context.Context, route *domain.Route) 
 	}
 	_, err := r.RouteCollection.InsertOne(ctx, route)
 	if err != nil {
+		logRepositoryError(ctx, "route", "create.insert_one", err, "collection", "routes", "route_id", route.ID.Hex())
 		return err
 	}
 	return nil
@@ -128,12 +134,14 @@ func (r *routeRepository) UpdateRoute(ctx context.Context, data map[string]inter
 	update := bson.M{"$set": filtered}
 	_, err = r.RouteCollection.UpdateOne(ctx, bson.M{"_id": objID}, update)
 	if err != nil {
+		logRepositoryError(ctx, "route", "update.update_one", err, "collection", "routes", "route_id", idStr)
 		return domain.Route{}, err
 	}
 
 	var updatedRoute domain.Route
 	err = r.RouteCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&updatedRoute)
 	if err != nil {
+		logRepositoryError(ctx, "route", "update.find_updated", err, "collection", "routes", "route_id", idStr)
 		return domain.Route{}, err
 	}
 	return updatedRoute, nil
@@ -150,6 +158,9 @@ func (r *routeRepository) DeleteRoute(ctx context.Context, routeId string) error
 	}
 
 	_, err = r.RouteCollection.DeleteOne(ctx, bson.M{"_id": objID})
+	if err != nil {
+		logRepositoryError(ctx, "route", "delete.delete_one", err, "collection", "routes", "route_id", routeId)
+	}
 	return err
 }
 
@@ -170,6 +181,7 @@ func (r *routeRepository) FinishRoute(ctx context.Context, id string, leaderID s
 	update := bson.M{"$set": bson.M{"status": "Finalizada", "date_finished": time.Now()}}
 	result, err := r.RouteCollection.UpdateOne(ctx, bson.M{"_id": objID, "route_leader": leaderObjID}, update)
 	if err != nil {
+		logRepositoryError(ctx, "route", "finish.update_one", err, "collection", "routes", "route_id", id, "leader_id", leaderID)
 		return err
 	}
 	if result.MatchedCount == 0 {
@@ -188,6 +200,9 @@ func (r *routeRepository) JoinRoute(ctx context.Context, code string, userID str
 	var route domain.Route
 	err := r.RouteCollection.FindOne(ctx, bson.M{"invite_code": code}).Decode(&route)
 	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			logRepositoryError(ctx, "route", "join.find_by_invite_code", err, "collection", "routes", "user_id", userID)
+		}
 		return domain.Route{}, errors.New("Ruta no encontrada")
 	}
 
@@ -209,11 +224,13 @@ func (r *routeRepository) JoinRoute(ctx context.Context, code string, userID str
 	update := bson.M{"$push": bson.M{"team": userObjID}}
 	_, err = r.RouteCollection.UpdateOne(ctx, bson.M{"_id": route.ID}, update)
 	if err != nil {
+		logRepositoryError(ctx, "route", "join.update_team", err, "collection", "routes", "route_id", route.ID.Hex(), "user_id", userID)
 		return domain.Route{}, err
 	}
 
 	err = r.RouteCollection.FindOne(ctx, bson.M{"_id": route.ID}).Decode(&route)
 	if err != nil {
+		logRepositoryError(ctx, "route", "join.find_updated", err, "collection", "routes", "route_id", route.ID.Hex(), "user_id", userID)
 		return domain.Route{}, err
 	}
 
@@ -239,6 +256,9 @@ func (r *routeRepository) LeaveRoute(ctx context.Context, routeId string, userID
 	var route domain.Route
 	err = r.RouteCollection.FindOne(ctx, bson.M{"_id": routeObjID}).Decode(&route)
 	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			logRepositoryError(ctx, "route", "leave.find_route", err, "collection", "routes", "route_id", routeId, "user_id", userID)
+		}
 		return errors.New("Ruta no encontrada")
 	}
 
@@ -260,6 +280,7 @@ func (r *routeRepository) LeaveRoute(ctx context.Context, routeId string, userID
 	update := bson.M{"$pull": bson.M{"team": userObjID}}
 	_, err = r.RouteCollection.UpdateOne(ctx, bson.M{"_id": routeObjID}, update)
 	if err != nil {
+		logRepositoryError(ctx, "route", "leave.update_team", err, "collection", "routes", "route_id", routeId, "user_id", userID)
 		return err
 	}
 
@@ -284,12 +305,14 @@ func (r *routeRepository) GetRoutesByUserID(ctx context.Context, userID string) 
 	}
 	cursor, err := r.RouteCollection.Find(ctx, filter)
 	if err != nil {
+		logRepositoryError(ctx, "route", "get_by_user.find", err, "collection", "routes", "user_id", userID)
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
 	var routes []domain.Route
 	if err := cursor.All(ctx, &routes); err != nil {
+		logRepositoryError(ctx, "route", "get_by_user.cursor_all", err, "collection", "routes", "user_id", userID)
 		return nil, err
 	}
 	return routes, nil
@@ -308,12 +331,14 @@ func (r *routeRepository) GetHelpPointsByRouteID(ctx context.Context, routeID st
 
 	cursor, err := r.HelpPointCollection.Find(ctx, bson.M{"route_id": objID})
 	if err != nil {
+		logRepositoryError(ctx, "route", "get_help_points.find_help_points", err, "collection", "help_points", "route_id", routeID)
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
 	var helpPoints []domain.PuntoAyuda
 	if err := cursor.All(ctx, &helpPoints); err != nil {
+		logRepositoryError(ctx, "route", "get_help_points.cursor_all", err, "collection", "help_points", "route_id", routeID)
 		return nil, err
 	}
 
@@ -338,12 +363,14 @@ func (r *routeRepository) GetHelpPointsByRouteID(ctx context.Context, routeID st
 
 	pCursor, err := r.PersonaCollection.Find(ctx, bson.M{"_id": bson.M{"$in": personaIDs}})
 	if err != nil {
+		logRepositoryWarn(ctx, "route", "get_help_points.find_personas", err, "collection", "personas", "route_id", routeID, "persona_ids_count", len(personaIDs))
 		return helpPoints, nil
 	}
 	defer pCursor.Close(ctx)
 
 	var personas []domain.Persona
 	if err := pCursor.All(ctx, &personas); err != nil {
+		logRepositoryWarn(ctx, "route", "get_help_points.personas_cursor_all", err, "collection", "personas", "route_id", routeID, "persona_ids_count", len(personaIDs))
 		return helpPoints, nil
 	}
 
@@ -390,12 +417,14 @@ func (r *routeRepository) GetMyParticipation(ctx context.Context, userID string)
 	}
 	cursor, err := r.RouteCollection.Find(ctx, filter)
 	if err != nil {
+		logRepositoryError(ctx, "route", "get_my_participation.find_routes", err, "collection", "routes", "user_id", userID)
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
 	var routes []domain.Route
 	if err := cursor.All(ctx, &routes); err != nil {
+		logRepositoryError(ctx, "route", "get_my_participation.cursor_all", err, "collection", "routes", "user_id", userID)
 		return nil, err
 	}
 
@@ -411,6 +440,7 @@ func (r *routeRepository) GetMyParticipation(ctx context.Context, userID string)
 			"route_id": bson.M{"$in": routeIDs},
 		})
 		if err != nil {
+			logRepositoryError(ctx, "route", "get_my_participation.count_help_points", err, "collection", "help_points", "user_id", userID, "routes_count", len(routeIDs))
 			return nil, err
 		}
 		totalHelpingPoints = int(helpCount)

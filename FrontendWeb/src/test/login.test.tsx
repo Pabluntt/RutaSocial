@@ -34,6 +34,9 @@ describe('Login page', () => {
     fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'Admin12345' } })
     fireEvent.click(screen.getByRole('button', { name: /ingresar/i }))
 
-    expect(mutate).toHaveBeenCalledWith({ email: 'admin@example.com', password: 'Admin12345' })
+    expect(mutate).toHaveBeenCalledWith(
+      { email: 'admin@example.com', password: 'Admin12345' },
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    )
   })
 })

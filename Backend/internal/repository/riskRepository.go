@@ -12,10 +12,10 @@ import (
 // RiskRepository define la interfaz para las operaciones relacionadas con riesgos.
 // Contiene métodos para obtener, crear, eliminar y actualizar riesgos.
 type RiskRepository interface {
-GetRisks(ctx context.Context) ([]domain.Riesgo, error)
-CreateRisk(ctx context.Context, risk domain.Riesgo) error
-DeleteRisk(ctx context.Context, id string) error
-UpdateRisk(ctx context.Context, updateData map[string]interface{}) (domain.Riesgo, error)
+	GetRisks(ctx context.Context) ([]domain.Riesgo, error)
+	CreateRisk(ctx context.Context, risk domain.Riesgo) error
+	DeleteRisk(ctx context.Context, id string) error
+	UpdateRisk(ctx context.Context, updateData map[string]interface{}) (domain.Riesgo, error)
 }
 
 // riskRepository implementa la interfaz RiskRepository.
@@ -39,6 +39,7 @@ func (r *riskRepository) GetRisks(ctx context.Context) ([]domain.Riesgo, error) 
 	defer cancel()
 	cursor, err := r.RiskCollection.Find(ctx, bson.M{})
 	if err != nil {
+		logRepositoryError(ctx, "risk", "get_all.find", err, "collection", "risks")
 		return nil, err
 	}
 	defer cursor.Close(ctx)
@@ -47,9 +48,14 @@ func (r *riskRepository) GetRisks(ctx context.Context) ([]domain.Riesgo, error) 
 	for cursor.Next(ctx) {
 		var risk domain.Riesgo
 		if err := cursor.Decode(&risk); err != nil {
+			logRepositoryError(ctx, "risk", "get_all.decode", err, "collection", "risks")
 			return nil, err
 		}
 		risks = append(risks, risk)
+	}
+	if err := cursor.Err(); err != nil {
+		logRepositoryError(ctx, "risk", "get_all.cursor", err, "collection", "risks")
+		return nil, err
 	}
 	return risks, nil
 }
@@ -62,6 +68,9 @@ func (r *riskRepository) CreateRisk(ctx context.Context, risk domain.Riesgo) err
 	risk.ID = bson.NewObjectID()
 	risk.DateRegister = time.Now()
 	_, err := r.RiskCollection.InsertOne(ctx, risk)
+	if err != nil {
+		logRepositoryError(ctx, "risk", "create.insert_one", err, "collection", "risks", "risk_id", risk.ID.Hex())
+	}
 	return err
 }
 
@@ -75,6 +84,9 @@ func (r *riskRepository) DeleteRisk(ctx context.Context, id string) error {
 		return errors.New("ID de riesgo inválido")
 	}
 	_, err = r.RiskCollection.DeleteOne(ctx, bson.M{"_id": objID})
+	if err != nil {
+		logRepositoryError(ctx, "risk", "delete.delete_one", err, "collection", "risks", "risk_id", id)
+	}
 	return err
 }
 
@@ -106,17 +118,15 @@ func (r *riskRepository) UpdateRisk(ctx context.Context, updateData map[string]i
 	update := bson.M{"$set": filtered}
 	_, err = r.RiskCollection.UpdateOne(ctx, bson.M{"_id": objID}, update)
 	if err != nil {
+		logRepositoryError(ctx, "risk", "update.update_one", err, "collection", "risks", "risk_id", idStr)
 		return domain.Riesgo{}, err
 	}
 
 	var updatedRisk domain.Riesgo
 	err = r.RiskCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&updatedRisk)
 	if err != nil {
+		logRepositoryError(ctx, "risk", "update.find_updated", err, "collection", "risks", "risk_id", idStr)
 		return domain.Riesgo{}, err
 	}
 	return updatedRisk, nil
 }
-
-
-
-

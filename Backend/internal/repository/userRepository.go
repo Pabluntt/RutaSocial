@@ -43,12 +43,14 @@ func (u *userRepository) GetAllUsers(ctx context.Context) ([]domain.Usuario, err
 	defer cancel()
 	cursor, err := u.UserCollection.Find(ctx, bson.M{})
 	if err != nil {
+		logRepositoryError(ctx, "user", "get_all.find", err, "collection", "usuarios")
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
 	var users []domain.Usuario
 	if err := cursor.All(ctx, &users); err != nil {
+		logRepositoryError(ctx, "user", "get_all.cursor_all", err, "collection", "usuarios")
 		return nil, err
 	}
 	for i := range users {
@@ -77,12 +79,14 @@ func (u *userRepository) GetUsersByIDs(ctx context.Context, ids []string) ([]dom
 
 	cursor, err := u.UserCollection.Find(ctx, bson.M{"_id": bson.M{"$in": objectIDs}})
 	if err != nil {
+		logRepositoryError(ctx, "user", "get_batch.find", err, "collection", "usuarios", "ids_count", len(objectIDs))
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
 	var users []domain.Usuario
 	if err := cursor.All(ctx, &users); err != nil {
+		logRepositoryError(ctx, "user", "get_batch.cursor_all", err, "collection", "usuarios", "ids_count", len(objectIDs))
 		return nil, err
 	}
 	for i := range users {
@@ -104,6 +108,9 @@ func (u *userRepository) GetPublicInfoByID(ctx context.Context, id string) (map[
 
 	err = u.UserCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&user)
 	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			logRepositoryError(ctx, "user", "get_public_info.find_one", err, "collection", "usuarios", "user_id", id)
+		}
 		return map[string]string{"name": ""}, err
 	}
 	return map[string]string{"name": user.Name, "institutionID": user.InstitutionID.Hex(), "phone": user.Phone}, nil
@@ -122,6 +129,9 @@ func (u *userRepository) GetUserByID(ctx context.Context, id string) (domain.Usu
 
 	err = u.UserCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&user)
 	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			logRepositoryError(ctx, "user", "get_by_id.find_one", err, "collection", "usuarios", "user_id", id)
+		}
 		return domain.Usuario{}, err
 	}
 	user.Sanitize()
@@ -143,6 +153,9 @@ func (u *userRepository) UpdateUserInfo(ctx context.Context, userID bson.ObjectI
 	var currentUser domain.Usuario
 	err := u.UserCollection.FindOne(ctx, bson.M{"_id": userID}).Decode(&currentUser)
 	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			logRepositoryError(ctx, "user", "update_profile.find_current", err, "collection", "usuarios", "user_id", userID.Hex())
+		}
 		return domain.Usuario{}, errors.New("usuario no encontrado")
 	}
 
@@ -183,6 +196,7 @@ func (u *userRepository) UpdateUserInfo(ctx context.Context, userID bson.ObjectI
 
 		hashedPassword, err := utils.HashPassword(newPassword)
 		if err != nil {
+			logRepositoryError(ctx, "user", "update_profile.hash_password", err, "user_id", userID.Hex())
 			return domain.Usuario{}, errors.New("error al hashear la nueva contraseña")
 		}
 		filteredData["password"] = hashedPassword
@@ -204,12 +218,14 @@ func (u *userRepository) UpdateUserInfo(ctx context.Context, userID bson.ObjectI
 
 	_, err = u.UserCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
+		logRepositoryError(ctx, "user", "update_profile.update_one", err, "collection", "usuarios", "user_id", userID.Hex())
 		return domain.Usuario{}, err
 	}
 
 	var updatedUser domain.Usuario
 	err = u.UserCollection.FindOne(ctx, filter).Decode(&updatedUser)
 	if err != nil {
+		logRepositoryError(ctx, "user", "update_profile.find_updated", err, "collection", "usuarios", "user_id", userID.Hex())
 		return domain.Usuario{}, err
 	}
 
@@ -230,6 +246,7 @@ func (u *userRepository) CreateUserByAdmin(ctx context.Context, user domain.Usua
 
 	hashedPassword, err := utils.HashPassword(user.Password)
 	if err != nil {
+		logRepositoryError(ctx, "user", "admin_create.hash_password", err)
 		return domain.Usuario{}, err
 	}
 
@@ -241,6 +258,7 @@ func (u *userRepository) CreateUserByAdmin(ctx context.Context, user domain.Usua
 
 	res, err := u.UserCollection.Database().Collection("usuarios").InsertOne(ctx, user)
 	if err != nil {
+		logRepositoryError(ctx, "user", "admin_create.insert_one", err, "collection", "usuarios", "role", user.Role, "institution_id", user.InstitutionID.Hex())
 		return domain.Usuario{}, err
 	}
 
@@ -273,6 +291,9 @@ func (u *userRepository) UpdateUserByAdmin(ctx context.Context, updateData map[s
 	var currentUser domain.Usuario
 	err = u.UserCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&currentUser)
 	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			logRepositoryError(ctx, "user", "admin_update.find_current", err, "collection", "usuarios", "user_id", idStr)
+		}
 		return domain.Usuario{}, errors.New("usuario no encontrado")
 	}
 
@@ -301,12 +322,14 @@ func (u *userRepository) UpdateUserByAdmin(ctx context.Context, updateData map[s
 
 	_, err = u.UserCollection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": filtered})
 	if err != nil {
+		logRepositoryError(ctx, "user", "admin_update.update_one", err, "collection", "usuarios", "user_id", idStr)
 		return domain.Usuario{}, err
 	}
 
 	var updatedUser domain.Usuario
 	err = u.UserCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&updatedUser)
 	if err != nil {
+		logRepositoryError(ctx, "user", "admin_update.find_updated", err, "collection", "usuarios", "user_id", idStr)
 		return domain.Usuario{}, err
 	}
 
@@ -327,6 +350,7 @@ func (u *userRepository) DeleteUserByID(ctx context.Context, id string) error {
 
 	result, err := u.UserCollection.DeleteOne(ctx, bson.M{"_id": objID})
 	if err != nil {
+		logRepositoryError(ctx, "user", "delete.delete_one", err, "collection", "usuarios", "user_id", id)
 		return err
 	}
 

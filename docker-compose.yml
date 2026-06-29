@@ -7,25 +7,42 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:-pass}
     ports:
       - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+      - mongo_config:/data/configdb
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand('ping').ok\" \"mongodb://$${MONGO_INITDB_ROOT_USERNAME}:$${MONGO_INITDB_ROOT_PASSWORD}@localhost:27017/admin\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     networks:
       - appnet
   backend:
     build: ./Backend
     ports:
       - "8080:8080"
+    depends_on:
+      mongo:
+        condition: service_healthy
     networks:
       - appnet
     env_file:
       - ./Backend/.env
   frontend:
-    build: ./FrontendWeb
+    build:
+      context: ./FrontendWeb
+      args:
+        VITE_URL_BACKEND: ${VITE_URL_BACKEND:-http://localhost:8080}
+        VITE_BASE_URL: ${VITE_BASE_URL:-}
     ports:
       - "3000:80"
     depends_on:
       - backend
     networks:
       - appnet
-    env_file:
-      - ./FrontendWeb/.env
 networks:
   appnet:
+volumes:
+  mongo_data:
+  mongo_config:

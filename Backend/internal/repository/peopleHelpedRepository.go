@@ -13,10 +13,10 @@ import (
 // Contiene métodos para obtener, crear, eliminar y actualizar personas ayudadas.
 // Este archivo está "obsoleto" como se mencionó en varios archivos, ya que se ha cambiado el nombre de la entidad a "PersonaAyudada".
 type PeopleHelpedRepository interface {
-GetPeopleHelped(ctx context.Context) ([]domain.PersonaAyudada, error)
-CreatePersonHelped(ctx context.Context, person domain.PersonaAyudada) error
-DeletePersonHelped(ctx context.Context, id string) error
-UpdatePersonHelped(ctx context.Context, updateData map[string]interface{}) (domain.PersonaAyudada, error)
+	GetPeopleHelped(ctx context.Context) ([]domain.PersonaAyudada, error)
+	CreatePersonHelped(ctx context.Context, person domain.PersonaAyudada) error
+	DeletePersonHelped(ctx context.Context, id string) error
+	UpdatePersonHelped(ctx context.Context, updateData map[string]interface{}) (domain.PersonaAyudada, error)
 }
 
 // peopleHelpedRepository implementa la interfaz PeopleHelpedRepository.
@@ -42,6 +42,7 @@ func (ph *peopleHelpedRepository) GetPeopleHelped(ctx context.Context) ([]domain
 	defer cancel()
 	cursor, err := ph.PeopleHelpedCollections.Find(ctx, bson.M{})
 	if err != nil {
+		logRepositoryError(ctx, "people_helped", "get_all.find", err, "collection", "people_helped")
 		return nil, err
 	}
 	defer cursor.Close(ctx)
@@ -50,9 +51,14 @@ func (ph *peopleHelpedRepository) GetPeopleHelped(ctx context.Context) ([]domain
 	for cursor.Next(ctx) {
 		var person domain.PersonaAyudada
 		if err := cursor.Decode(&person); err != nil {
+			logRepositoryError(ctx, "people_helped", "get_all.decode", err, "collection", "people_helped")
 			return nil, err
 		}
 		peopleHelped = append(peopleHelped, person)
+	}
+	if err := cursor.Err(); err != nil {
+		logRepositoryError(ctx, "people_helped", "get_all.cursor", err, "collection", "people_helped")
+		return nil, err
 	}
 	return peopleHelped, nil
 }
@@ -65,6 +71,9 @@ func (ph *peopleHelpedRepository) CreatePersonHelped(ctx context.Context, person
 	person.ID = bson.NewObjectID()
 	person.DateRegister = time.Now()
 	_, err := ph.PeopleHelpedCollections.InsertOne(ctx, person)
+	if err != nil {
+		logRepositoryError(ctx, "people_helped", "create.insert_one", err, "collection", "people_helped", "person_id", person.ID.Hex())
+	}
 	return err
 }
 
@@ -78,6 +87,9 @@ func (ph *peopleHelpedRepository) DeletePersonHelped(ctx context.Context, id str
 		return errors.New("ID de persona ayudada inválido")
 	}
 	_, err = ph.PeopleHelpedCollections.DeleteOne(ctx, bson.M{"_id": objID})
+	if err != nil {
+		logRepositoryError(ctx, "people_helped", "delete.delete_one", err, "collection", "people_helped", "person_id", id)
+	}
 	return err
 }
 
@@ -109,12 +121,14 @@ func (ph *peopleHelpedRepository) UpdatePersonHelped(ctx context.Context, update
 	update := bson.M{"$set": filtered}
 	_, err = ph.PeopleHelpedCollections.UpdateOne(ctx, bson.M{"_id": objID}, update)
 	if err != nil {
+		logRepositoryError(ctx, "people_helped", "update.update_one", err, "collection", "people_helped", "person_id", idStr)
 		return domain.PersonaAyudada{}, err
 	}
 
 	var updatedPerson domain.PersonaAyudada
 	err = ph.PeopleHelpedCollections.FindOne(ctx, bson.M{"_id": objID}).Decode(&updatedPerson)
 	if err != nil {
+		logRepositoryError(ctx, "people_helped", "update.find_updated", err, "collection", "people_helped", "person_id", idStr)
 		return domain.PersonaAyudada{}, err
 	}
 
@@ -124,12 +138,9 @@ func (ph *peopleHelpedRepository) UpdatePersonHelped(ctx context.Context, update
 		bson.M{"$set": bson.M{"peopleHelped.$": updatedPerson}},
 	)
 	if err != nil {
+		logRepositoryError(ctx, "people_helped", "update.sync_help_point", err, "collection", "help_points", "person_id", idStr)
 		return domain.PersonaAyudada{}, err
 	}
 
 	return updatedPerson, nil
 }
-
-
-
-

@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import './App.css'
 import Home from './pages/home'
 import Login from './pages/login'
@@ -8,7 +8,7 @@ import Usuarios from './pages/admin/usuarios/Usuarios'
 import UserDetail from './pages/admin/usuarios/UserDetail'
 import AdminRoutes from './pages/admin/routes/AdminRoutes'
 import { useNavigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { interceptorResponse } from './api/services/axiosInstance'
 import useSessionStore from './stores/useSessionStore'
 import { ThemeProvider } from '@emotion/react'
@@ -28,6 +28,14 @@ import TourOverlay from './component/TourOverlay'
 import ErrorBoundary from './component/ErrorBoundary'
 import HydrationGate from './component/HydrationGate'
 import { SnackbarProvider } from './context/SnackbarContext'
+
+function ProtectedRoute({ children }: { children: ReactNode }) {
+  const accessToken = useSessionStore((state) => state.accessToken)
+  if (!accessToken) {
+    return <Navigate to={`${import.meta.env.VITE_BASE_URL}/login`} replace />
+  }
+  return children
+}
 
 const getErrorStatus = (error: unknown) => {
   if (error && typeof error === 'object' && 'status' in error) {
@@ -57,7 +65,7 @@ const customQuery = createTheme({
 
 function App() {
 
-  const { clearSession, setEnableGPS, setCountRetryGPS } = useSessionStore()
+  const { clearSession, setEnableGPS, setCountRetryGPS, accessToken } = useSessionStore()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -83,35 +91,41 @@ function App() {
                 <ErrorBoundary>
                   <Routes>
                     <Route path={`${import.meta.env.VITE_BASE_URL}/`} element={
-                      <EventCalendarUpdateProvider>
-                        <Schedule />
-                      </EventCalendarUpdateProvider>
+                      <ProtectedRoute>
+                        <EventCalendarUpdateProvider>
+                          <Schedule />
+                        </EventCalendarUpdateProvider>
+                      </ProtectedRoute>
                     } />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/login`} element={<Login />} />
-                    <Route path={`${import.meta.env.VITE_BASE_URL}/mapa`} element={<Home/>} />
-                    <Route path={`${import.meta.env.VITE_BASE_URL}/perfil`} element={<Profile />} />
+                    <Route path={`${import.meta.env.VITE_BASE_URL}/mapa`} element={<ProtectedRoute><Home/></ProtectedRoute>} />
+                    <Route path={`${import.meta.env.VITE_BASE_URL}/perfil`} element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/calendario`} element={
-                      <EventCalendarUpdateProvider>
-                        <Schedule />
-                      </EventCalendarUpdateProvider>
+                      <ProtectedRoute>
+                        <EventCalendarUpdateProvider>
+                          <Schedule />
+                        </EventCalendarUpdateProvider>
+                      </ProtectedRoute>
                       } 
                     />
-                    <Route path={`${import.meta.env.VITE_BASE_URL}/admin/usuarios`} element={<Usuarios />} />
-                    <Route path={`${import.meta.env.VITE_BASE_URL}/admin/usuarios/:id`} element={<UserDetail />} />
-                    <Route path={`${import.meta.env.VITE_BASE_URL}/admin/rutas`} element={<AdminRoutes />} />
+                    <Route path={`${import.meta.env.VITE_BASE_URL}/admin/usuarios`} element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
+                    <Route path={`${import.meta.env.VITE_BASE_URL}/admin/usuarios/:id`} element={<ProtectedRoute><UserDetail /></ProtectedRoute>} />
+                    <Route path={`${import.meta.env.VITE_BASE_URL}/admin/rutas`} element={<ProtectedRoute><AdminRoutes /></ProtectedRoute>} />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/historial`} element={
-                      <HelpPointUpdateProvider>
-                        <RouteHistory />
-                      </HelpPointUpdateProvider>
+                      <ProtectedRoute>
+                        <HelpPointUpdateProvider>
+                          <RouteHistory />
+                        </HelpPointUpdateProvider>
+                      </ProtectedRoute>
                       } 
                     />
-                    <Route path={`${import.meta.env.VITE_BASE_URL}/personas-ayudadas`} element={<PeopleHelped />} />
-                    <Route path={`${import.meta.env.VITE_BASE_URL}/personas-ayudadas/:id`} element={<PersonaProfile />} />
+                    <Route path={`${import.meta.env.VITE_BASE_URL}/personas-ayudadas`} element={<ProtectedRoute><PeopleHelped /></ProtectedRoute>} />
+                    <Route path={`${import.meta.env.VITE_BASE_URL}/personas-ayudadas/:id`} element={<ProtectedRoute><PersonaProfile /></ProtectedRoute>} />
                     <Route path='*' element={ <NotFound />} />
                 </Routes>
                 </ErrorBoundary>
-                <HelpButton />
-                <TourOverlay />
+                {accessToken ? <HelpButton /> : null}
+                {accessToken ? <TourOverlay /> : null}
               </SnackbarProvider>
             </ThemeProvider>
           </ZoomProvider>
