@@ -90,9 +90,18 @@ export default function PersonaProfile() {
     return (
         <div className="flex h-screen overflow-hidden">
             <div className="sticky top-0 self-start flex-shrink-0">
-                {computerDevice ? <Sidebar /> : <div className="absolute top-4 z-20 left-2"><CustomDrawer DrawerList={DrawerList} /></div>}
+                {computerDevice ? <Sidebar /> : null}
             </div>
-            <div className="flex grow justify-center overflow-y-auto">
+            <div className="flex grow flex-col overflow-hidden">
+                {!computerDevice && (
+                    <div className="flex flex-shrink-0 items-center gap-2 bg-white px-2 py-2 shadow-sm z-20">
+                        <CustomDrawer DrawerList={DrawerList} />
+                        <Typography variant="h6" sx={{ fontSize: '1.05rem', fontWeight: 600 }}>
+                            Perfil
+                        </Typography>
+                    </div>
+                )}
+                <div className="flex grow justify-center overflow-y-auto">
                 <div className="w-full max-w-3xl p-4 md:p-6 flex flex-col gap-4">
                     <Button
                         startIcon={<ArrowBackIcon />}
@@ -170,6 +179,7 @@ export default function PersonaProfile() {
                             </div>
                         )}
                     </Paper>
+                </div>
                 </div>
             </div>
 

@@ -5,7 +5,9 @@ import MenuIcon from '@mui/icons-material/Menu';
 
 
 
-export default function CustomDrawer({ DrawerList } : {DrawerList: () => JSX.Element}) {
+type DrawerListComponent = (props?: { onNavigate?: () => void }) => JSX.Element
+
+export default function CustomDrawer({ DrawerList } : {DrawerList: DrawerListComponent}) {
     
     const [ openDrawer, setOpenDrawer ] = useState(false)
 
@@ -18,6 +20,7 @@ export default function CustomDrawer({ DrawerList } : {DrawerList: () => JSX.Ele
     return (
         <>
             <IconButton 
+                data-tour-id="mobile-menu"
                 size="large"
                 edge="start"
                 color="inherit"
@@ -31,7 +34,7 @@ export default function CustomDrawer({ DrawerList } : {DrawerList: () => JSX.Ele
                 open={openDrawer}
                 onClose={toggleDrawer(false)}
             >
-                <DrawerList />
+                <DrawerList onNavigate={toggleDrawer(false)} />
             </Drawer>
         </>
 

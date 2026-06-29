@@ -26,7 +26,7 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
 export default function DialogSendAviso({ open, setOpen } : { open : boolean, setOpen: (ar : boolean) => void}) {
 
     const theme = useTheme();
-    const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
+    const computerDevice = useMediaQuery(theme.breakpoints.up('sm'));
     const [ description, setDescription ] = useState('')
     const [ sendToAll, setSendToAll ] = useState(false)
     const [ noticeError, setNoticeError ] = useState({
@@ -86,11 +86,22 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
     return (
         <>
             <BootstrapDialog 
-                fullScreen={fullScreen}
+                fullScreen={false}
                 fullWidth
+                maxWidth={computerDevice ? 'sm' : 'xs'}
                 open={open} 
                 onClose={handleClose}
                 aria-labelledby='aviso-titulo'
+                slotProps={{
+                    paper: {
+                        sx: computerDevice ? undefined : {
+                            m: 2,
+                            width: 'calc(100vw - 32px)',
+                            maxHeight: 'calc(100dvh - 32px)',
+                            borderRadius: '14px',
+                        },
+                    },
+                }}
             >
                 <DialogTitle className='m-0 p-2' id="aviso-titulo">
                     Enviar Un Aviso

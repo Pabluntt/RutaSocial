@@ -68,7 +68,7 @@ export default function TourOverlay() {
     <>
       <div
         data-tour-overlay="true"
-        className="fixed inset-0 z-[99] cursor-pointer"
+        className="fixed inset-0 z-[1400] cursor-pointer"
         onClick={handleOverlayClick}
       />
 
@@ -76,46 +76,49 @@ export default function TourOverlay() {
 
       {targetRect && mascotTop !== undefined && mascotLeft !== undefined && (
         <div
-          className="fixed z-[101]"
+          className="fixed z-[1402]"
           style={{ top: mascotTop, left: Math.max(16, mascotLeft) }}
         >
           <TourMascot />
         </div>
       )}
 
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[101] flex items-center gap-4 bg-white rounded-full px-6 py-3 shadow-xl">
+      <div className={`fixed left-1/2 -translate-x-1/2 z-[1402] bg-white shadow-xl ${isDesktop ? 'bottom-8 flex items-center gap-4 rounded-full px-6 py-3' : 'bottom-4 flex w-[calc(100vw-24px)] max-w-sm flex-col gap-2 rounded-2xl px-4 py-3'}`}>
         {!isDesktop && (
-          <p className="text-sm text-gray-500 mr-2">
-            Abre el menú lateral tocando ☰ para explorar las secciones.
+          <p className="text-sm text-gray-500 text-center">
+            Recorre las secciones del menú lateral.
           </p>
         )}
-        <button
-          onClick={prevStep}
-          disabled={isFirst}
-          className="px-4 py-1.5 text-sm rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
-        >
-          ← Anterior
-        </button>
 
-        <span className="text-xs text-gray-400 min-w-[60px] text-center">
-          {currentStep + 1} / {steps.length}
-        </span>
+        <div className="flex w-full items-center justify-center gap-3">
+          <button
+            onClick={prevStep}
+            disabled={isFirst}
+            className="px-4 py-1.5 text-sm rounded-full border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
+          >
+            ← Anterior
+          </button>
 
-        {isLast ? (
-          <button
-            onClick={closeTour}
-            className="px-4 py-1.5 text-sm rounded-full bg-teal-500 text-white hover:bg-teal-600 transition"
-          >
-            Finalizar
-          </button>
-        ) : (
-          <button
-            onClick={nextStep}
-            className="px-4 py-1.5 text-sm rounded-full bg-teal-500 text-white hover:bg-teal-600 transition"
-          >
-            Siguiente →
-          </button>
-        )}
+          <span className="text-xs text-gray-400 min-w-[52px] text-center">
+            {currentStep + 1} / {steps.length}
+          </span>
+
+          {isLast ? (
+            <button
+              onClick={closeTour}
+              className="px-4 py-1.5 text-sm rounded-full bg-teal-500 text-white hover:bg-teal-600 transition"
+            >
+              Finalizar
+            </button>
+          ) : (
+            <button
+              onClick={nextStep}
+              className="px-4 py-1.5 text-sm rounded-full bg-teal-500 text-white hover:bg-teal-600 transition"
+            >
+              Siguiente →
+            </button>
+          )}
+        </div>
 
         <button
           onClick={closeTour}

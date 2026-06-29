@@ -16,7 +16,7 @@ import RouteIcon from '@mui/icons-material/Route';
 import { Role } from "../Enums/Role";
 
 
-export default function DrawerList() {
+export default function DrawerList({ onNavigate } : { onNavigate?: () => void } = {}) {
 
     const theme = useTheme();
     const isMobile = !useMediaQuery(theme.breakpoints.up('sm'));
@@ -28,36 +28,44 @@ export default function DrawerList() {
 
     const onClickProfile = () => {
         navigate(`${import.meta.env.VITE_BASE_URL}/perfil`)
+        onNavigate?.()
     }
 
     const onClickUsuarios = () => {
         navigate(`${import.meta.env.VITE_BASE_URL}/admin/usuarios`)
+        onNavigate?.()
     }
 
     const onClickRutas = () => {
         navigate(`${import.meta.env.VITE_BASE_URL}/admin/rutas`)
+        onNavigate?.()
     }
 
     const onClickCerrarSesion = () => {
         clearSession()
         navigate(`${import.meta.env.VITE_BASE_URL}/login`)
+        onNavigate?.()
     }
 
     const onClickHome = () => {
         navigate(`${import.meta.env.VITE_BASE_URL}/`)
+        onNavigate?.()
     }
 
     const onClickHistory = () => {
         navigate(`${import.meta.env.VITE_BASE_URL}/historial`)
+        onNavigate?.()
     }
 
 
     const onClickSchedule = () => {
         navigate(`${import.meta.env.VITE_BASE_URL}/mapa`)
+        onNavigate?.()
     }
 
     const onClickPeopleHelped = () => {
         navigate(`${import.meta.env.VITE_BASE_URL}/personas-ayudadas`)
+        onNavigate?.()
     }
 
     const onClickSendNotice = () => {
@@ -67,64 +75,64 @@ export default function DrawerList() {
     const color = '#28bdc8'
     
     return (
-        <div className={`${isMobile ? 'py-3 gap-2' : 'py-5 gap-4'} w-45 flex grow flex-col flex-wrap justify-items-between`}>
+        <div className={`${isMobile ? 'w-[min(82vw,320px)] py-3 gap-2' : 'w-45 py-5 gap-4'} flex min-h-full flex-col`}>
             <Button data-tour-id="home" fullWidth onClick={onClickHome} color="info" sx={btnSx}>
-                <div className="flex w-full justify-start px-2 gap-5 items-center">
+                <div className="flex w-full justify-start px-2 gap-4 items-center min-w-0">
                     <HomeIcon />
-                     <Typography>Home</Typography>
+                     <Typography sx={{ whiteSpace: 'normal', textAlign: 'left' }}>Home</Typography>
                  </div>
             </Button>
             <Button data-tour-id="profile" fullWidth onClick={onClickProfile} color='info' sx={btnSx}>
-                <div className="flex w-full justify-start px-2 gap-5 items-center">
+                <div className="flex w-full justify-start px-2 gap-4 items-center min-w-0">
                     <AccountBoxIcon />
-                    <Typography>Perfil</Typography>
+                    <Typography sx={{ whiteSpace: 'normal', textAlign: 'left' }}>Perfil</Typography>
                 </div>
             </Button>
             <Button data-tour-id="map" fullWidth onClick={onClickSchedule} color='info' sx={btnSx}>
-                <div className="flex w-full justify-start px-2 gap-5 items-center">
+                <div className="flex w-full justify-start px-2 gap-4 items-center min-w-0">
                     <MapIcon />
-                    <Typography>Mapa</Typography>
+                    <Typography sx={{ whiteSpace: 'normal', textAlign: 'left' }}>Mapa</Typography>
                 </div>
             </Button>
             <Button data-tour-id="history" fullWidth onClick={onClickHistory} color='info' sx={btnSx}>
-                <div className="flex w-full justify-start px-2 gap-5 items-center">
+                <div className="flex w-full justify-start px-2 gap-4 items-center min-w-0">
                     <HistoryIcon />
-                    <Typography>Historial</Typography>
+                    <Typography sx={{ whiteSpace: 'normal', textAlign: 'left' }}>Historial</Typography>
                 </div>
             </Button>
             { role === Role.admin && (
                 <>
                     <Button data-tour-id="admin-users" fullWidth onClick={onClickUsuarios} color='info' sx={btnSx}>
-                        <div className="flex w-full justify-start px-2 gap-5 items-center">
+                        <div className="flex w-full justify-start px-2 gap-4 items-center min-w-0">
                             <PeopleAltIcon/>
-                            <Typography>Gestionar Usuarios</Typography>
+                            <Typography sx={{ whiteSpace: 'normal', textAlign: 'left' }}>Gestionar Usuarios</Typography>
                         </div>
                     </Button>
                     <Button data-tour-id="admin-routes" fullWidth onClick={onClickRutas} color='info' sx={btnSx}>
-                        <div className="flex w-full justify-start px-2 gap-5 items-center">
+                        <div className="flex w-full justify-start px-2 gap-4 items-center min-w-0">
                             <RouteIcon/>
-                            <Typography>Gestionar Rutas</Typography>
+                            <Typography sx={{ whiteSpace: 'normal', textAlign: 'left' }}>Gestionar Rutas</Typography>
                         </div>
                     </Button>
                 </>
             )}
             <Button data-tour-id="send-notice" fullWidth onClick={onClickSendNotice} color="info" sx={btnSx}>
-                <div className="flex w-full justify-start px-2 gap-5 items-center">
+                <div className="flex w-full justify-start px-2 gap-4 items-center min-w-0">
                     <CampaignIcon/>
-                    <Typography>Crear Aviso</Typography>
+                    <Typography sx={{ whiteSpace: 'normal', textAlign: 'left' }}>Crear Aviso</Typography>
                 </div>
             </Button>
             <Button data-tour-id="people-helped" fullWidth onClick={onClickPeopleHelped} color='info' sx={btnSx}>
-                <div className="flex w-full justify-start px-2 gap-5 items-center">
+                <div className="flex w-full justify-start px-2 gap-4 items-center min-w-0">
                     <GroupAddIcon/>
-                    <Typography>Personas Ayudadas</Typography>
+                    <Typography sx={{ whiteSpace: 'normal', textAlign: 'left' }}>Personas Ayudadas</Typography>
                 </div>
             </Button>
             <div className="flex grow items-end w-full" >
                 <Button data-tour-id="logout" fullWidth color="warning" onClick={onClickCerrarSesion} sx={btnSx}>
-                    <div className="flex w-full justify-start px-2 gap-5 items-center">
+                    <div className="flex w-full justify-start px-2 gap-4 items-center min-w-0">
                         <LogoutIcon fontSize="small" />
-                        <Typography variant="body2">Cerrar Sesión</Typography>
+                        <Typography variant="body2" sx={{ whiteSpace: 'normal', textAlign: 'left' }}>Cerrar Sesión</Typography>
                     </div>
                 </Button>
             </div>

@@ -15,7 +15,7 @@ export default function TourHighlight() {
 
   return (
     <div
-      className="fixed z-[100] pointer-events-none"
+      className="fixed z-[1401] pointer-events-none"
       style={{
         left: rect.left - 4,
         top: rect.top - 4,

@@ -139,17 +139,17 @@ export default function AdminRoutes() {
                         />
                         <IconButton disabled><SearchIcon /></IconButton>
                     </Paper>
-                    <div className={"flex " + (computerDevice ? '' : 'overflow-x-auto')}>
+                    <div className={"flex " + (computerDevice ? '' : 'w-full overflow-x-auto pb-1')}>
                         <ToggleButtonGroup
                             value={statusFilter}
                             exclusive
                             onChange={(_, value) => value && setStatusFilter(value)}
                             size="small"
-                            orientation={computerDevice ? "horizontal" : "vertical"}
+                            orientation="horizontal"
                         >
-                            <ToggleButton value="all" sx={!computerDevice ? { minWidth: 120 } : {}}>Todas</ToggleButton>
-                            <ToggleButton value="on progress" sx={!computerDevice ? { minWidth: 120 } : {}}>En Progreso</ToggleButton>
-                            <ToggleButton value="Finalizada" sx={!computerDevice ? { minWidth: 120 } : {}}>Finalizadas</ToggleButton>
+                            <ToggleButton value="all" sx={!computerDevice ? { minWidth: 88, px: 1 } : {}}>Todas</ToggleButton>
+                            <ToggleButton value="on progress" sx={!computerDevice ? { minWidth: 92, px: 1 } : {}}>Activas</ToggleButton>
+                            <ToggleButton value="Finalizada" sx={!computerDevice ? { minWidth: 104, px: 1 } : {}}>Finalizadas</ToggleButton>
                         </ToggleButtonGroup>
                     </div>
                 </div>
@@ -161,7 +161,7 @@ export default function AdminRoutes() {
                 ) : (
                     <Paper>
                         <TableContainer sx={{ overflowX: 'auto' }}>
-                            <Table size="small" stickyHeader sx={{ minWidth: computerDevice ? 'auto' : 500, width: '100%' }}>
+                            <Table size="small" stickyHeader sx={{ minWidth: computerDevice ? 'auto' : 560, width: '100%', '& .MuiTableCell-root': !computerDevice ? { px: 0.75, py: 0.5 } : undefined }}>
                                 <TableHead>
                                     <TableRow>
                                         <TableCell sx={{ fontWeight: 600 }}>Título</TableCell>
@@ -221,7 +221,7 @@ export default function AdminRoutes() {
                                                     </TableCell>
                                                 )}
                                                 <TableCell align="center">
-                                                    <div className={"flex " + (computerDevice ? 'gap-1 justify-center' : 'flex-col gap-0.5')}>
+                                                    <div className={"flex " + (computerDevice ? 'gap-1 justify-center' : 'flex-row gap-0.5 justify-center whitespace-nowrap')}>
                                                         <Tooltip title="Editar">
                                                             <IconButton size="small" color="primary" onClick={() => handleEditClick(route)}>
                                                                 <EditIcon fontSize="small" />

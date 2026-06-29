@@ -94,9 +94,18 @@ export default function PeopleHelped() {
     return (
         <div className="flex h-screen overflow-hidden max-w-full">
             <div className="sticky top-0 self-start flex-shrink-0">
-                {computerDevice ? <Sidebar /> : <div className="absolute top-4 z-20 left-2"><CustomDrawer DrawerList={DrawerList} /></div>}
+                {computerDevice ? <Sidebar /> : null}
             </div>
-            <div className="flex grow justify-center max-w-full overflow-y-auto">
+            <div className="flex grow flex-col max-w-full overflow-hidden">
+                {!computerDevice && (
+                    <div className="flex flex-shrink-0 items-center gap-2 bg-white px-2 py-2 shadow-sm z-20">
+                        <CustomDrawer DrawerList={DrawerList} />
+                        <Typography variant="h6" sx={{ fontSize: '1.05rem', fontWeight: 600 }}>
+                            Personas Ayudadas
+                        </Typography>
+                    </div>
+                )}
+                <div className="flex grow justify-center max-w-full overflow-y-auto">
                 <Paper variant="outlined" square className="h-full w-full max-w-3xl shadow-[4px_0_6px_-1px_rgba(0,0,0,0.1)] overflow-y-auto">
                     <div className="p-4">
                         <Typography variant="h5" className="mb-4">Personas Ayudadas</Typography>
@@ -197,6 +206,7 @@ export default function PeopleHelped() {
                         )}
                     </div>
                 </Paper>
+                </div>
             </div>
         </div>
     )

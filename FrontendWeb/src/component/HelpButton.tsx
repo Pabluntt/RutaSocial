@@ -10,12 +10,16 @@ import {
   DialogActions,
   Button,
   Box,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { useTourStore } from '../stores/useTourStore'
 import { mascotAssets } from '../assets/mascot/mascotAssets'
 
 export default function HelpButton() {
   const location = useLocation()
+  const theme = useTheme()
+  const isMobile = !useMediaQuery(theme.breakpoints.up('sm'))
   const [openDialog, setOpenDialog] = useState(false)
   const { startTour } = useTourStore()
 
@@ -27,6 +31,12 @@ export default function HelpButton() {
 
   const handleStart = () => {
     setOpenDialog(false)
+    if (isMobile) {
+      const menuButton = document.querySelector('[data-tour-id="mobile-menu"]') as HTMLElement | null
+      menuButton?.click()
+      window.setTimeout(startTour, 250)
+      return
+    }
     startTour()
   }
 
@@ -38,11 +48,11 @@ export default function HelpButton() {
           aria-label="Abrir ayuda guiada"
           sx={{
             position: 'fixed',
-            bottom: 24,
-            right: 24,
+            bottom: isMobile ? 16 : 24,
+            right: isMobile ? 16 : 24,
             zIndex: 90,
-            width: 64,
-            height: 64,
+            width: isMobile ? 52 : 64,
+            height: isMobile ? 52 : 64,
             bgcolor: '#fff',
             border: '2px solid #009BA5',
             color: '#009BA5',
@@ -54,7 +64,7 @@ export default function HelpButton() {
             component="img"
             src={mascotAssets.thinking}
             alt="Mascota de ayuda"
-            sx={{ width: 55, height: 55, objectFit: 'contain' }}
+            sx={{ width: isMobile ? 44 : 55, height: isMobile ? 44 : 55, objectFit: 'contain' }}
           />
           <Box
             component="span"
@@ -78,20 +88,27 @@ export default function HelpButton() {
         </Fab>
       </Tooltip>
 
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        fullWidth
+        maxWidth="xs"
+        slotProps={{ paper: { sx: isMobile ? { m: 2, borderRadius: '14px' } : undefined } }}
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pr: 2 }}>
           <Box
             component="img"
             src={mascotAssets.wave}
             alt="Mascota saludando"
-            sx={{ width: 88, height: 88, objectFit: 'contain' }}
+            sx={{ width: isMobile ? 64 : 88, height: isMobile ? 64 : 88, objectFit: 'contain', flexShrink: 0 }}
           />
           ¡Hola! Soy tu guía
         </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            ¿Quieres que te ayude a identificar cada sección de la barra lateral?
-            Te explicaré una por una para que conozcas todo lo que puedes hacer.
+            {isMobile
+              ? '¿Quieres que te ayude a identificar cada sección del menú? Lo abriré para explicarte una por una.'
+              : '¿Quieres que te ayude a identificar cada sección de la barra lateral? Te explicaré una por una para que conozcas todo lo que puedes hacer.'}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
