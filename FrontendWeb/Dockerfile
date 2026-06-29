@@ -8,7 +8,7 @@ ENV VITE_URL_BACKEND=$VITE_URL_BACKEND
 ENV VITE_BASE_URL=$VITE_BASE_URL
 
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 COPY . .
 
