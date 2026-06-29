@@ -382,6 +382,13 @@ func (r routeUseCase) ExportReport(c *gin.Context) {
 	f.SetCellStyle(sheetName, fmt.Sprintf("A%d", personHeader), fmt.Sprintf("F%d", personHeader), headerStyle)
 	f.SetRowHeight(sheetName, personHeader, 22)
 
+	getComment := func(hp domain.PuntoAyuda) string {
+		if hp.Comment != "" {
+			return hp.Comment
+		}
+		return ""
+	}
+
 	currentRow := personHeader
 	for pi, hp := range helpPoints {
 		people := hp.People
@@ -393,7 +400,7 @@ func (r routeUseCase) ExportReport(c *gin.Context) {
 			f.SetCellValue(sheetName, fmt.Sprintf("A%d", currentRow), p.Name)
 			f.SetCellValue(sheetName, fmt.Sprintf("B%d", currentRow), p.Age)
 			f.SetCellValue(sheetName, fmt.Sprintf("C%d", currentRow), p.Gender)
-			f.SetCellValue(sheetName, fmt.Sprintf("D%d", currentRow), hp.Comment)
+			f.SetCellValue(sheetName, fmt.Sprintf("D%d", currentRow), getComment(hp))
 			f.SetCellValue(sheetName, fmt.Sprintf("E%d", currentRow), pi+1)
 			f.SetCellValue(sheetName, fmt.Sprintf("F%d", currentRow), hp.DateRegister.Format("2006-01-02 15:04:05"))
 			f.SetCellStyle(sheetName, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("F%d", currentRow), dataStyle)
@@ -420,6 +427,7 @@ func (r routeUseCase) ExportReport(c *gin.Context) {
 			f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), fmt.Sprintf("%.6f, %.6f", hp.Coords[0], hp.Coords[1]))
 		}
 		f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), hp.DateRegister.Format("2006-01-02 15:04:05"))
+
 		f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), hp.Comment)
 		f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("D%d", row), dataStyle)
 	}

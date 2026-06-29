@@ -10,12 +10,11 @@ import {
   Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/RootStack';
 import Icon from 'react-native-vector-icons/FontAwesome'; // <--- IMPORTANTE
-import { backendUrl } from '../../config/api';
+import { HelpPointService, RouteService } from '../../api/services';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'History'>;
 
@@ -42,11 +41,7 @@ export default function HistoryScreen() {
 
   const fetchRoutes = async () => {
     try {
-      const token = await AsyncStorage.getItem('accessToken');
-      const res = await axios.get(`${backendUrl}/route`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setRoutes(res.data.message || []);
+      setRoutes(await RouteService.all());
     } catch (error) {
       console.error('Error al obtener las rutas:', error);
     } finally {
@@ -56,11 +51,8 @@ export default function HistoryScreen() {
 
   const fetchPeopleHelped = async (routeId: string) => {
     try {
-      const token = await AsyncStorage.getItem('accessToken');
-      const res = await axios.get(`${backendUrl}/helping-point`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const filtered = res.data.message.filter(
+      const helpPoints = await HelpPointService.all();
+      const filtered = helpPoints.filter(
         (point: any) => point.route_id === routeId
       );
       setHelpPointsByRoute(prev => ({ ...prev, [routeId]: filtered }));
@@ -113,10 +105,7 @@ export default function HistoryScreen() {
   const handleDelete = async () => {
     if (!selectedRoute) return;
     try {
-      const token = await AsyncStorage.getItem('accessToken');
-      await axios.delete(`${backendUrl}/route/${selectedRoute._id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await RouteService.remove(selectedRoute._id);
       setDeleteModalVisible(false);
       setSelectedRoute(null);
       await fetchRoutes();

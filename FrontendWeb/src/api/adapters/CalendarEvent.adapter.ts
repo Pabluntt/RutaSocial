@@ -16,7 +16,7 @@ export type TCalendarEventBackend = {
 
 export type TCalendarEventCreateRequest = Omit<
     TCalendarEventBackend,
-    '_id'
+    '_id' | 'author_id'
 >
 
 
@@ -99,7 +99,6 @@ export function MapCalendarEventToCreateRequest(
         date_start: data.dateStart.toISOString(),
         time_start: data.timeStart,
         time_end: data.timeEnd,
-        author_id: data.authorID,
     }
     if (data.routeID && data.routeID !== '000000000000000000000000') {
         req.route_id = data.routeID

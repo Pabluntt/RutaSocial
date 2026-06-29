@@ -1,8 +1,6 @@
 import React from 'react';
 import { Alert as RNAlert, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { backendUrl } from '../../../config/api';
+import { NoticeService } from '../../../api/services';
 
 type Props = {
   visible: boolean;
@@ -36,10 +34,7 @@ export default function NotificationsModal({
               onPress={async () => {
                 if (!isUnread) return;
                 try {
-                  const token = await AsyncStorage.getItem('accessToken');
-                  await axios.put(`${backendUrl}/notification/read/${notification._id}`, {}, {
-                    headers: { Authorization: `Bearer ${token}` },
-                  });
+                  await NoticeService.markRead(notification._id);
                   await onRefresh();
                 } catch (err) {
                   console.error('Error al marcar aviso como leído:', err);

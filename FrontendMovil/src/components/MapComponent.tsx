@@ -1,10 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { StyleSheet, View, TouchableOpacity, Text, Modal, ActivityIndicator, Alert } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Region, Circle } from 'react-native-maps';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import * as Location from 'expo-location'; 
-import { backendUrl } from '../config/api';
+import { HelpPointService, RiskService } from '../api/services';
 
 type RiskMarker = {
   latitude: number;
@@ -191,12 +189,10 @@ export default function MapComponent({
                           style: 'destructive',
                           onPress: async () => {
                             try {
-                              const token = await AsyncStorage.getItem('accessToken');
-                              await axios.delete(`${backendUrl}/helping-point/${selectedHelp.id}`, {
-                                headers: { Authorization: `Bearer ${token}` }
-                              });
+                              const id = selectedHelp.id;
+                              await HelpPointService.remove(id);
                               setSelectedHelp(null);
-                              if (typeof onHelpDeleted === 'function') onHelpDeleted(selectedHelp.id);
+                              if (typeof onHelpDeleted === 'function') onHelpDeleted(id);
                             } catch (err) {
                               Alert.alert('Error al borrar', 'No se pudo eliminar el punto de ayuda');
                             }
@@ -246,12 +242,10 @@ export default function MapComponent({
                           style: 'destructive',
                           onPress: async () => {
                             try {
-                              const token = await AsyncStorage.getItem('accessToken');
-                              await axios.delete(`${backendUrl}/risk/${selectedRisk.id}`, {
-                                headers: { Authorization: `Bearer ${token}` }
-                              });
+                              const id = selectedRisk.id;
+                              await RiskService.remove(id);
                               setSelectedRisk(null);
-                              if (typeof onRiskDeleted === 'function') onRiskDeleted(selectedRisk.id);
+                              if (typeof onRiskDeleted === 'function') onRiskDeleted(id);
                             } catch (err) {
                               Alert.alert('Error al borrar', 'No se pudo eliminar el riesgo');
                             }

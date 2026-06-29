@@ -28,6 +28,24 @@ func IsValidString(str string) bool {
 	return re.MatchString(str)
 }
 
+// IsValidComment permite comentarios multilinea y puntuacion comun, bloqueando
+// caracteres de control peligrosos y vectores HTML/JS basicos.
+func IsValidComment(str string) bool {
+	str = strings.TrimSpace(str)
+	if str == "" {
+		return true
+	}
+	if strings.Contains(strings.ToLower(str), "javascript:") || strings.ContainsAny(str, "<>") {
+		return false
+	}
+	for _, r := range str {
+		if (r < 32 && r != '\n' && r != '\r' && r != '\t') || r == 127 {
+			return false
+		}
+	}
+	return true
+}
+
 // IsValidPassword permite contraseñas fuertes sin aceptar caracteres que puedan
 // alterar HTML, JSON embebido, headers o logs multilinea.
 func IsValidPassword(str string) bool {
@@ -64,6 +82,14 @@ func SanitizeStringFields(c *gin.Context, updateData map[string]interface{}) boo
 		strVal, ok := value.(string)
 		if ok {
 			strVal = strings.TrimSpace(strVal)
+			if key == "comment" {
+				if !IsValidComment(strVal) {
+					c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Hay caracteres inválidos"})
+					return false
+				}
+				updateData[key] = strVal
+				continue
+			}
 			if !IsValidString(strVal) {
 				c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Hay caracteres inválidos"})
 				return false

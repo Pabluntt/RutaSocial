@@ -104,7 +104,7 @@ npm run dev
 
 ### Frontend Móvil
 ```bash
-cd FrontendMovil/frontmovil
+cd FrontendMovil
 npm install
 npm start
 ```
@@ -155,7 +155,8 @@ RutaSocial/
 │   ├── src/
 │   └── Dockerfile
 ├── FrontendMovil/       # React Native + Expo
-│   └── frontmovil/
+│   ├── src/
+│   └── app.config.js
 ├── docker-compose.yml   # Orquestación de servicios
 └── run.ps1 / run.sh     # Scripts de inicio
 ```

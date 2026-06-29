@@ -3,10 +3,12 @@ package repository
 import (
 	"context"
 	"errors"
+	"strings"
+	"time"
+
 	"github.com/SebaVCH/hdcProject/internal/domain"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
-	"time"
 )
 
 // ErrPersonaNotFound se retorna cuando no se encuentra una persona.
@@ -63,7 +65,7 @@ func (h *helpPointRepository) CreateHelpingPoint(ctx context.Context, helpPoint 
 	}
 
 	var personaIDs []bson.ObjectID
-	for _, personHelped := range helpPoint.People {
+	for index, personHelped := range helpPoint.People {
 		personHelped.DateRegister = time.Now()
 		personHelped.ID = bson.NewObjectID()
 		_, err = h.PeopleHelpedCollections.InsertOne(ctx, personHelped)
@@ -73,11 +75,46 @@ func (h *helpPointRepository) CreateHelpingPoint(ctx context.Context, helpPoint 
 		}
 
 		var personaID bson.ObjectID
-		if personHelped.Rut != "" {
+		if personHelped.PersonaID != "" {
+			personaID, err = bson.ObjectIDFromHex(personHelped.PersonaID)
+			if err != nil {
+				return domain.PuntoAyuda{}, errors.New("ID de persona inválido")
+			}
+		}
+
+		if personaID.IsZero() && index < len(helpPoint.PersonaIDs) && !helpPoint.PersonaIDs[index].IsZero() {
+			personaID = helpPoint.PersonaIDs[index]
+		}
+
+		if !personaID.IsZero() {
+			update := bson.M{
+				"$set": bson.M{
+					"nombre":              personHelped.Name,
+					"rut":                 personHelped.Rut,
+					"edad":                personHelped.Age,
+					"genero":              personHelped.Gender,
+					"fecha_actualizacion": time.Now(),
+				},
+			}
+			result, err := h.PersonaCollection.UpdateOne(ctx, bson.M{"_id": personaID}, update)
+			if err != nil {
+				logRepositoryError(ctx, "help_point", "create.update_existing_persona", err, "collection", "personas", "user_id", userID, "persona_id", personaID.Hex())
+				return domain.PuntoAyuda{}, err
+			}
+			if result.MatchedCount == 0 {
+				return domain.PuntoAyuda{}, errors.New("persona existente no encontrada")
+			}
+		} else if personHelped.Rut != "" {
 			var existing domain.Persona
 			err = h.PersonaCollection.FindOne(ctx, bson.M{"rut": personHelped.Rut}).Decode(&existing)
 			if err == nil {
 				personaID = existing.ID
+				update := bson.M{"$set": bson.M{"fecha_actualizacion": time.Now()}}
+				_, err = h.PersonaCollection.UpdateOne(ctx, bson.M{"_id": personaID}, update)
+				if err != nil {
+					logRepositoryError(ctx, "help_point", "create.add_comment_to_persona_by_rut", err, "collection", "personas", "user_id", userID, "persona_id", personaID.Hex())
+					return domain.PuntoAyuda{}, err
+				}
 			} else if err == mongo.ErrNoDocuments {
 				newPersona := domain.Persona{
 					ID:            bson.NewObjectID(),
@@ -145,6 +182,13 @@ func (h *helpPointRepository) UpdateHelpingPoint(ctx context.Context, data map[s
 	if err != nil {
 		return domain.PuntoAyuda{}, errors.New("ID de punto de ayuda inválido")
 	}
+
+	var existingHelpPoint domain.PuntoAyuda
+	if err := h.HelpPointCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&existingHelpPoint); err != nil {
+		logRepositoryError(ctx, "help_point", "update.find_existing", err, "collection", "help_points", "help_point_id", idStr)
+		return domain.PuntoAyuda{}, err
+	}
+
 	delete(data, "_id")
 
 	allowedFields := map[string]bool{
@@ -162,6 +206,18 @@ func (h *helpPointRepository) UpdateHelpingPoint(ctx context.Context, data map[s
 	if err != nil {
 		logRepositoryError(ctx, "help_point", "update.update_one", err, "collection", "help_points", "help_point_id", idStr)
 		return domain.PuntoAyuda{}, err
+	}
+
+	if comment, ok := filtered["comment"].(string); ok && strings.TrimSpace(comment) != "" && comment != existingHelpPoint.Comment && len(existingHelpPoint.PersonaIDs) > 0 {
+		_, err = h.PersonaCollection.UpdateMany(
+			ctx,
+			bson.M{"_id": bson.M{"$in": existingHelpPoint.PersonaIDs}},
+			bson.M{"$set": bson.M{"fecha_actualizacion": time.Now()}},
+		)
+		if err != nil {
+			logRepositoryError(ctx, "help_point", "update.touch_personas", err, "collection", "personas", "help_point_id", idStr)
+			return domain.PuntoAyuda{}, err
+		}
 	}
 
 	var updatedHelpPoint domain.PuntoAyuda

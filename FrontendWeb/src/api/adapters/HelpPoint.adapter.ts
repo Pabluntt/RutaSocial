@@ -96,13 +96,15 @@ export function MapHelpPointToCreateRequest(
             age: person.age,
             gender: person.gender,
             name: person.name,
-            rut: person.rut
+            rut: person.rut,
+            persona_id: person.personaID,
         })),
         people_helped: people[0] ? {
             age: people[0].age,
             gender: people[0].gender,
             name: people[0].name,
-            rut: people[0].rut
+            rut: people[0].rut,
+            persona_id: people[0].personaID,
         } : undefined,
         persona_ids: personaIDs.length > 0 ? personaIDs : undefined,
         author_id: data.authorID,
@@ -131,13 +133,15 @@ export function MapHelpPointToUpdateRequest(
             age: person.age,
             gender: person.gender,
             name: person.name,
-            rut: person.rut
+            rut: person.rut,
+            persona_id: person.personaID,
         })),
         people_helped: people[0] ? {
             age: people[0].age,
             gender: people[0].gender,
             name: people[0].name,
             rut: people[0].rut,
+            persona_id: people[0].personaID,
             date: new Date()
         } : undefined,
         persona_ids: personaIDs.length > 0 ? personaIDs : undefined,

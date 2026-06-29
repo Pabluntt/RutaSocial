@@ -11,15 +11,15 @@ import {
   Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/RootStack';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { Picker } from '@react-native-picker/picker';
-import { backendUrl } from '../../config/api';
 import { Role } from '../../config/roles';
+import { InstitutionService, UserService } from '../../api/services';
+import { apiClient } from '../../api/client';
 
 const primaryColor = '#2B7A78';
 const secondaryColor = '#3AAFA9';
@@ -49,16 +49,15 @@ export default function UsersScreen({ navigation }: Props) {
 
   const fetchUsers = async () => {
   try {
-    const token = await AsyncStorage.getItem('accessToken');
-    const res = await axios.get(`${backendUrl}/user/`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const usersResponse = await UserService.all();
     // Ordena por nombre alfabéticamente, ignorando mayúsculas/minúsculas
-    const sortedUsers = res.data.message.sort((a, b) =>
+    const sortedUsers = usersResponse.sort((a, b) =>
       a.name?.toLowerCase().localeCompare(b.name?.toLowerCase())
     );
     setUsers(sortedUsers);
   } catch (err) {
+    console.error('Error al cargar usuarios:', err);
+    Alert.alert('Error', 'No se pudieron cargar los usuarios');
   } finally {
     setLoading(false);
   }
@@ -66,11 +65,7 @@ export default function UsersScreen({ navigation }: Props) {
 
   const fetchInstitutions = async () => {
     try {
-      const token = await AsyncStorage.getItem('accessToken');
-      const res = await axios.get(`${backendUrl}/institution/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setInstitutions(res.data.message || []);
+      setInstitutions(await InstitutionService.all());
     } catch {
       Alert.alert('Error al cargar instituciones');
     }
@@ -88,16 +83,13 @@ export default function UsersScreen({ navigation }: Props) {
   }
 
   try {
-    const token = await AsyncStorage.getItem('accessToken');
-    await axios.post(`${backendUrl}/user`, {
+    await UserService.createByAdmin({
       name,
       email,
       password,
       phone,
       institutionID: selectedInstitution,
       role,
-    }, {
-      headers: { Authorization: `Bearer ${token}` },
     });
 
     Alert.alert('Usuario registrado correctamente');
@@ -127,7 +119,7 @@ export default function UsersScreen({ navigation }: Props) {
       const fileUri = FileSystem.documentDirectory + 'people_helped.xlsx';
 
       const downloadResumable = FileSystem.createDownloadResumable(
-        `${backendUrl}/export-data/people-helped`,
+        `${apiClient.defaults.baseURL}/export-data/people-helped`,
         fileUri,
         {
           headers: { Authorization: `Bearer ${token}` },

@@ -112,8 +112,8 @@ export default function RouteHistory() {
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'))
     
     return (
-        <div className="flex flex-grow">
-            <div className="flex">
+        <div className="flex h-screen overflow-hidden">
+            <div className="sticky top-0 self-start flex-shrink-0">
                 { computerDevice ?
                     <Sidebar />
                     :

@@ -11,8 +11,7 @@ import {
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { NavigationProp } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import { backendUrl } from '../../config/api';
+import { AuthService } from '../../api/services';
 
 type LoginScreenProps = {
   navigation: NavigationProp<any>;
@@ -23,12 +22,7 @@ const authenticate = async (
   password: string
 ): Promise<{ accessToken: string } | null> => {
   try {
-    const response = await axios.post(`${backendUrl}/login`, {
-      email,
-      password,
-    });
-
-    const token = response.data.token;
+    const token = await AuthService.login(email, password);
     if (!token) return null;
 
     return { accessToken: token };

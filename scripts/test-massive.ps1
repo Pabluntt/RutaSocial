@@ -29,7 +29,7 @@ Run-Step "FrontendWeb typecheck" "npx tsc --noEmit" "$root\FrontendWeb"
 Run-Step "FrontendWeb unit tests" "npm test" "$root\FrontendWeb"
 Run-Step "FrontendWeb build" "npm run build" "$root\FrontendWeb"
 
-Run-Step "FrontendMovil typecheck" "npx tsc --noEmit" "$root\FrontendMovil\frontmovil"
+Run-Step "FrontendMovil typecheck" "npx tsc --noEmit" "$root\FrontendMovil"
 
 if (-not $SkipApiSmoke) {
   Run-Step "API smoke HTTP real" "node scripts/api-smoke.mjs" "$root"

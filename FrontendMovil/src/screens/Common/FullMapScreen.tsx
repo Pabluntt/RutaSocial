@@ -8,10 +8,9 @@ import { RootStackParamList } from '../../navigation/RootStack';
 import MapComponent from '../../components/MapComponent';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
 import * as Location from 'expo-location';
-import { backendUrl } from '../../config/api';
+import { HelpPointService, RiskService, RouteService } from '../../api/services';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'FullMap'>;
 
@@ -36,21 +35,18 @@ export default function FullMapScreen() {
   // --- Fetch inicial de marcadores ---
   const fetchAllMarkers = async () => {
     try {
-      const token = await AsyncStorage.getItem('accessToken');
-      const riskRes = await axios.get(`${backendUrl}/risk`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const helpRes = await axios.get(`${backendUrl}/helping-point`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const risks = (riskRes.data.message || []).map((r: any) => ({
+      const [risksResponse, helpsResponse] = await Promise.all([
+        RiskService.all(),
+        HelpPointService.all(),
+      ]);
+      const risks = risksResponse.map((r: any) => ({
         latitude: r.coords[0],
         longitude: r.coords[1],
         description: r.description,
         date: r.date_register,
         id: r._id,
       }));
-      const helps = (helpRes.data.message || []).map((h: any) => ({
+      const helps = helpsResponse.map((h: any) => ({
         latitude: h.coords[0],
         longitude: h.coords[1],
         name: h.people_helped?.name ?? '',
@@ -77,7 +73,6 @@ export default function FullMapScreen() {
         return;
       }
       const location = await Location.getCurrentPositionAsync({});
-      const token = await AsyncStorage.getItem('accessToken');
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) {
         Alert.alert('Error', 'No se encontró el ID del usuario.');
@@ -87,13 +82,11 @@ export default function FullMapScreen() {
         Alert.alert('Por favor ingresa una descripción.');
         return;
       }
-      await axios.post(`${backendUrl}/risk`, {
+      const createdRisk = await RiskService.create({
         coords: [location.coords.latitude, location.coords.longitude],
         description,
         author_id: userId,
         date_register: new Date().toISOString(),
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
       });
       setRiskMarkers(prev => [
         ...prev,
@@ -101,7 +94,8 @@ export default function FullMapScreen() {
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
           description,
-          date: new Date().toISOString()
+          date: new Date().toISOString(),
+          id: createdRisk?._id,
         }
       ]);
       setRiskModalVisible(false);
@@ -122,7 +116,6 @@ export default function FullMapScreen() {
         return;
       }
       const location = await Location.getCurrentPositionAsync({});
-      const token = await AsyncStorage.getItem('accessToken');
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) {
         Alert.alert('Error', 'No se encontró el ID del usuario.');
@@ -138,9 +131,7 @@ export default function FullMapScreen() {
           date: new Date().toISOString(),
         }
       };
-      await axios.post(`${backendUrl}/helping-point`, helpPoint, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const createdHelpPoint = await HelpPointService.create(helpPoint);
       setHelpMarkers(prev => [
         ...prev,
         {
@@ -149,7 +140,8 @@ export default function FullMapScreen() {
           name: name || '',
           age: age ? parseInt(age) : 0,
           gender: gender || '',
-          date: new Date().toISOString()
+          date: new Date().toISOString(),
+          id: createdHelpPoint?._id,
         }
       ]);
       setHelpModalVisible(false);
@@ -167,7 +159,6 @@ export default function FullMapScreen() {
   const handleMapPress = async ({ latitude, longitude }: { latitude: number, longitude: number }) => {
     if (!mode) return;
 
-    const token = await AsyncStorage.getItem('accessToken');
     if (mode === 'risk') {
       try {
         const userId = await AsyncStorage.getItem('userId');
@@ -175,15 +166,13 @@ export default function FullMapScreen() {
           Alert.alert('Error', 'No se encontró el ID del usuario.');
           return;
         }
-        await axios.post(`${backendUrl}/risk`, {
+        const createdRisk = await RiskService.create({
           coords: [latitude, longitude],
           description,
           author_id: userId,
           date_register: new Date().toISOString(),
-        }, {
-          headers: { Authorization: `Bearer ${token}` },
         });
-        setRiskMarkers(prev => [...prev, { latitude, longitude, description, date: new Date().toISOString() }]);
+        setRiskMarkers(prev => [...prev, { latitude, longitude, description, date: new Date().toISOString(), id: createdRisk?._id }]);
         Alert.alert('Riesgo registrado');
       } catch {
         Alert.alert('Error al guardar el riesgo');
@@ -202,15 +191,14 @@ export default function FullMapScreen() {
             date: new Date().toISOString(),
           }
         };
-        await axios.post(`${backendUrl}/helping-point`, helpPoint, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const createdHelpPoint = await HelpPointService.create(helpPoint);
         setHelpMarkers(prev => [...prev, {
           latitude, longitude,
           name: name || '',
           age: age ? parseInt(age) : 0,
           gender: gender || '',
-          date: new Date().toISOString()
+          date: new Date().toISOString(),
+          id: createdHelpPoint?._id,
         }]);
         Alert.alert('Atención registrada');
       } catch {
@@ -236,10 +224,11 @@ export default function FullMapScreen() {
   const handleFinishRoute = async () => {
     setIsFinishing(true);
     try {
-      const token = await AsyncStorage.getItem('accessToken');
-      await axios.patch(`${backendUrl}/route/${routeId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      if (!routeId) {
+        Alert.alert('Error', 'No se encontró la ruta activa');
+        return;
+      }
+      await RouteService.finish(routeId);
       setRouteFinished(true);
       setTimeout(() => {
         setRouteFinished(false);

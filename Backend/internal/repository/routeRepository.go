@@ -389,10 +389,11 @@ func (r *routeRepository) GetHelpPointsByRouteID(ctx context.Context, routeID st
 				continue
 			}
 			helpPoints[i].People = append(helpPoints[i].People, domain.PersonaAyudada{
-				Name:   persona.Nombre,
-				Age:    persona.Edad,
-				Gender: persona.Genero,
-				Rut:    persona.Rut,
+				Name:         persona.Nombre,
+				Age:          persona.Edad,
+				Gender:       persona.Genero,
+				Rut:          persona.Rut,
+				Antecedentes: persona.Antecedentes,
 			})
 		}
 	}

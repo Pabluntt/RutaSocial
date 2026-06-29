@@ -39,6 +39,7 @@ export default function PersonaProfile() {
     const linkedHelpPoints = useMemo(() => {
         if (!helpPoints || !persona) return []
         return helpPoints.filter(hp =>
+            hp.people.some(p => p.personaID === persona.id) ||
             hp.people.some(p => p.rut && persona.rut && p.rut === persona.rut) ||
             hp.personaID === persona.id
         )
@@ -87,8 +88,8 @@ export default function PersonaProfile() {
     }
 
     return (
-        <div className="flex flex-grow h-screen">
-            <div className="flex">
+        <div className="flex h-screen overflow-hidden">
+            <div className="sticky top-0 self-start flex-shrink-0">
                 {computerDevice ? <Sidebar /> : <div className="absolute top-4 z-20 left-2"><CustomDrawer DrawerList={DrawerList} /></div>}
             </div>
             <div className="flex grow justify-center overflow-y-auto">

@@ -6,11 +6,9 @@ import {
 } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/RootStack';
-import { backendUrl } from '../../config/api';
+import { CalendarService, InstitutionService, UserService } from '../../api/services';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Event'>;
@@ -29,88 +27,58 @@ export default function EventScreen({ navigation }: Props) {
   const [institutions, setInstitutions] = useState<{ [id: string]: { name: string, color: string } }>({});
   const [userCache, setUserCache] = useState<{ [id: string]: any }>({}); // cache de usuarios por id
 
-  const API = `${backendUrl}/calendar-event`;
-
-  const getToken = async () => {
-    const token = await AsyncStorage.getItem('accessToken');
-    return token;
+  const getIdString = (id: any): string | undefined => {
+    if (!id) return undefined;
+    if (typeof id === 'string') return id;
+    if (typeof id === 'object' && id.$oid) return id.$oid;
+    return undefined;
   };
 
   // Cargar todas las instituciones y crear el mapa id → { name, color }
   const loadInstitutions = async () => {
-    const token = await getToken();
-    if (!token) return;
-
     try {
-      // Ojo: Si tienes auth de admin, cambia endpoint a uno público si es posible
-      const res = await axios.get(`${backendUrl}/institution/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const arr = res.data.message || [];
+      const arr = await InstitutionService.all();
       const map: { [id: string]: { name: string, color: string } } = {};
       arr.forEach((inst: any) => {
         map[inst._id] = { name: inst.name, color: inst.color };
       });
       setInstitutions(map);
+      return map;
     } catch (err) {
       console.error('Error al obtener instituciones:', err);
+      return {};
     }
   };
 
   const getUsersByIds = async (userIds: string[]) => {
     const missingIds = [...new Set(userIds.filter((id) => id && !userCache[id]))];
     if (missingIds.length === 0) return { ...userCache };
-    const token = await getToken();
-    if (!token) return { ...userCache };
     try {
-      const res = await axios.get(`${backendUrl}/user/batch`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { ids: missingIds.join(',') },
-      });
-      const users = Array.isArray(res.data.message) ? res.data.message : [];
+      const users = await UserService.batch(missingIds);
       const nextCache = { ...userCache };
       users.forEach((user: any) => {
-        nextCache[user._id] = { ...user, institution: user.institutionID };
+        const id = user._id || user.id;
+        if (id) nextCache[id] = { ...user, institution: user.institutionID };
       });
       setUserCache(nextCache);
       return nextCache;
     } catch (err) {
       console.error('Error al obtener usuarios por lote:', err);
-      const nextCache = { ...userCache };
-      await Promise.all(missingIds.map(async (id) => {
-        try {
-          const res = await axios.get(`${backendUrl}/user/public-info/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const user = res.data.message;
-          if (user) nextCache[id] = { ...user, _id: id, institution: user.institutionID };
-        } catch {
-          // Keep the event visible even when an old backend cannot resolve an author.
-        }
-      }));
-      setUserCache(nextCache);
-      return nextCache;
+      return { ...userCache };
     }
   };
 
   // Cargar eventos, usuarios autores y marcar fechas por color de institución
-  const loadEvents = async () => {
-    const token = await getToken();
-    if (!token) return;
-
+  const loadEvents = async (institutionsMap = institutions) => {
     try {
-      const res = await axios.get(API, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const allEvents = Array.isArray(res.data) ? res.data : [];
+      const allEvents = await CalendarService.all();
       const marked: any = {};
       const userIdSet = new Set<string>();
 
       // 1. Junta todos los authorIDs únicos
       allEvents.forEach((event: any) => {
-        if (event.author_id) userIdSet.add(event.author_id);
-        else if (event.authorID) userIdSet.add(event.authorID); // según tu modelo
+        const authorId = getIdString(event.author_id || event.authorID);
+        if (authorId) userIdSet.add(authorId);
       });
 
       // 2. Carga todos los usuarios (solo los necesarios)
@@ -120,14 +88,14 @@ export default function EventScreen({ navigation }: Props) {
       // 3. Marca las fechas usando el color de la institución del usuario autor
       allEvents.forEach((event: any) => {
         const date = new Date(event.date_start).toISOString().split('T')[0];
-        const authorId = event.author_id || event.authorID;
+        const authorId = getIdString(event.author_id || event.authorID);
         const user = usersById[authorId];
         let instId = user?.institution;
-        let dotColor = institutions[instId]?.color || '#0F9997';
+        let dotColor = institutionsMap[instId]?.color || '#0F9997';
 
         // Por si aún no se ha cargado institutions, fallback por nombre
-        if (!dotColor && user?.institution_name && institutions) {
-          const instEntry = Object.values(institutions).find(inst => inst.name === user.institution_name);
+        if (!dotColor && user?.institution_name && institutionsMap) {
+          const instEntry = Object.values(institutionsMap).find(inst => inst.name === user.institution_name);
           if (instEntry) dotColor = instEntry.color;
         }
 
@@ -168,14 +136,12 @@ export default function EventScreen({ navigation }: Props) {
     const date = day.dateString;
     setSelectedDate(date);
 
-    const token = await getToken();
-    if (!token) return;
-
     try {
-      const res = await axios.get(`${API}?date=${date}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setEventsForSelectedDate(Array.isArray(res.data) ? res.data : []);
+      const events = await CalendarService.all();
+      setEventsForSelectedDate(events.filter((event: any) => {
+        if (!event.date_start) return false;
+        return new Date(event.date_start).toISOString().split('T')[0] === date;
+      }));
       setShowEventModal(true);
     } catch (err) {
       console.error('Error al obtener eventos del día:', err);
@@ -189,37 +155,29 @@ export default function EventScreen({ navigation }: Props) {
       return;
     }
 
-    const token = await getToken();
-    if (!token) return;
-
     try {
-      await axios.post(
-        API,
-        {
-          title: eventName,
-          description: eventDescription,
-          date_start: new Date(selectedDate),
-          time_start: eventTime.toLocaleTimeString('es-CL', { hour12: false }),
-          time_end: '',
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await CalendarService.create({
+        title: eventName,
+        description: eventDescription,
+        date_start: new Date(selectedDate),
+        time_start: eventTime.toLocaleTimeString('es-CL', { hour12: false }),
+        time_end: '',
+      });
 
       Alert.alert('Evento creado');
       setEventName('');
       setEventDescription('');
       setSelectedDate('');
       await loadEvents();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error al crear evento:', err.response?.data || err.message);
     }
   };
 
   useEffect(() => {
     (async () => {
-      await loadInstitutions();
+      const map = await loadInstitutions();
+      await loadEvents(map);
     })();
   }, []);
 
@@ -228,7 +186,7 @@ export default function EventScreen({ navigation }: Props) {
       await loadEvents();
     })();
     // eslint-disable-next-line
-  }, [selectedDate, institutions]);
+  }, [selectedDate]);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

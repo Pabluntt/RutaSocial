@@ -4,13 +4,12 @@ import {
   StyleSheet, Alert
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/RootStack';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Clipboard from 'expo-clipboard';
-import { backendUrl } from '../../config/api';
+import { RouteService } from '../../api/services';
 
 export default function RouteScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -32,7 +31,6 @@ export default function RouteScreen() {
 
     try {
       setLoading(true);
-      const token = await AsyncStorage.getItem('accessToken');
       const userId = await AsyncStorage.getItem('userId');
 
       const body = {
@@ -44,12 +42,8 @@ export default function RouteScreen() {
         date_created: startDate.toISOString(),
       };
 
-      const res = await axios.post(`${backendUrl}/route`, body, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const createdRoute = res.data.message;
-      const inviteCode = res.data.message?.invite_code;
+      const createdRoute = await RouteService.create(body);
+      const inviteCode = createdRoute?.invite_code;
 
       setInviteCode(inviteCode || 'No disponible');
       setInviteModalVisible(true);

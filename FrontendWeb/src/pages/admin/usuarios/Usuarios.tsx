@@ -68,9 +68,9 @@ export default function Usuarios() {
     // Verificar si el usuario está autenticado
     if(!role || (role !== Role.admin && role !== Role.volunteer)) {
         return (
-            <div className={"flex grow " + (computerDevice ? 'flex-row' : 'flex-col')}>
+            <div className={"flex h-screen overflow-hidden " + (computerDevice ? 'flex-row' : 'flex-col')}>
                 { computerDevice ? 
-                    <div className="flex z-10">
+                    <div className="sticky top-0 self-start flex-shrink-0 z-10">
                         <Sidebar />
                     </div>    
                     :
@@ -79,7 +79,7 @@ export default function Usuarios() {
                         <p className="flex text-2xl text-center font-semibold p-3 items-center">Gestión Usuarios</p>
                     </div>
                 }
-                <div className="flex w-full h-full items-center justify-center">
+                <div className="flex w-full h-full items-center justify-center overflow-y-auto">
                     <Alert severity="error">
                         <Typography variant="h6">Acceso Denegado</Typography>
                         <Typography>No tienes permiso para acceder a esta página.</Typography>
@@ -90,9 +90,9 @@ export default function Usuarios() {
     }
 
     return (
-        <div className={"flex grow " + (computerDevice ? 'flex-row' : 'flex-col')}>
+        <div className={"flex h-screen overflow-hidden " + (computerDevice ? 'flex-row' : 'flex-col')}>
             { computerDevice ? 
-                <div className="flex z-10">
+                <div className="sticky top-0 self-start flex-shrink-0 z-10">
                     <Sidebar />
                 </div>    
                 :
@@ -102,7 +102,7 @@ export default function Usuarios() {
                 </div>
 
             }
-            <div className="flex w-full h-full flex-col justify-start gap-5 sm:gap-10 p-3 sm:p-5 bg-gray-100 max-w-full">
+            <div className="flex w-full h-full flex-col justify-start gap-5 sm:gap-10 p-3 sm:p-5 bg-gray-100 max-w-full overflow-y-auto">
                 { computerDevice ? 
                     <div>
                         <Typography variant="h5">Gestión de Usuarios</Typography>

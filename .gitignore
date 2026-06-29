@@ -3,7 +3,9 @@
 *.env
 Backend/.env
 FrontendWeb/.env
-FrontendMovil/frontmovil/.env
+FrontendMovil/.env
+FrontendMovil/.expo/
+FrontendMovil/node_modules/
 !.env.example
 !*.env.example
 .idea/

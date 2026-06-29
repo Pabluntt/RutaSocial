@@ -14,15 +14,14 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/RootStack';
 import { useFocusEffect } from '@react-navigation/native';
-import { backendUrl } from '../../config/api';
 import { Role } from '../../config/roles';
 import HomeMapSection from './Home/HomeMapSection';
 import NotificationsModal from './Home/NotificationsModal';
 import HomeMainActions from './Home/HomeMainActions';
+import { HelpPointService, NoticeService, RiskService, RouteService, UserService } from '../../api/services';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -83,11 +82,7 @@ export default function HomeScreen({ navigation }: Props) {
   // Alertas
   const fetchAlerts = async () => {
     try {
-      const token = await AsyncStorage.getItem('accessToken');
-      const res = await axios.get(`${backendUrl}/notification`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const alertsArray = res.data.alerts || [];
+      const alertsArray = await NoticeService.all();
       const userName = await AsyncStorage.getItem('userName');
       const formatted = alertsArray.map((a: any) => `${userName || 'Usuario'}: ${a.description}`);
       setAlertLog(formatted.reverse());
@@ -96,35 +91,19 @@ export default function HomeScreen({ navigation }: Props) {
     }
   };
 
-  const getUserNamesByIds = async (ids: string[], token: string) => {
+  const getUserNamesByIds = async (ids: string[]) => {
     const uniqueIds = [...new Set(ids.filter(Boolean))];
     if (uniqueIds.length === 0) return {};
     try {
-      const res = await axios.get(`${backendUrl}/user/batch`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { ids: uniqueIds.join(',') },
-      });
-      const users = Array.isArray(res.data.message) ? res.data.message : [];
+      const users = await UserService.batch(uniqueIds);
       return users.reduce((acc, user) => {
-        if (user?._id) acc[user._id] = user.name || 'Desconocido';
+        const id = user?._id || user?.id;
+        if (id) acc[id] = user.name || 'Desconocido';
         return acc;
       }, {} as Record<string, string>);
     } catch (err) {
       console.error('Error al obtener autores por lote:', err);
-      const users = await Promise.all(uniqueIds.map(async (id) => {
-        try {
-          const res = await axios.get(`${backendUrl}/user/public-info/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          return { id, name: res.data.message?.name || 'Desconocido' };
-        } catch {
-          return undefined;
-        }
-      }));
-      return users.reduce((acc, user) => {
-        if (user) acc[user.id] = user.name;
-        return acc;
-      }, {} as Record<string, string>);
+      return {};
     }
   };
 
@@ -143,19 +122,13 @@ export default function HomeScreen({ navigation }: Props) {
   // Notificaciones
   const fetchAllNotifications = async () => {
     try {
-      const token = await AsyncStorage.getItem('accessToken');
-      const res = await axios.get(`${backendUrl}/notification`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const unreadRes = await axios.get(`${backendUrl}/notification/unread`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const notificationsArr = res.data.message || [];
-      const unreadArr = unreadRes.data.message || [];
+      const [notificationsArr, unreadArr] = await Promise.all([
+        NoticeService.all(),
+        NoticeService.unread(),
+      ]);
 
       const authorIds = [...new Set(notificationsArr.map(n => getAuthorIdString(n.author_id)).filter(Boolean))] as string[];
-      const idToName = await getUserNamesByIds(authorIds, token || '');
+      const idToName = await getUserNamesByIds(authorIds);
 
       const notificationsWithNames = notificationsArr.map((n: any) => ({
         ...n,
@@ -183,13 +156,10 @@ export default function HomeScreen({ navigation }: Props) {
 
   // Marcar todas como leídas
   const markAllNotificationsAsRead = async () => {
-    const token = await AsyncStorage.getItem('accessToken');
     await Promise.all(
       unreadNotifications.map(async (n) => {
         try {
-          await axios.put(`${backendUrl}/notification/read/${n._id}`, {}, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          await NoticeService.markRead(n._id);
         } catch (err) {
           console.error('Error al marcar aviso como leído:', err);
           RNAlert.alert('Error', 'No se pudo marcar un aviso como leído.');
@@ -202,11 +172,7 @@ export default function HomeScreen({ navigation }: Props) {
   // Riesgos
   const fetchRisks = async () => {
   try {
-    const token = await AsyncStorage.getItem('accessToken');
-    const res = await axios.get(`${backendUrl}/risk`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const risksArray = Array.isArray(res.data.message) ? res.data.message : [];
+    const risksArray = await RiskService.all();
     const formatted = risksArray.map((r: any) => ({
       latitude: r.coords[0],
       longitude: r.coords[1],
@@ -223,11 +189,7 @@ export default function HomeScreen({ navigation }: Props) {
   // Puntos de ayuda
   const fetchHelpPoints = async () => {
   try {
-    const token = await AsyncStorage.getItem('accessToken');
-    const res = await axios.get(`${backendUrl}/helping-point`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const helpArray = Array.isArray(res.data.message) ? res.data.message : [];
+    const helpArray = await HelpPointService.all();
     const formatted = helpArray.map((h: any) => ({
       latitude: h.coords[0],
       longitude: h.coords[1],
@@ -265,15 +227,10 @@ export default function HomeScreen({ navigation }: Props) {
       return;
     }
     try {
-      const token = await AsyncStorage.getItem('accessToken');
-      const userId = await AsyncStorage.getItem('userId');
-      await axios.post(`${backendUrl}/notification`, {
+      await NoticeService.create({
         description: alertText,
-        author_id: userId,
         send_email: false,
         send_to_all: false,
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
       });
       setAlertText('');
       setAlertModalVisible(false);
@@ -427,14 +384,10 @@ export default function HomeScreen({ navigation }: Props) {
               style={styles.sendButton}
               onPress={async () => {
                 try {
-                  const token = await AsyncStorage.getItem('accessToken');
-                  const res = await axios.get(`${backendUrl}/route/code/${invitationCode}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                  });
-                  if (res.data?.message) {
+                  const route = await RouteService.byCode(invitationCode);
+                  if (route) {
                     setJoinRouteVisible(false);
                     setInvitationCode('');
-                    const route = res.data.message;
                     navigation.navigate('FullMap', { routeId: route._id, codeRoute: route.codeRoute, isOngoing: route.isOngoing });
                   } else {
                     RNAlert.alert('Error', 'Código inválido o ruta no encontrada');

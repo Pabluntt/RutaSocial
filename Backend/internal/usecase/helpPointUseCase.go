@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/SebaVCH/hdcProject/internal/domain"
 	"github.com/SebaVCH/hdcProject/internal/repository"
@@ -84,7 +85,8 @@ func (h helpingPointUseCase) CreateHelpingPoint(c *gin.Context) {
 		}
 	}
 
-	if helpPoint.Comment != "" && !utils.IsValidString(helpPoint.Comment) {
+	helpPoint.Comment = strings.TrimSpace(helpPoint.Comment)
+	if !utils.IsValidComment(helpPoint.Comment) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Se presentaron caracteres inválidos en el comentario del punto"})
 		return
 	}

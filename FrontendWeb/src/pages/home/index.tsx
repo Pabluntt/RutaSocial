@@ -106,20 +106,21 @@ export default function Home() {
 
     const stateDescriptionRisk = useState('')
     const [ attendedP, setAttendedP ] = useState<TUserRegister>({
-        name: 'Sin especificar',
+        name: 'No especificado',
         age: -1,
-        gender : 'Sin especificar'
+        gender : 'No especificado'
     })
     const [ locationMethod, setLocationMethod ] = useState<LocationMethod>(LocationMethod.None)
     
     // Estado para personas en el diálogo de punto de atención
     // Se mantiene en el padre para no perderse si el diálogo se desmonta
-    const [ attendedPeople, setAttendedPeople ] = useState<{ id: string; name: string; rut: string; age: string }[]>(() => [
-        { id: `${Date.now()}-${Math.random()}`, name: '', rut: '', age: '' }
+    const [ attendedPeople, setAttendedPeople ] = useState<{ id: string; name: string; rut: string; age: string; gender: string; personaID?: string }[]>(() => [
+        { id: `${Date.now()}-${Math.random()}`, name: '', rut: '', age: '', gender: 'No especificado' }
     ])
     
     // Estado para coordenadas del diálogo de punto de atención
     const [ attendedCoords, setAttendedCoords ] = useState<number[]>([])
+    const [ attendedComment, setAttendedComment ] = useState('')
 
     const [ risks, setRisks ] = useState<Risk[]>([])
     const [ helpPoints, setHelpPoints ] = useState<HelpPoint[]>([])
@@ -215,10 +216,10 @@ export default function Home() {
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'));
 
     return (
-        <div className="flex flex-grow">
+        <div className="flex h-screen overflow-hidden">
             { !onSelectLocationMap ?
                 computerDevice ? 
-                    <div className="flex z-20">
+                    <div className="sticky top-0 self-start flex-shrink-0 z-20">
                         <Sidebar />
                     </div>
                     :
@@ -228,7 +229,7 @@ export default function Home() {
                 :
                 <></>
             }
-            <div className={`relative flex grow flex-col justify-between`}>
+            <div className={`relative flex grow flex-col justify-between overflow-y-auto`}>
                 <Mapa
                     stateCurrentLocation={[currentLocation, setCurrentLocation]}
                     helpPoints={displayHelpPoints}
@@ -427,6 +428,7 @@ export default function Home() {
                                         stateLocationMethod={[locationMethod, setLocationMethod]}
                                         statePeople={[attendedPeople, setAttendedPeople]}
                                         stateCoords={[attendedCoords, setAttendedCoords]}
+                                        stateComment={[attendedComment, setAttendedComment]}
                                         location={location}
                                     />
                                     <DialogCreateRisk 

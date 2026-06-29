@@ -11,7 +11,7 @@ export default function Schedule() {
     return (
         <div className="flex h-screen overflow-hidden max-w-full">
             { computerDevice ? 
-                <div className="flex grow z-30 ">
+                <div className="sticky top-0 self-start flex-shrink-0 z-30">
                     <Sidebar />
                 </div>
                 :
@@ -19,7 +19,7 @@ export default function Schedule() {
                     <CustomDrawer DrawerList={DrawerList} />
                 </div>
             }
-            <div className="flex grow w-full h-full gap-1 items-center justify-center">
+            <div className="flex grow w-full h-full gap-1 items-center justify-center overflow-y-auto">
                 <div className="grow p-2 sm:p-5 min-h-full w-full max-w-full overflow-x-auto">
                     <Calendar />
                 </div>

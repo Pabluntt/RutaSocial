@@ -8,7 +8,7 @@ import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import ReplayIcon from '@mui/icons-material/Replay';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import AddIcon from '@mui/icons-material/Add';
-import { Alert, CircularProgress, IconButton, TextField, Typography, Zoom, Chip, Paper, Divider, useTheme, useMediaQuery, List, ListItemButton, ListItemText, ListItemAvatar, Avatar, InputAdornment } from '@mui/material';
+import { Alert, CircularProgress, IconButton, TextField, Typography, Zoom, Chip, Paper, Divider, useTheme, useMediaQuery, List, ListItemButton, ListItemText, ListItemAvatar, Avatar, InputAdornment, MenuItem } from '@mui/material';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import getCurrentLocation, { Position } from '../../utils/getCurrentLocation';
 import useSessionStore from '../../stores/useSessionStore';
@@ -23,7 +23,8 @@ import { Persona } from '../../api/models/Persona';
 import SearchIcon from '@mui/icons-material/Search';
 import { useAppSnackbar } from '../../context/SnackbarContext';
 
-const SIN_ESPECIFICAR = 'Sin especificar';
+const NO_ESPECIFICADO = 'No especificado';
+const GENDER_OPTIONS = ['Hombre', 'Mujer', NO_ESPECIFICADO];
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
@@ -42,6 +43,7 @@ type PersonDraft = {
     name: string
     rut: string
     age: string
+    gender: string
     personaID?: string
 };
 
@@ -52,16 +54,25 @@ export type DialogCreateAttendedProps = {
     stateAttended : [ TUserRegister, React.Dispatch<React.SetStateAction<TUserRegister>> ]
     statePeople : [ PersonDraft[], React.Dispatch<React.SetStateAction<PersonDraft[]>> ]
     stateCoords : [ number[], React.Dispatch<React.SetStateAction<number[]>> ]
+    stateComment : [ string, React.Dispatch<React.SetStateAction<string>> ]
     location : Position
 }
 
 function createPersonDraft(seed?: Partial<TUserRegister>): PersonDraft {
     return {
         id: `${Date.now()}-${Math.random()}`,
-        name: seed?.name && seed.name !== SIN_ESPECIFICAR ? seed.name : '',
+        name: seed?.name && seed.name !== NO_ESPECIFICADO ? seed.name : '',
         rut: '',
         age: seed?.age && seed.age > 0 ? String(seed.age) : '',
+        gender: normalizeGender(seed?.gender),
     }
+}
+
+function normalizeGender(gender?: string) {
+    const normalized = (gender || '').trim().toLowerCase();
+    if (normalized === 'hombre') return 'Hombre';
+    if (normalized === 'mujer') return 'Mujer';
+    return NO_ESPECIFICADO;
 }
 
 function normalizeRut(rut: string) {
@@ -73,7 +84,7 @@ function isValidRutFormat(rut: string) {
     return /^(?:\d{1,2}\.\d{3}\.\d{3}-[\dkK]|\d{7,8}-[\dkK])$/.test(normalizeRut(rut));
 }
 
-export default function DialogCreateAttended({ stateAttended, stateOpen, stateOnSelectLocationMap, location, stateLocationMethod, statePeople, stateCoords } : DialogCreateAttendedProps) {
+export default function DialogCreateAttended({ stateAttended, stateOpen, stateOnSelectLocationMap, location, stateLocationMethod, statePeople, stateCoords, stateComment } : DialogCreateAttendedProps) {
 
     const authorID = useProfile().data?.id
     const { routeId } = useSessionStore()
@@ -82,13 +93,13 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
     const [ attendedP, setAttendedP ] = stateAttended
     const [ people, setPeople ] = statePeople
     const [ coords, setCoords ] = stateCoords
+    const [ comment, setComment ] = stateComment
 
     const theme = useTheme();
     const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ locationMethod, setLocationMethod ] = stateLocationMethod
     const [ createButtonDisable, setCreateButtonDisable ] = useState(true)
     const [ error, setError ] = useState<string | undefined>()
-    const [ comment, setComment ] = useState('')
     const [ searchOpen, setSearchOpen ] = useState(false)
     const [ searchQuery, setSearchQuery ] = useState('')
     const [ searchResults, setSearchResults ] = useState<Persona[]>([])
@@ -131,6 +142,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                     name: persona.nombre,
                     rut: persona.rut || '',
                     age: persona.edad > 0 ? String(persona.edad) : '',
+                    gender: normalizeGender(persona.genero),
                     personaID: persona.id,
                 }
                 : p
@@ -196,9 +208,9 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
         if(primaryPerson) {
             setAttendedP(prev => ({
                 ...prev,
-                name: primaryPerson.name || SIN_ESPECIFICAR,
+                name: primaryPerson.name || NO_ESPECIFICADO,
                 age: primaryPerson.age ? Number(primaryPerson.age) : -1,
-                gender: SIN_ESPECIFICAR,
+                gender: normalizeGender(primaryPerson.gender),
             }))
         }
     }, [primaryPerson, setAttendedP])
@@ -250,6 +262,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                 name: person.name.trim(),
                 rut: normalizeRut(person.rut),
                 age: person.age.trim(),
+                gender: normalizeGender(person.gender),
                 personaID: person.personaID,
             }))
 
@@ -271,7 +284,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                 name: person.name,
                 rut: person.rut,
                 age: person.age.length > 0 ? Number(person.age) : -1,
-                gender: SIN_ESPECIFICAR,
+                gender: person.gender,
                 personaID: person.personaID,
             })) as HelpedPerson[],
             peopleHelped: validPeople[0]
@@ -279,7 +292,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                     name: validPeople[0].name,
                     rut: validPeople[0].rut,
                     age: validPeople[0].age.length > 0 ? Number(validPeople[0].age) : -1,
-                    gender: SIN_ESPECIFICAR,
+                    gender: validPeople[0].gender,
                     personaID: validPeople[0].personaID,
                 }
                 : undefined,
@@ -291,7 +304,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
     useEffect(() => {
         if(isSuccess) {
             refetch()
-            setAttendedP({ name: SIN_ESPECIFICAR, gender: SIN_ESPECIFICAR, age: -1 })
+            setAttendedP({ name: NO_ESPECIFICADO, gender: NO_ESPECIFICADO, age: -1 })
             setTimeout(() => {
                 handleClose()
             }, 2000)
@@ -383,6 +396,21 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                                                 value={person.age}
                                                 slotProps={{ inputLabel: { shrink: true } }}
                                             />
+                                            <TextField
+                                                fullWidth
+                                                select
+                                                id={`gender-${person.id}`}
+                                                variant='outlined'
+                                                size="small"
+                                                value={person.gender}
+                                                onChange={(e) => updatePerson(person.id, 'gender', e.target.value)}
+                                                label='Género'
+                                                slotProps={{ inputLabel: { shrink: true } }}
+                                            >
+                                                {GENDER_OPTIONS.map(option => (
+                                                    <MenuItem key={option} value={option}>{option}</MenuItem>
+                                                ))}
+                                            </TextField>
                                         </div>
                                         <div className='mt-2'>
                                             <Button

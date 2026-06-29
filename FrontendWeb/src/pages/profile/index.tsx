@@ -73,9 +73,9 @@ export default function Profile() {
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'));
     
     return (
-        <div className={'flex grow ' + (computerDevice ? '' : 'flex-col max-w-full')}>
+        <div className={'flex h-screen overflow-hidden ' + (computerDevice ? '' : 'flex-col max-w-full')}>
             {computerDevice ? 
-                <div className="flex z-20">
+                <div className="sticky top-0 self-start flex-shrink-0 z-20">
                     <Sidebar />
                 </div>
                 :
@@ -85,7 +85,7 @@ export default function Profile() {
                 </div>
             }
             <ClickAwayListener onClickAway={(e) => {handleClickAway(e)}}>
-                <div className="flex grow flex-col self-stretch justify-start items-start justify-items-start gap-10 border border-neutral-300 rounded-xs px-5 bg-gray-100 max-w-full">
+                <div className="flex grow flex-col self-stretch justify-start items-start justify-items-start gap-10 border border-neutral-300 rounded-xs px-5 bg-gray-100 max-w-full overflow-y-auto">
                     <div className="flex flex-col justify-start items-start p-1 sm:p-2 md:p-4 lg:p-5 g-5 w-full h-full">
                         <div className="flex flex-col w-full justify-between items-start gap-2 sm:flex-row sm:items-center">
                             <div className="flex flex-col justify-start items-start">

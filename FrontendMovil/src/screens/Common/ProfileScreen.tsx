@@ -10,12 +10,11 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/RootStack';
-import { backendUrl } from '../../config/api';
 import { Role } from '../../config/roles';
+import { InstitutionService, UserService } from '../../api/services';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Profile'>;
@@ -42,26 +41,28 @@ export default function ProfileScreen({ navigation }: Props) {
   useEffect(() => {
     const loadAllProfileData = async () => {
       try {
-        const token = await AsyncStorage.getItem('accessToken');
-        const res = await axios.get(`${backendUrl}/user/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const [profile, institutions] = await Promise.all([
+          UserService.profile(),
+          InstitutionService.all(),
+        ]);
 
-        setName(res.data.message.name || '');
-        setPhone(res.data.message.phone || '');
-        setEmail(res.data.message.email || '');
+        setName(profile.name || '');
+        setPhone(profile.phone || '');
+        setEmail(profile.email || '');
         setRegisterDate(
-          res.data.message.date_register
-            ? new Date(res.data.message.date_register).toLocaleDateString('es-CL')
+          profile.date_register
+            ? new Date(profile.date_register).toLocaleDateString('es-CL')
             : ''
         );
-        setRole(res.data.message.role || '');
-        setInstitution(res.data.message.institution || '');
+        setRole(profile.role || '');
+        const institutionId = profile.institutionID || profile.institution_id || profile.institution;
+        const institutionName = institutions.find((inst: any) => inst._id === institutionId)?.name;
+        setInstitution(institutionName || profile.institution_name || profile.institution || '');
 
         // Buscar última ruta si existe
-        const list: { date: string }[] = res.data.message.list_routes || [];
+        const list: { date: string }[] = profile.list_routes || [];
         if (list.length > 0) {
-          const sorted = list.sort(
+          const sorted = [...list].sort(
             (a, b) =>
               new Date(b.date).getTime() - new Date(a.date).getTime()
           );
@@ -69,14 +70,11 @@ export default function ProfileScreen({ navigation }: Props) {
         }
 
         // Obtener datos de participación
-        const userId = res.data.message._id || res.data.message.id || res.data.message.user_id;
+        const userId = profile._id || profile.id || profile.user_id;
         if (userId) {
-          const participationRes = await axios.get(
-            `${backendUrl}/route/participation/${userId}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          setHelpingPointsCount(participationRes.data.message.total_helpingpoints || 0);
-          setRoutesCount(participationRes.data.message.total_routes || 0);
+          const participation = await UserService.participation(userId);
+          setHelpingPointsCount(participation.total_helpingpoints || 0);
+          setRoutesCount(participation.total_routes || 0);
         }
       } catch (error) {
         console.error('Error al cargar perfil o participación:', error);
@@ -94,7 +92,6 @@ export default function ProfileScreen({ navigation }: Props) {
         Alert.alert('Error', 'Las contraseñas no coinciden');
         return;
       }
-      const token = await AsyncStorage.getItem('accessToken');
       const updateData: any = { name, phone };
 
       if (currentPassword && newPassword && confirmPassword) {
@@ -103,9 +100,7 @@ export default function ProfileScreen({ navigation }: Props) {
         updateData.confirmNewPassword = confirmPassword;
       }
 
-      await axios.put(`${backendUrl}/user/update`, updateData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await UserService.updateProfile(updateData);
 
       setIsEditing(false);
       setCurrentPassword('');

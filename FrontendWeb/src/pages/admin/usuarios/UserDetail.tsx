@@ -90,9 +90,9 @@ export default function UserDetail() {
     }
 
     return (
-        <div className={"flex grow " + (computerDevice ? 'flex-row' : 'flex-col')}>
+        <div className={"flex h-screen overflow-hidden " + (computerDevice ? 'flex-row' : 'flex-col')}>
             {computerDevice ?
-                <div className="flex z-10">
+                <div className="sticky top-0 self-start flex-shrink-0 z-10">
                     <Sidebar />
                 </div>
                 :

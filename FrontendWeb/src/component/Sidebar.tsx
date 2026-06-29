@@ -67,7 +67,7 @@ export default function Sidebar() {
     }
 
     return (
-        <div className="flex flex-col shadow-[4px_0_6px_-1px_rgba(0,0,0,0.25)]">
+        <div className="flex h-screen flex-col shadow-[4px_0_6px_-1px_rgba(0,0,0,0.25)]">
             <Tooltip title={"Home"}><IconButton data-tour-id="home" onClick={onClickHome} sx={{ p : 2, ...hoverStyles }}><HomeIcon htmlColor="#374151" sx={{ fontSize: 40 }} /></IconButton></Tooltip>
             <Divider variant="middle"/>
             <div className="flex flex-col py-5 gap-7 justify-start items-center">

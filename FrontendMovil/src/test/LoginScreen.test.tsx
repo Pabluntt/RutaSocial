@@ -1,15 +1,19 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+import { AuthService } from '../api/services';
 import LoginScreen from '../screens/Auth/LoginScreen';
 
-jest.mock('axios');
+jest.mock('../api/services', () => ({
+  AuthService: {
+    login: jest.fn(),
+  },
+}));
 jest.mock('jwt-decode', () => ({ __esModule: true, default: jest.fn(() => ({ user_id: 'user-id', user_role: 'admin' })) }));
 
 describe('LoginScreen', () => {
   it('logs in and navigates home', async () => {
     const navigate = jest.fn();
-    (axios.post as jest.Mock).mockResolvedValue({ data: { token: 'jwt-token' } });
+    (AuthService.login as jest.Mock).mockResolvedValue('jwt-token');
 
     const { getByPlaceholderText, getByText } = await render(<LoginScreen navigation={{ navigate } as any} />);
 

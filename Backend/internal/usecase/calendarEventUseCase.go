@@ -5,8 +5,19 @@ import (
 	"github.com/SebaVCH/hdcProject/internal/repository"
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"net/http"
+	"time"
 )
+
+type calendarEventRequest struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	DateStart   string `json:"date_start"`
+	TimeStart   string `json:"time_start"`
+	TimeEnd     string `json:"time_end"`
+	RouteID     string `json:"route_id"`
+}
 
 // CalendarEventUseCase define la interfaz para las operaciones relacionadas con eventos de calendario.
 // Contiene métodos para obtener, crear, eliminar y actualizar eventos de calendario.
@@ -74,11 +85,34 @@ func (ce calendarEventUseCase) GetUserCalendarEvents(c *gin.Context) {
 // CreateCalendarEvent maneja la solicitud para crear un nuevo evento de calendario.
 // Valida los datos de entrada y verifica que el título y la descripción no contengan caracteres inválidos.
 func (ce calendarEventUseCase) CreateCalendarEvent(c *gin.Context) {
-	var event domain.EventoCalendario
-	if err := c.ShouldBindJSON(&event); err != nil {
+	var req calendarEventRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		logUseCaseWarn(c, "calendar_event.create.bind_json", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
+	}
+
+	dateStart, err := time.Parse(time.RFC3339, req.DateStart)
+	if err != nil {
+		logUseCaseWarn(c, "calendar_event.create.date_start", http.StatusBadRequest, err)
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Fecha de inicio inválida"})
+		return
+	}
+
+	event := domain.EventoCalendario{
+		Title:       req.Title,
+		Description: req.Description,
+		DateStart:   dateStart,
+		TimeStart:   req.TimeStart,
+		TimeEnd:     req.TimeEnd,
+	}
+	if req.RouteID != "" && req.RouteID != "000000000000000000000000" {
+		routeID, err := bson.ObjectIDFromHex(req.RouteID)
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "ID de ruta inválido"})
+			return
+		}
+		event.RouteID = routeID
 	}
 
 	if !utils.IsValidString(event.Title) || !utils.IsValidString(event.Description) {
@@ -169,7 +203,22 @@ func (ce calendarEventUseCase) UpdateCalendarEvent(c *gin.Context) {
 	if routeID, ok := updateData["route_id"].(string); ok {
 		if routeID == "" || routeID == "000000000000000000000000" {
 			delete(updateData, "route_id")
+		} else {
+			routeObjID, err := bson.ObjectIDFromHex(routeID)
+			if err != nil {
+				c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "ID de ruta inválido"})
+				return
+			}
+			updateData["route_id"] = routeObjID
 		}
+	}
+	if dateStart, ok := updateData["date_start"].(string); ok {
+		parsedDateStart, err := time.Parse(time.RFC3339, dateStart)
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Fecha de inicio inválida"})
+			return
+		}
+		updateData["date_start"] = parsedDateStart
 	}
 
 	updateEvent, err := ce.calendarRepository.UpdateCalendarEvent(c.Request.Context(), updateData)
