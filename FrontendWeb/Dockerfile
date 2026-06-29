@@ -7,10 +7,10 @@ ARG VITE_BASE_URL=
 ENV VITE_URL_BACKEND=$VITE_URL_BACKEND
 ENV VITE_BASE_URL=$VITE_BASE_URL
 
-COPY package*.json ./
+COPY FrontendWeb/package*.json ./
 RUN npm install
 
-COPY . .
+COPY FrontendWeb/ .
 
 # Build
 RUN npm run build
