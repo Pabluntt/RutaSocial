@@ -27,8 +27,26 @@ import HelpButton from './component/HelpButton'
 import TourOverlay from './component/TourOverlay'
 import ErrorBoundary from './component/ErrorBoundary'
 import HydrationGate from './component/HydrationGate'
+import { SnackbarProvider } from './context/SnackbarContext'
 
-const queryClient = new QueryClient()
+const getErrorStatus = (error: unknown) => {
+  if (error && typeof error === 'object' && 'status' in error) {
+    return Number((error as { status?: unknown }).status)
+  }
+  return undefined
+}
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error) => {
+        const status = getErrorStatus(error)
+        if (status === 401 || status === 403 || status === 404) return false
+        return failureCount < 1
+      },
+    },
+  },
+})
 
 const customQuery = createTheme({
   typography: {
@@ -61,6 +79,7 @@ function App() {
         <AuthProvider>
           <ZoomProvider>
             <ThemeProvider theme={customQuery}>
+              <SnackbarProvider>
                 <ErrorBoundary>
                   <Routes>
                     <Route path={`${import.meta.env.VITE_BASE_URL}/`} element={
@@ -93,6 +112,7 @@ function App() {
                 </ErrorBoundary>
                 <HelpButton />
                 <TourOverlay />
+              </SnackbarProvider>
             </ThemeProvider>
           </ZoomProvider>
         </AuthProvider>

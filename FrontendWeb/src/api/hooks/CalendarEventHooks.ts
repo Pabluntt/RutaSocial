@@ -7,10 +7,11 @@ import { CalendarEvent } from "../models/Calendar"
 
 
 
-export function useCalendarEvents() {
+export function useCalendarEvents(enabled?: boolean) {
     return useQuery({
         queryKey : ['events'],
-        queryFn : () => CalendarService.GetEvents()
+        queryFn : () => CalendarService.GetEvents(),
+        enabled,
     })
 }
 

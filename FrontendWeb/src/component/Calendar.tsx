@@ -26,6 +26,7 @@ import { useNavigate } from 'react-router-dom'
 import useSessionStore from '../stores/useSessionStore'
 import { RouteService } from '../api/services/RouteService'
 import { CalendarService } from '../api/services/CalendarService'
+import { useAppSnackbar } from '../context/SnackbarContext'
 import './Calendar.css'
 
 const isHexColor = (color: string | undefined): color is string => /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color ?? '')
@@ -41,7 +42,7 @@ export default function Calendar() {
     const [selectInfo, setSelectInfo] = useState<DateSelectArg | null>(null)
     const [open, setOpen] = useState(false)
     const [ eventCalendar, setEventCalendar ] = useEventCalendarUpdateDialog()
-    const { isError, isPending, isSuccess, data, refetch} = useCalendarEvents()
+    const { isError, isPending, isSuccess, data, refetch} = useCalendarEvents(!!accessToken)
     const deleteQuery = useDeleteCalendarEvent()
     const mutate = deleteQuery.mutate
     const [ eventClicked, setEventClicked ] = useState<CalendarEvent | undefined>(undefined)
@@ -50,6 +51,7 @@ export default function Calendar() {
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'))
     const openPopover = Boolean(anchorEl)
     const id =  openPopover ? 'view-event-popover' : undefined
+    const { showSnackbar } = useAppSnackbar()
 
 
     
@@ -90,7 +92,7 @@ export default function Calendar() {
         
         // Validar que la fecha del evento sea hoy
         if(!isToday(eventClicked.dateStart)) {
-            alert('Solo puedes iniciar rutas agendadas para hoy')
+            showSnackbar('Solo puedes iniciar rutas agendadas para hoy', 'warning')
             return
         }
 
@@ -118,16 +120,18 @@ export default function Calendar() {
                 })
 
                 refetch()
-            } catch {
-                alert('Error al crear la ruta automática. Intenta de nuevo.')
+            } catch (error) {
+                console.error('Error al crear ruta automática', error)
+                showSnackbar('Error al crear la ruta automática. Intenta de nuevo.', 'error')
                 return
             }
         } else {
             // Validar que la ruta exista en el backend
             try {
                 await RouteService.FindRouteByID(routeId)
-            } catch {
-                alert('La ruta vinculada a este evento no existe o no está disponible.\nCreá una nueva ruta desde el menú + y vinculala al evento.')
+            } catch (error) {
+                console.error('Ruta vinculada no disponible', error)
+                showSnackbar('La ruta vinculada a este evento no existe o no está disponible. Crea una nueva ruta y vincúlala al evento.', 'error')
                 return
             }
         }

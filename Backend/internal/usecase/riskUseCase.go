@@ -39,6 +39,11 @@ func (r riskUseCase) GetAllRisks(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener riesgos"})
 		return
 	}
+	if utils.HasPagination(c) {
+		paginated, meta := utils.PaginateSlice(c, risks)
+		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
+		return
+	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": risks})
 }
 

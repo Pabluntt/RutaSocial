@@ -4,6 +4,7 @@ package database
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"os"
 	"time"
@@ -23,7 +24,7 @@ func StartDB() error {
 
 	if uri = os.Getenv("MONGODB_URI"); uri == "" {
 		slog.Error("Error al obtener la URI del la DB")
-		os.Exit(1)
+		return errors.New("MONGODB_URI no puede estar vacío")
 	}
 
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)

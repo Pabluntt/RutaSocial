@@ -32,6 +32,11 @@ func (a alojamientoUseCase) GetAllAlojamientos(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener alojamientos"})
 		return
 	}
+	if utils.HasPagination(c) {
+		paginated, meta := utils.PaginateSlice(c, alojamientos)
+		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
+		return
+	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": alojamientos})
 }
 

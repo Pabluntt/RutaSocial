@@ -51,8 +51,28 @@ if (!token) throw new Error('login no retornó token');
 
 const authHeaders = { Authorization: `Bearer ${token}` };
 
+const profile = await request('/user/profile', { method: 'GET', headers: authHeaders });
+assertStatus(profile, [200], 'GET /user/profile');
+console.log('OK GET /user/profile');
+
+const userId = profile.body?.message?._id;
+if (!userId) throw new Error('profile no retornó _id');
+
+const batch = await request(`/user/batch?ids=${userId}`, { method: 'GET', headers: authHeaders });
+assertStatus(batch, [200], 'GET /user/batch');
+if (!Array.isArray(batch.body?.message) || batch.body.message.length !== 1) {
+  throw new Error(`GET /user/batch no retornó el usuario esperado: ${JSON.stringify(batch.body).slice(0, 500)}`);
+}
+console.log('OK GET /user/batch');
+
+const paginatedRoutes = await request('/route?page=1&limit=1', { method: 'GET', headers: authHeaders });
+assertStatus(paginatedRoutes, [200], 'GET /route paginado');
+if (!paginatedRoutes.body?.pagination) {
+  throw new Error(`GET /route paginado no retornó metadata de paginación: ${JSON.stringify(paginatedRoutes.body).slice(0, 500)}`);
+}
+console.log('OK GET /route?page=1&limit=1');
+
 const checks = [
-  ['GET', '/user/profile', [200]],
   ['GET', '/route', [200]],
   ['GET', '/risk', [200]],
   ['GET', '/helping-point', [200]],

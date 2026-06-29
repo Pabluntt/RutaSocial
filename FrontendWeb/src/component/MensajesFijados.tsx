@@ -25,16 +25,16 @@ export default function MensajesFijados() {
     const open = Boolean(anchorEl)
     const id = open ? "notification-popover" : undefined
 
-    const { isSuccess, isError, isLoading, data, refetch} = useNoticesMap()
+    const { isSuccess, isError, isLoading, data, refetch} = useNoticesMap(!!accessToken)
     const { data: weather } = useWeather(coords?.latitude ?? null, coords?.longitude ?? null)
 
     useEffect(() => {
         getCurrentLocation()
             .then((pos) => setCoords(pos))
-            .catch(() => {})
+            .catch((error) => console.error('No se pudo obtener ubicación actual', error))
     }, [])
 
-    const profile = useProfile()
+    const profile = useProfile(!!accessToken)
     const currentUserId = profile.data?.id
     const mutationMarkNotice = useMarkNotices()
     const dismissNoticeMut = useDismissNotice()

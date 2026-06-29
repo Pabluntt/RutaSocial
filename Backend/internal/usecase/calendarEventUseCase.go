@@ -40,6 +40,11 @@ func (ce calendarEventUseCase) GetAllCalendarEvents(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener eventos"})
 		return
 	}
+	if utils.HasPagination(c) {
+		paginated, meta := utils.PaginateSlice(c, events)
+		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
+		return
+	}
 	c.IndentedJSON(http.StatusOK, events)
 }
 
@@ -55,6 +60,11 @@ func (ce calendarEventUseCase) GetUserCalendarEvents(c *gin.Context) {
 	if err != nil {
 		logUseCaseError(c, "calendar_event.get_by_user", http.StatusBadRequest, err, "target_user_id", userID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener eventos del usuario"})
+		return
+	}
+	if utils.HasPagination(c) {
+		paginated, meta := utils.PaginateSlice(c, events)
+		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
 		return
 	}
 

@@ -41,6 +41,11 @@ func (h helpingPointUseCase) GetAllPoints(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener puntos de ayuda"})
 		return
 	}
+	if utils.HasPagination(c) {
+		paginated, meta := utils.PaginateSlice(c, helpPoints)
+		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
+		return
+	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": helpPoints})
 }
 

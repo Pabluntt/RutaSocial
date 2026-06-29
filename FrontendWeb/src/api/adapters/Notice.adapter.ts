@@ -14,20 +14,25 @@ export type TNoticeUpdateRequest = TNoticeBackend;
 
 export type TNoticeMapCache = {
     users?: Map<string, Promise<TPublicUserInfo>>
+    usersById?: Map<string, TPublicUserInfo>
 }
 
 export async function MapNoticeFromBackend(data: TNoticeBackend, cache?: TNoticeMapCache): Promise<Notice> {
 
     let authorName = 'Usuario Eliminado'
     try {
-        let userPromise = cache?.users?.get(data.author_id)
-        if (!userPromise) {
-            userPromise = UserService.GetPublicInfoByID(data.author_id)
-            cache?.users?.set(data.author_id, userPromise)
+        let info = cache?.usersById?.get(data.author_id)
+        if (!info) {
+            let userPromise = cache?.users?.get(data.author_id)
+            if (!userPromise) {
+                userPromise = UserService.GetPublicInfoByID(data.author_id)
+                cache?.users?.set(data.author_id, userPromise)
+            }
+            info = await userPromise
         }
-        const info = await userPromise
         authorName = info.name
-    } catch(_e) {
+    } catch(error) {
+        console.error('No se pudo obtener autor del aviso', error)
     }
     const notice: Partial<Notice> = {
         id: data._id,

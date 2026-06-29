@@ -13,14 +13,15 @@ import (
 // UserRepository define la interfaz para las operaciones relacionadas con usuarios.
 // Contiene métodos para obtener, actualizar y eliminar usuarios, así como obtener información pública.
 type UserRepository interface {
-GetUserByID(ctx context.Context, id string) (domain.Usuario, error)
-GetUserProfile(ctx context.Context, userID string) (domain.Usuario, error)
-UpdateUserInfo(ctx context.Context, userID bson.ObjectID, userData map[string]interface{}) (domain.Usuario, error)
-GetAllUsers(ctx context.Context) ([]domain.Usuario, error)
-GetPublicInfoByID(ctx context.Context, id string) (map[string]string, error)
-CreateUserByAdmin(ctx context.Context, user domain.Usuario) (domain.Usuario, error)
-UpdateUserByAdmin(ctx context.Context, updateData map[string]interface{}) (domain.Usuario, error)
-DeleteUserByID(ctx context.Context, id string) error
+	GetUserByID(ctx context.Context, id string) (domain.Usuario, error)
+	GetUserProfile(ctx context.Context, userID string) (domain.Usuario, error)
+	UpdateUserInfo(ctx context.Context, userID bson.ObjectID, userData map[string]interface{}) (domain.Usuario, error)
+	GetAllUsers(ctx context.Context) ([]domain.Usuario, error)
+	GetUsersByIDs(ctx context.Context, ids []string) ([]domain.Usuario, error)
+	GetPublicInfoByID(ctx context.Context, id string) (map[string]string, error)
+	CreateUserByAdmin(ctx context.Context, user domain.Usuario) (domain.Usuario, error)
+	UpdateUserByAdmin(ctx context.Context, updateData map[string]interface{}) (domain.Usuario, error)
+	DeleteUserByID(ctx context.Context, id string) error
 }
 
 // userRepository implementa la interfaz UserRepository.
@@ -41,6 +42,40 @@ func (u *userRepository) GetAllUsers(ctx context.Context) ([]domain.Usuario, err
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	cursor, err := u.UserCollection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var users []domain.Usuario
+	if err := cursor.All(ctx, &users); err != nil {
+		return nil, err
+	}
+	for i := range users {
+		users[i].Sanitize()
+	}
+	return users, nil
+}
+
+func (u *userRepository) GetUsersByIDs(ctx context.Context, ids []string) ([]domain.Usuario, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	objectIDs := make([]bson.ObjectID, 0, len(ids))
+	seen := make(map[bson.ObjectID]bool, len(ids))
+	for _, id := range ids {
+		objID, err := bson.ObjectIDFromHex(id)
+		if err != nil || seen[objID] {
+			continue
+		}
+		seen[objID] = true
+		objectIDs = append(objectIDs, objID)
+	}
+	if len(objectIDs) == 0 {
+		return []domain.Usuario{}, nil
+	}
+
+	cursor, err := u.UserCollection.Find(ctx, bson.M{"_id": bson.M{"$in": objectIDs}})
 	if err != nil {
 		return nil, err
 	}
@@ -301,7 +336,3 @@ func (u *userRepository) DeleteUserByID(ctx context.Context, id string) error {
 
 	return nil
 }
-
-
-
-

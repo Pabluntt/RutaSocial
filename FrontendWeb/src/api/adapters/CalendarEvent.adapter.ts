@@ -24,6 +24,7 @@ export type TCalendarEventUpdateRequest = TCalendarEventBackend
 
 export type TCalendarEventMapCache = {
     users?: Map<string, Promise<TPublicUserInfo>>
+    usersById?: Map<string, TPublicUserInfo>
     institutions?: Map<string, Promise<Institution>>
 }
 
@@ -36,12 +37,15 @@ export async function MapCalendarEventFromBackend(
     let colorInstitution = '#000000'
     try {
         const authorID = data.author_id as string
-        let userPromise = cache?.users?.get(authorID)
-        if (!userPromise) {
-            userPromise = UserService.GetPublicInfoByID(authorID)
-            cache?.users?.set(authorID, userPromise)
+        let user = cache?.usersById?.get(authorID)
+        if (!user) {
+            let userPromise = cache?.users?.get(authorID)
+            if (!userPromise) {
+                userPromise = UserService.GetPublicInfoByID(authorID)
+                cache?.users?.set(authorID, userPromise)
+            }
+            user = await userPromise
         }
-        const user = await userPromise
 
         let institutionPromise = cache?.institutions?.get(user.institutionID)
         if (!institutionPromise) {
@@ -50,7 +54,8 @@ export async function MapCalendarEventFromBackend(
         }
         colorInstitution = (await institutionPromise).color
         authorName = user.name
-    } catch(_e) {
+    } catch(error) {
+        console.error('No se pudo obtener autor o institución del evento', error)
     }
 
     // Parsear fecha correctamente sin problemas de timezone

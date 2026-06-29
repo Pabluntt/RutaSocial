@@ -16,6 +16,7 @@ import { CalendarEvent } from '../../api/models/Calendar';
 import { useCalendarEvents, useCreateCalendarEvent } from '../../api/hooks/CalendarEventHooks';
 import { useProfile } from '../../api/hooks/UserHooks';
 import { useRoutesByUser } from '../../api/hooks/RouteHooks';
+import { useAppSnackbar } from '../../context/SnackbarContext';
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
@@ -59,6 +60,7 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
         errorStartTime : '',
         errorEndTime : ''
     })
+    const { showSnackbar } = useAppSnackbar()
 
     // Obtener rutas del usuario actual
     const { data: userRoutes } = useRoutesByUser(authorID, !!authorID)
@@ -181,7 +183,7 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
                 setFormCalendarEvent(prev => ({...prev, dateStart : localDate}))
             } else {
                 setOpen(false)
-                alert('error: date nulltype')
+                showSnackbar('No se pudo obtener la fecha seleccionada', 'error')
             }
        }
     }, [selectInfo])

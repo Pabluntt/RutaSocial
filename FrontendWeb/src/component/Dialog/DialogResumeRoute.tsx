@@ -12,6 +12,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DoneIcon from '@mui/icons-material/Done';
 import useSessionStore from '../../stores/useSessionStore';
 import { useRoute } from '../../api/hooks/RouteHooks';
+import { useAppSnackbar } from '../../context/SnackbarContext';
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
@@ -36,6 +37,7 @@ export default function DialogResumeRoute({ stateOpen } : DialogResumeRiskProps)
 
     const [ open, setOpen ] = stateOpen
     const [ copySuccess, setCopySuccess ] = useState<undefined | boolean>()
+    const { showSnackbar } = useAppSnackbar()
 
     const { isSuccess, isError, isPending, data } = useRoute( routeId as string, true)
 
@@ -50,7 +52,7 @@ export default function DialogResumeRoute({ stateOpen } : DialogResumeRiskProps)
             setCopySuccess(true)
         } catch(e) {
             setCopySuccess(false)
-            alert((e as Error).message)
+            showSnackbar((e as Error).message, 'error')
         }
     }
 

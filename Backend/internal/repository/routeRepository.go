@@ -385,7 +385,6 @@ func (r *routeRepository) GetMyParticipation(ctx context.Context, userID string)
 	filter := bson.M{
 		"$or": []bson.M{
 			{"team": userObjID},
-			{"team": userID},
 			{"route_leader": userObjID},
 		},
 	}

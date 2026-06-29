@@ -46,6 +46,44 @@ export class UserService {
         ))
     }
 
+    static async FindUsersBatch(ids: string[]): Promise<(TPublicUserInfo & { id: string })[]> {
+        const uniqueIds = [...new Set(ids.filter(Boolean))]
+        if (uniqueIds.length === 0) return []
+        if (import.meta.env.VITE_ENABLE_USER_BATCH !== 'true') {
+            const users = await Promise.all(uniqueIds.map(async (id) => {
+                try {
+                    const user = await UserService.GetPublicInfoByID(id)
+                    return { id, ...user }
+                } catch {
+                    return undefined
+                }
+            }))
+            return users.filter((user): user is TPublicUserInfo & { id: string } => Boolean(user))
+        }
+
+        try {
+            const { data } = await axiosInstance.get(`/user/batch`, {
+                params: { ids: uniqueIds.join(',') }
+            })
+            return (data?.message as (TPublicUserInfo & { _id: string })[]).map((user) => ({
+                id: user._id,
+                name: user.name,
+                institutionID: user.institutionID,
+                phone: user.phone,
+            }))
+        } catch {
+            const users = await Promise.all(uniqueIds.map(async (id) => {
+                try {
+                    const user = await UserService.GetPublicInfoByID(id)
+                    return { id, ...user }
+                } catch {
+                    return undefined
+                }
+            }))
+            return users.filter((user): user is TPublicUserInfo & { id: string } => Boolean(user))
+        }
+    }
+
     static async GetPublicInfoByID(id: string): Promise<TPublicUserInfo> {
         const { data } = await axiosInstance.get(`/user/public-info/${id}`)
         return data?.message as TPublicUserInfo

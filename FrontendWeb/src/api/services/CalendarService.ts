@@ -1,5 +1,6 @@
 import { MapCalendarEventFromBackend, TCalendarEventBackend, TCalendarEventCreateRequest, TCalendarEventUpdateRequest } from "../adapters/CalendarEvent.adapter"
 import { CalendarEvent } from "../models/Calendar"
+import { UserService } from "./UserService"
 import { axiosInstance } from "./axiosInstance"
 
 
@@ -9,7 +10,7 @@ export class CalendarService {
 
     static async GetEvents() : Promise<CalendarEvent[]> {
         const { data } = await axiosInstance.get(`/${this.RESOURCE_NAME}`)
-        const cache = { users: new Map(), institutions: new Map() }
+        const cache = await CalendarService.buildEventCache(data as TCalendarEventBackend[])
         return await Promise.all((data as TCalendarEventBackend[]).map(async (event, _) => (
            await MapCalendarEventFromBackend(event as TCalendarEventBackend, cache) 
         )))
@@ -33,10 +34,17 @@ export class CalendarService {
     static async GetUserCalendarEvents(userId: string): Promise<CalendarEvent[]> {
         const { data } = await axiosInstance.get(`/${this.RESOURCE_NAME}/user/${userId}`)
         if (data?.message === null) return []
-        const cache = { users: new Map(), institutions: new Map() }
+        const cache = await CalendarService.buildEventCache(data?.message as TCalendarEventBackend[])
         return await Promise.all((data?.message as TCalendarEventBackend[]).map(async (event) =>
             await MapCalendarEventFromBackend(event, cache)
         ))
+    }
+
+    private static async buildEventCache(events: TCalendarEventBackend[]) {
+        const usersById = new Map()
+        const users = await UserService.FindUsersBatch(events.map((event) => event.author_id))
+        users.forEach((user) => usersById.set(user.id, { name: user.name, institutionID: user.institutionID, phone: user.phone }))
+        return { users: new Map(), usersById, institutions: new Map() }
     }
 
 } 

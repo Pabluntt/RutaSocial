@@ -33,6 +33,7 @@ const authenticate = async (
 
     return { accessToken: token };
   } catch (error: any) {
+    console.error('Error al autenticar usuario', error);
     return null;
   }
 };

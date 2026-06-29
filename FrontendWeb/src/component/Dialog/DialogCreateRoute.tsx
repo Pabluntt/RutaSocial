@@ -18,6 +18,7 @@ import { es } from 'date-fns/locale';
 import { useCreateRoute } from '../../api/hooks/RouteHooks';
 import { Route } from '../../api/models/Route';
 import { useProfile } from '../../api/hooks/UserHooks';
+import { useAppSnackbar } from '../../context/SnackbarContext';
 
 
 
@@ -65,6 +66,7 @@ export default function DialogCreateRoute({ stateOpen } : DialogCreateRouteProps
 
     const [ copySuccess, setCopySuccess ] = useState<boolean | undefined>()
     const { data, mutate } = useCreateRoute()
+    const { showSnackbar } = useAppSnackbar()
 
 
 
@@ -138,7 +140,7 @@ export default function DialogCreateRoute({ stateOpen } : DialogCreateRouteProps
             setCopySuccess(true)
         } catch(e) {
             setCopySuccess(false)
-            alert((e as Error).message)
+            showSnackbar((e as Error).message, 'error')
         }
     }
 

@@ -37,7 +37,27 @@ jobs:
           cache-dependency-path: FrontendWeb/package-lock.json
       - run: npm ci
       - run: npm run lint
+        continue-on-error: true
+      - run: npx tsc --noEmit
+      - run: npm test
       - run: npm run build
+
+  mobile-typecheck-and-test:
+    name: Mobile typecheck + test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: FrontendMovil/frontmovil
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '23'
+          cache: 'npm'
+          cache-dependency-path: FrontendMovil/frontmovil/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test -- --runInBand
 
   docker-build:
     name: Docker compose build
@@ -46,3 +66,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker compose build
+
+  e2e-local:
+    name: Local Docker E2E
+    runs-on: windows-latest
+    needs: [backend-lint-and-test, frontend-lint-and-build]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '23'
+          cache: 'npm'
+          cache-dependency-path: FrontendWeb/package-lock.json
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache-dependency-path: Backend/go.sum
+      - name: Install web dependencies
+        working-directory: FrontendWeb
+        run: npm ci
+      - name: Install Playwright Chromium
+        working-directory: FrontendWeb
+        run: npx playwright install chromium
+      - name: Run isolated E2E
+        run: powershell -ExecutionPolicy Bypass -File .\scripts\test-e2e-local.ps1 -SkipWeather

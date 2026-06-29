@@ -25,6 +25,7 @@ func SetupUserRouter(r *gin.Engine) {
 	protected.PUT("/update", userController.UpdateUserInfo)
 	protected.GET("/", middleware.RoleMiddleware(domain.RoleAdmin), userController.GetAllUsers)
 	protected.POST("/", middleware.RoleMiddleware(domain.RoleAdmin), userController.CreateUserByAdmin)
+	protected.GET("/batch", userController.GetUsersBatch)
 	protected.GET("/:id", middleware.RoleMiddleware(domain.RoleAdmin), userController.GetUserByID)
 	protected.PUT("/:id", middleware.RoleMiddleware(domain.RoleAdmin), userController.UpdateUserByAdmin)
 	protected.DELETE("/:id", middleware.RoleMiddleware(domain.RoleAdmin), userController.DeleteUser)

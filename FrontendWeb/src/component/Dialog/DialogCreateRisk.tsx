@@ -15,6 +15,7 @@ import { LocationMethod } from '../../Enums/LocationMethod';
 import { useCreateRisk, useRisks } from '../../api/hooks/RiskHooks';
 import { RiskStatus } from '../../Enums/RiskStatus';
 import { useProfile } from '../../api/hooks/UserHooks';
+import { useAppSnackbar } from '../../context/SnackbarContext';
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
@@ -54,6 +55,7 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
 
     const { mutate, data, isError, isSuccess, isPending, isIdle, reset } = useCreateRisk()
     const { refetch } = useRisks()
+    const { showSnackbar } = useAppSnackbar()
 
     const handleCurrentLocation = async () => {
         setLocationMethod(LocationMethod.Current)
@@ -62,7 +64,7 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
             setCoords([currentPosition.latitude, currentPosition.longitude])
         } catch (e) {
             setError((e as Error).message)
-            alert(`error : ${(e as Error).message}`)
+            showSnackbar((e as Error).message, 'error')
         }
     }
     

@@ -47,6 +47,11 @@ func (r routeUseCase) FindAll(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener rutas"})
 		return
 	}
+	if utils.HasPagination(c) {
+		paginated, meta := utils.PaginateSlice(c, routes)
+		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
+		return
+	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": routes})
 }
 
@@ -236,6 +241,11 @@ func (r routeUseCase) GetUserRoutes(c *gin.Context) {
 	if err != nil {
 		logUseCaseError(c, "route.get_user_routes", http.StatusBadRequest, err, "target_user_id", userID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener rutas del usuario"})
+		return
+	}
+	if utils.HasPagination(c) {
+		paginated, meta := utils.PaginateSlice(c, routes)
+		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
 		return
 	}
 

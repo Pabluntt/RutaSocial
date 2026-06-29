@@ -22,6 +22,6 @@ func SetupAuthRouter(r *gin.Engine) {
 	authUseCase := usecase.NewAuthUseCase(authRepo)
 	authController := controller.NewAuthController(authUseCase)
 
-	r.POST("/register", authController.Register)
+	r.POST("/register", middleware.RateLimitMiddleware(5, time.Minute), authController.Register)
 	r.POST("/login", middleware.RateLimitMiddleware(5, time.Minute), authController.Login)
 }

@@ -39,6 +39,11 @@ func (p peopleHelpedUseCase) GetAllPeopleHelped(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener personas ayudadas"})
 		return
 	}
+	if utils.HasPagination(c) {
+		paginated, meta := utils.PaginateSlice(c, peopleHelped)
+		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
+		return
+	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": peopleHelped})
 }
 

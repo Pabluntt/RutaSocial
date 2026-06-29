@@ -3,12 +3,13 @@ package repository
 import (
 	"context"
 	"errors"
+	"strings"
+	"time"
 
 	"github.com/SebaVCH/hdcProject/internal/domain"
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
-	"time"
 )
 
 // NotificationRepository define la interfaz para las operaciones relacionadas con notificaciones.
@@ -52,12 +53,49 @@ func (n *notificationRepository) CreateNotification(ctx context.Context, notific
 	notification.ID = bson.NewObjectID()
 	notification.CreatedAt = time.Now()
 
+	session, err := n.NotificationsCollection.Database().Client().StartSession()
+	if err != nil {
+		return err
+	}
+	defer session.EndSession(ctx)
+
+	var recipients []domain.Usuario
+	_, err = session.WithTransaction(ctx, func(sc context.Context) (interface{}, error) {
+		users, err := n.insertNotificationWithRelations(sc, notification)
+		if err != nil {
+			return nil, err
+		}
+		recipients = users
+		return nil, nil
+	})
+	if err != nil {
+		if !isTransactionUnsupported(err) {
+			return err
+		}
+		users, fallbackErr := n.insertNotificationWithRelations(ctx, notification)
+		if fallbackErr != nil {
+			return fallbackErr
+		}
+		recipients = users
+	}
+
+	if notification.SendEmail {
+		for _, user := range recipients {
+			go utils.SendNotificationMail(user, notification)
+		}
+	}
+
+	return nil
+}
+
+func (n *notificationRepository) insertNotificationWithRelations(ctx context.Context, notification domain.Aviso) ([]domain.Usuario, error) {
+
 	var userFilter bson.M
 	if !notification.SendToAll {
 		var author domain.Usuario
 		err := n.UserCollection.FindOne(ctx, bson.M{"_id": notification.AuthorID}).Decode(&author)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		userFilter = bson.M{
 			"institutionID": author.InstitutionID,
@@ -80,16 +118,18 @@ func (n *notificationRepository) CreateNotification(ctx context.Context, notific
 
 	cursor, err := n.UserCollection.Find(ctx, userFilter)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer cursor.Close(ctx)
 
 	relations := make([]interface{}, 0)
+	recipients := make([]domain.Usuario, 0)
 	for cursor.Next(ctx) {
 		var user domain.Usuario
 		if err := cursor.Decode(&user); err != nil {
-			continue
+			return nil, err
 		}
+		recipients = append(recipients, user)
 
 		relations = append(relations, domain.NotificationPersonRelation{
 			ID:             bson.NewObjectID(),
@@ -100,27 +140,31 @@ func (n *notificationRepository) CreateNotification(ctx context.Context, notific
 			Dismissed:      false,
 		})
 
-		if notification.SendEmail {
-			go utils.SendNotificationMail(user, notification)
-		}
 	}
 	if err := cursor.Err(); err != nil {
-		return err
+		return nil, err
 	}
 
 	_, err = n.NotificationsCollection.InsertOne(ctx, notification)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if len(relations) > 0 {
 		_, err = n.NotificationPersonRelationCollection.InsertMany(ctx, relations)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return recipients, nil
+}
+
+func isTransactionUnsupported(err error) bool {
+	message := strings.ToLower(err.Error())
+	return strings.Contains(message, "transaction numbers are only allowed") ||
+		strings.Contains(message, "replica set") ||
+		strings.Contains(message, "transactions are not supported")
 }
 
 // DeleteNotification elimina una notificación por su ID.

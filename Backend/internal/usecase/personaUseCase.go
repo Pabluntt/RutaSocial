@@ -37,6 +37,11 @@ func (uc *personaUseCase) GetAll(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener personas"})
 		return
 	}
+	if utils.HasPagination(c) {
+		paginated, meta := utils.PaginateSlice(c, personas)
+		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
+		return
+	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": personas})
 }
 
@@ -67,6 +72,11 @@ func (uc *personaUseCase) Search(c *gin.Context) {
 	if err != nil {
 		logUseCaseError(c, "persona.search", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al buscar personas"})
+		return
+	}
+	if utils.HasPagination(c) {
+		paginated, meta := utils.PaginateSlice(c, personas)
+		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": personas})

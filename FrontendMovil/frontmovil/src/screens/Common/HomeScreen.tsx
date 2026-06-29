@@ -17,10 +17,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/RootStack';
-import MapComponent from '../../components/MapComponent';
 import { useFocusEffect } from '@react-navigation/native';
 import { backendUrl } from '../../config/api';
 import { Role } from '../../config/roles';
+import HomeMapSection from './Home/HomeMapSection';
+import NotificationsModal from './Home/NotificationsModal';
+import HomeMainActions from './Home/HomeMainActions';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
@@ -94,22 +96,35 @@ export default function HomeScreen({ navigation }: Props) {
     }
   };
 
-  // Obtener nombre por ID (para notificaciones)
-  const getUserNameById = async (id: any, token: string, cache = {}) => {
-    if (!id) return 'Desconocido';
-    if (cache[id]) return cache[id];
+  const getUserNamesByIds = async (ids: string[], token: string) => {
+    const uniqueIds = [...new Set(ids.filter(Boolean))];
+    if (uniqueIds.length === 0) return {};
     try {
-      const res = await axios.get(`${backendUrl}/user/${id}`, {
+      const res = await axios.get(`${backendUrl}/user/batch`, {
         headers: { Authorization: `Bearer ${token}` },
+        params: { ids: uniqueIds.join(',') },
       });
-      const user = res.data.message;
-      if (user && user.name) {
-        cache[id] = user.name;
-        return user.name;
-      }
-      return 'Desconocido';
-    } catch {
-      return 'Desconocido';
+      const users = Array.isArray(res.data.message) ? res.data.message : [];
+      return users.reduce((acc, user) => {
+        if (user?._id) acc[user._id] = user.name || 'Desconocido';
+        return acc;
+      }, {} as Record<string, string>);
+    } catch (err) {
+      console.error('Error al obtener autores por lote:', err);
+      const users = await Promise.all(uniqueIds.map(async (id) => {
+        try {
+          const res = await axios.get(`${backendUrl}/user/public-info/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          return { id, name: res.data.message?.name || 'Desconocido' };
+        } catch {
+          return undefined;
+        }
+      }));
+      return users.reduce((acc, user) => {
+        if (user) acc[user.id] = user.name;
+        return acc;
+      }, {} as Record<string, string>);
     }
   };
 
@@ -139,15 +154,8 @@ export default function HomeScreen({ navigation }: Props) {
       const notificationsArr = res.data.message || [];
       const unreadArr = unreadRes.data.message || [];
 
-      const nameCache: any = {};
-      const authorIds = [...new Set(notificationsArr.map(n => n.author_id))];
-      const idToName: any = {};
-
-      await Promise.all(authorIds.map(async (id) => {
-        const idStr = getAuthorIdString(id);
-        if (!idStr) return;
-        idToName[idStr] = await getUserNameById(idStr, token, nameCache);
-      }));
+      const authorIds = [...new Set(notificationsArr.map(n => getAuthorIdString(n.author_id)).filter(Boolean))] as string[];
+      const idToName = await getUserNamesByIds(authorIds, token || '');
 
       const notificationsWithNames = notificationsArr.map((n: any) => ({
         ...n,
@@ -182,7 +190,10 @@ export default function HomeScreen({ navigation }: Props) {
           await axios.put(`${backendUrl}/notification/read/${n._id}`, {}, {
             headers: { Authorization: `Bearer ${token}` },
           });
-        } catch { }
+        } catch (err) {
+          console.error('Error al marcar aviso como leído:', err);
+          RNAlert.alert('Error', 'No se pudo marcar un aviso como leído.');
+        }
       })
     );
     await fetchAllNotifications();
@@ -352,72 +363,28 @@ export default function HomeScreen({ navigation }: Props) {
         )}
       </TouchableOpacity>
 
-      {/* Botones principales */}
-      <TouchableOpacity style={[styles.alertToggleButton, { backgroundColor: '#4682B4' }]} onPress={() => setJoinRouteVisible(true)}>
-        <Text style={styles.alertToggleButtonText}>Unirse a Ruta</Text>
-      </TouchableOpacity>
+      <HomeMainActions
+        styles={styles}
+        onJoinRoute={() => setJoinRouteVisible(true)}
+        onOpenAlerts={() => setAlertModalVisible(true)}
+      />
 
-      <TouchableOpacity style={styles.alertToggleButton} onPress={() => setAlertModalVisible(true)}>
-        <Text style={styles.alertToggleButtonText}>Abrir Avisos</Text>
-      </TouchableOpacity>
+      <HomeMapSection
+        style={styles.mapWrapper}
+        riskMarkers={riskMarkers}
+        helpMarkers={helpMarkers}
+        onRiskDeleted={handleRiskDeleted}
+      />
 
-      {/* Mapa */}
-      <View style={styles.mapWrapper}>
-        <MapComponent
-          key={[...riskMarkers, ...helpMarkers].map(m => `${m.latitude}-${m.longitude}`).join(',')}
-          riskMarkers={riskMarkers}
-          helpMarkers={helpMarkers}
-          onRiskDeleted={handleRiskDeleted}
-        />
-      </View>
-
-      {/* Modal notificaciones */}
-      <Modal visible={showNotificationModal} animationType="slide">
-        <ScrollView contentContainerStyle={{ padding: 20, backgroundColor: "#fff" }}>
-          <Text style={styles.alertTitle}>Avisos</Text>
-          {notifications.map((n) => {
-            const isUnread = unreadNotifications.find(u => u._id === n._id);
-            return (
-              <TouchableOpacity
-                key={n._id}
-                style={[
-                  styles.notificationItem,
-                  isUnread && { backgroundColor: '#FFEDD5' },
-                ]}
-                onPress={async () => {
-                  if (isUnread) {
-                    try {
-                      const token = await AsyncStorage.getItem('accessToken');
-                      await axios.put(`${backendUrl}/notification/read/${n._id}`, {}, {
-                        headers: { Authorization: `Bearer ${token}` },
-                      });
-                      fetchAllNotifications();
-                    } catch { }
-                  }
-                }}
-              >
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ fontWeight: 'bold' }}>{n.author_name || 'Autor'}</Text>
-                  <Text style={{ fontSize: 12, color: '#888' }}>
-                    {new Date(n.created_at).toLocaleString()}
-                  </Text>
-                </View>
-                <Text style={{ fontSize: 15, color: '#333' }}>{n.description}</Text>
-                {isUnread && <Text style={{ color: '#E74C3C', fontSize: 12 }}>No leído</Text>}
-              </TouchableOpacity>
-            )
-          })}
-          <TouchableOpacity
-            style={styles.cancelButton}
-            onPress={async () => {
-              await markAllNotificationsAsRead();
-              setShowNotificationModal(false);
-            }}
-          >
-            <Text style={styles.cancelButtonText}>Cerrar</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </Modal>
+      <NotificationsModal
+        visible={showNotificationModal}
+        notifications={notifications}
+        unreadNotifications={unreadNotifications}
+        styles={styles}
+        onClose={() => setShowNotificationModal(false)}
+        onRefresh={fetchAllNotifications}
+        onMarkAllRead={markAllNotificationsAsRead}
+      />
 
       {/* Modal avisos */}
       <Modal visible={alertModalVisible} animationType="slide">

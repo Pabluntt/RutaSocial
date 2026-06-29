@@ -173,6 +173,11 @@ func (n notificationUseCase) GetNotifications(c *gin.Context) {
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener aviso"})
 		return
 	}
+	if utils.HasPagination(c) {
+		paginated, meta := utils.PaginateSlice(c, notifications)
+		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
+		return
+	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": notifications})
 }
@@ -187,6 +192,11 @@ func (n notificationUseCase) GetUnreadNotifications(c *gin.Context) {
 	if err != nil {
 		logUseCaseError(c, "notification.get_unread", http.StatusInternalServerError, err)
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener aviso"})
+		return
+	}
+	if utils.HasPagination(c) {
+		paginated, meta := utils.PaginateSlice(c, notifications)
+		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
 		return
 	}
 
@@ -204,6 +214,11 @@ func (n notificationUseCase) GetReadNotifications(c *gin.Context) {
 	if err != nil {
 		logUseCaseError(c, "notification.get_read", http.StatusInternalServerError, err)
 		c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener aviso"})
+		return
+	}
+	if utils.HasPagination(c) {
+		paginated, meta := utils.PaginateSlice(c, notifications)
+		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
 		return
 	}
 

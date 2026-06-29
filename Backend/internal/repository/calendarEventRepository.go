@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"time"
+
 	"github.com/SebaVCH/hdcProject/internal/domain"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -12,12 +13,12 @@ import (
 // CalendarEventRepository define la interfaz para las operaciones relacionadas con eventos de calendario.
 // Contiene métodos para obtener, crear, eliminar, actualizar eventos de calendario y buscar por ID y usuario.
 type CalendarEventRepository interface {
-GetAllCalendarEvents(ctx context.Context) ([]domain.EventoCalendario, error)
-CreateCalendarEvent(ctx context.Context, event domain.EventoCalendario, userID string) (domain.EventoCalendario, error)
-DeleteCalendarEvent(ctx context.Context, id string) error
-UpdateCalendarEvent(ctx context.Context, updateData map[string]interface{}) (domain.EventoCalendario, error)
-FindByIDAndUserID(ctx context.Context, id string, userID string) error
-GetCalendarEventsByUserID(ctx context.Context, userID string) ([]domain.EventoCalendario, error)
+	GetAllCalendarEvents(ctx context.Context) ([]domain.EventoCalendario, error)
+	CreateCalendarEvent(ctx context.Context, event domain.EventoCalendario, userID string) (domain.EventoCalendario, error)
+	DeleteCalendarEvent(ctx context.Context, id string) error
+	UpdateCalendarEvent(ctx context.Context, updateData map[string]interface{}) (domain.EventoCalendario, error)
+	FindByIDAndUserID(ctx context.Context, id string, userID string) error
+	GetCalendarEventsByUserID(ctx context.Context, userID string) ([]domain.EventoCalendario, error)
 }
 
 // calendarEventRepository implementa la interfaz CalendarEventRepository.
@@ -91,7 +92,11 @@ func (c calendarEventRepository) CreateCalendarEvent(ctx context.Context, event 
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	event.ID = bson.NewObjectID()
-	event.AuthorID, _ = bson.ObjectIDFromHex(userID)
+	userObjID, err := bson.ObjectIDFromHex(userID)
+	if err != nil {
+		return domain.EventoCalendario{}, errors.New("ID de usuario inválido")
+	}
+	event.AuthorID = userObjID
 
 	data, err := bson.Marshal(event)
 	if err != nil {
@@ -184,9 +189,13 @@ func (c calendarEventRepository) FindByIDAndUserID(ctx context.Context, id strin
 	if err != nil {
 		return errors.New("ID de evento de calendario inválido")
 	}
+	userObjID, err := bson.ObjectIDFromHex(userID)
+	if err != nil {
+		return errors.New("ID de usuario inválido")
+	}
 
 	var event domain.EventoCalendario
-	filter := bson.M{"_id": objID, "author_id": userID}
+	filter := bson.M{"_id": objID, "author_id": userObjID}
 	err = c.CalendarEventCollection.FindOne(ctx, filter).Decode(&event)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -196,7 +205,3 @@ func (c calendarEventRepository) FindByIDAndUserID(ctx context.Context, id strin
 	}
 	return nil
 }
-
-
-
-

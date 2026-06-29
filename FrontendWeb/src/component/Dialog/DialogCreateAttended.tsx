@@ -21,6 +21,7 @@ import { HelpedPerson } from '../../api/models/HelpPoint';
 import { PersonaService } from '../../api/services/PersonaService';
 import { Persona } from '../../api/models/Persona';
 import SearchIcon from '@mui/icons-material/Search';
+import { useAppSnackbar } from '../../context/SnackbarContext';
 
 const SIN_ESPECIFICAR = 'Sin especificar';
 
@@ -92,6 +93,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
     const [ searchQuery, setSearchQuery ] = useState('')
     const [ searchResults, setSearchResults ] = useState<Persona[]>([])
     const [ searchTargetPersonId, setSearchTargetPersonId ] = useState<string | null>(null)
+    const { showSnackbar } = useAppSnackbar()
 
     const searchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
@@ -106,7 +108,8 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
             try {
                 const results = await PersonaService.Search(query)
                 setSearchResults(results)
-            } catch {
+            } catch (error) {
+                console.error('Error al buscar personas', error)
                 setSearchResults([])
             }
         }, 300)
@@ -156,7 +159,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
             setCoords([currentPosition.latitude, currentPosition.longitude])
         } catch (e) {
             setError((e as Error).message)
-            alert(`error : ${(e as Error).message}`)
+            showSnackbar((e as Error).message, 'error')
         }
     }
 
@@ -233,11 +236,11 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
 
     const handleSubmit = () => {
         if(coords.length !== 2) {
-            alert('no hay coordenadas registradas')
+            showSnackbar('No hay coordenadas registradas', 'warning')
             return
         }
         if(!authorID) {
-            alert('ha ocurrido un error inesperado')
+            showSnackbar('Ha ocurrido un error inesperado', 'error')
             return
         }
 
@@ -251,12 +254,12 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
             }))
 
         if(validPeople.length === 0) {
-            alert('Debes agregar al menos una persona con nombre')
+            showSnackbar('Debes agregar al menos una persona con nombre', 'warning')
             return
         }
 
         if(validPeople.some(person => person.rut.length > 0 && !isValidRutFormat(person.rut))) {
-            alert('El formato del RUT no es válido')
+            showSnackbar('El formato del RUT no es válido', 'warning')
             return
         }
 

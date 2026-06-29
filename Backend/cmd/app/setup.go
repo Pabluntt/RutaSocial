@@ -31,6 +31,10 @@ func StartBackend() error {
 		return err
 	}
 
+	if err := database.EnsureIndexes(database.Client.Database(config.DBName)); err != nil {
+		return err
+	}
+
 	if err := utils.CreateDefaultAdmin(database.Client.Database(config.DBName).Collection("usuarios")); err != nil {
 		return err
 	}

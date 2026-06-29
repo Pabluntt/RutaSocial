@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"strings"
+
 	"github.com/SebaVCH/hdcProject/internal/domain"
 	"github.com/SebaVCH/hdcProject/internal/dto"
 	"github.com/SebaVCH/hdcProject/internal/repository"
@@ -18,6 +20,7 @@ type UserUseCase interface {
 	GetUserProfile(c *gin.Context)
 	UpdateUserInfo(c *gin.Context)
 	GetAllUsers(c *gin.Context)
+	GetUsersBatch(c *gin.Context)
 	GetPublicInfoByID(c *gin.Context)
 	CreateUserByAdmin(c *gin.Context)
 	UpdateUserByAdmin(c *gin.Context)
@@ -73,6 +76,29 @@ func (u userUseCase) GetUserProfile(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"message": dto.MapUserToResponse(user)})
 }
 
+func (u userUseCase) GetUsersBatch(c *gin.Context) {
+	idsParam := c.Query("ids")
+	if idsParam == "" {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Debe indicar ids"})
+		return
+	}
+
+	ids := strings.Split(idsParam, ",")
+	if len(ids) > 100 {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Máximo 100 ids por solicitud"})
+		return
+	}
+
+	users, err := u.userRepository.GetUsersByIDs(c.Request.Context(), ids)
+	if err != nil {
+		logUseCaseError(c, "user.get_batch", http.StatusBadRequest, err)
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener usuarios"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": dto.MapUsersToPublicResponse(users)})
+}
+
 // UpdateUserInfo maneja la solicitud para actualizar la información del usuario autenticado.
 // Valida el token JWT, verifica los datos de entrada y actualiza la información del usuario en la base de datos.
 func (u userUseCase) UpdateUserInfo(c *gin.Context) {
@@ -126,7 +152,13 @@ func (u userUseCase) GetAllUsers(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener usuarios"})
 		return
 	}
-	c.IndentedJSON(http.StatusOK, gin.H{"message": dto.MapUsersToResponse(users)})
+	response := dto.MapUsersToResponse(users)
+	if utils.HasPagination(c) {
+		paginated, meta := utils.PaginateSlice(c, response)
+		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, gin.H{"message": response})
 }
 
 // CreateUserByAdmin maneja la solicitud para crear un usuario desde el panel admin.

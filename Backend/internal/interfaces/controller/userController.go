@@ -37,6 +37,10 @@ func (u *userController) GetAllUsers(c *gin.Context) {
 	u.userUseCase.GetAllUsers(c)
 }
 
+func (u *userController) GetUsersBatch(c *gin.Context) {
+	u.userUseCase.GetUsersBatch(c)
+}
+
 // UpdateUserInfo maneja la solicitud para actualizar la información del usuario autenticado.
 // @Summary Actualizar información del usuario
 // @Description Actualiza los datos del usuario autenticado. Requiere autenticación.

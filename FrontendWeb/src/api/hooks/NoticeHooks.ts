@@ -20,13 +20,14 @@ export function useCreateNotice() {
     })
 }
 
-export function useNoticesMap() {
+export function useNoticesMap(enabled?: boolean) {
     return useQuery({
         queryKey : ['notices-read/unread'],
         queryFn: async () => ({
             read : await NoticeService.GetReadNotices(),
             unread : await NoticeService.GetUnReadNotices()
-        })
+        }),
+        enabled,
     })
 }
 

@@ -57,22 +57,39 @@ export default function EventScreen({ navigation }: Props) {
     }
   };
 
-  // Cargar usuario por id y guardar en cache
-  const getUserById = async (userId: string) => {
-    if (userCache[userId]) return userCache[userId];
-
+  const getUsersByIds = async (userIds: string[]) => {
+    const missingIds = [...new Set(userIds.filter((id) => id && !userCache[id]))];
+    if (missingIds.length === 0) return { ...userCache };
     const token = await getToken();
-    if (!token) return null;
+    if (!token) return { ...userCache };
     try {
-      const res = await axios.get(`${backendUrl}/user/${userId}`, {
+      const res = await axios.get(`${backendUrl}/user/batch`, {
         headers: { Authorization: `Bearer ${token}` },
+        params: { ids: missingIds.join(',') },
       });
-      const user = res.data.message;
-      setUserCache(prev => ({ ...prev, [userId]: user }));
-      return user;
+      const users = Array.isArray(res.data.message) ? res.data.message : [];
+      const nextCache = { ...userCache };
+      users.forEach((user: any) => {
+        nextCache[user._id] = { ...user, institution: user.institutionID };
+      });
+      setUserCache(nextCache);
+      return nextCache;
     } catch (err) {
-      console.error('Error al obtener usuario:', err);
-      return null;
+      console.error('Error al obtener usuarios por lote:', err);
+      const nextCache = { ...userCache };
+      await Promise.all(missingIds.map(async (id) => {
+        try {
+          const res = await axios.get(`${backendUrl}/user/public-info/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const user = res.data.message;
+          if (user) nextCache[id] = { ...user, _id: id, institution: user.institutionID };
+        } catch {
+          // Keep the event visible even when an old backend cannot resolve an author.
+        }
+      }));
+      setUserCache(nextCache);
+      return nextCache;
     }
   };
 
@@ -98,18 +115,7 @@ export default function EventScreen({ navigation }: Props) {
 
       // 2. Carga todos los usuarios (solo los necesarios)
       const userArr = Array.from(userIdSet);
-      const usersById: { [id: string]: any } = { ...userCache };
-
-      await Promise.all(
-        userArr.map(async (id) => {
-          if (!usersById[id]) {
-            const user = await getUserById(id);
-            if (user) usersById[id] = user;
-          }
-        })
-      );
-
-      setUserCache(usersById); // Actualiza el cache global
+      const usersById = await getUsersByIds(userArr);
 
       // 3. Marca las fechas usando el color de la institución del usuario autor
       allEvents.forEach((event: any) => {

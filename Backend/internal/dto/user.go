@@ -21,6 +21,13 @@ type UserResponse struct {
 	IsActive        bool   `json:"is_active"`
 }
 
+type PublicUserResponse struct {
+	ID            string `json:"_id"`
+	Name          string `json:"name"`
+	InstitutionID string `json:"institutionID"`
+	Phone         string `json:"phone"`
+}
+
 func MapUserToResponse(u domain.Usuario) UserResponse {
 	return UserResponse{
 		ID:              u.ID.Hex(),
@@ -41,6 +48,23 @@ func MapUsersToResponse(users []domain.Usuario) []UserResponse {
 	result := make([]UserResponse, len(users))
 	for i, u := range users {
 		result[i] = MapUserToResponse(u)
+	}
+	return result
+}
+
+func MapUserToPublicResponse(u domain.Usuario) PublicUserResponse {
+	return PublicUserResponse{
+		ID:            u.ID.Hex(),
+		Name:          u.Name,
+		InstitutionID: u.InstitutionID.Hex(),
+		Phone:         u.Phone,
+	}
+}
+
+func MapUsersToPublicResponse(users []domain.Usuario) []PublicUserResponse {
+	result := make([]PublicUserResponse, len(users))
+	for i, u := range users {
+		result[i] = MapUserToPublicResponse(u)
 	}
 	return result
 }

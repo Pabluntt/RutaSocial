@@ -15,12 +15,12 @@ var ErrPersonaNotFound = errors.New("persona no encontrada")
 // HelpPointRepository define la interfaz para las operaciones relacionadas con puntos de ayuda.
 // Contiene métodos para obtener, crear, actualizar y eliminar puntos de ayuda, así como buscar por ID y usuario.
 type HelpPointRepository interface {
-GetAllPoints(ctx context.Context) ([]domain.PuntoAyuda, error)
-CreateHelpingPoint(ctx context.Context, helpPoint domain.PuntoAyuda, userID string) (domain.PuntoAyuda, error)
-UpdateHelpingPoint(ctx context.Context, data map[string]interface{}) (domain.PuntoAyuda, error)
-DeleteHelpingPoint(ctx context.Context, id string) error
-FindByIDAndUserID(ctx context.Context, id string, userID string) error
-LinkPersonaToHelpPoint(ctx context.Context, helpPointID string, personaID string) error
+	GetAllPoints(ctx context.Context) ([]domain.PuntoAyuda, error)
+	CreateHelpingPoint(ctx context.Context, helpPoint domain.PuntoAyuda, userID string) (domain.PuntoAyuda, error)
+	UpdateHelpingPoint(ctx context.Context, data map[string]interface{}) (domain.PuntoAyuda, error)
+	DeleteHelpingPoint(ctx context.Context, id string) error
+	FindByIDAndUserID(ctx context.Context, id string, userID string) error
+	LinkPersonaToHelpPoint(ctx context.Context, helpPointID string, personaID string) error
 }
 
 // helpPointRepository implementa la interfaz HelpPointRepository.
@@ -50,7 +50,11 @@ func (h *helpPointRepository) CreateHelpingPoint(ctx context.Context, helpPoint 
 	defer cancel()
 	helpPoint.ID = bson.NewObjectID()
 	helpPoint.DateRegister = time.Now()
-	helpPoint.AuthorID, _ = bson.ObjectIDFromHex(userID)
+	userObjID, err := bson.ObjectIDFromHex(userID)
+	if err != nil {
+		return domain.PuntoAyuda{}, errors.New("ID de usuario inválido")
+	}
+	helpPoint.AuthorID = userObjID
 	if len(helpPoint.People) == 0 && (helpPoint.PeopleHelped.Name != "" || helpPoint.PeopleHelped.Gender != "" || helpPoint.PeopleHelped.Age != 0 || helpPoint.PeopleHelped.Rut != "") {
 		helpPoint.People = []domain.PersonaAyudada{helpPoint.PeopleHelped}
 	}
@@ -62,7 +66,7 @@ func (h *helpPointRepository) CreateHelpingPoint(ctx context.Context, helpPoint 
 	for _, personHelped := range helpPoint.People {
 		personHelped.DateRegister = time.Now()
 		personHelped.ID = bson.NewObjectID()
-		_, err := h.PeopleHelpedCollections.InsertOne(ctx, personHelped)
+		_, err = h.PeopleHelpedCollections.InsertOne(ctx, personHelped)
 		if err != nil {
 			return domain.PuntoAyuda{}, err
 		}
@@ -112,7 +116,7 @@ func (h *helpPointRepository) CreateHelpingPoint(ctx context.Context, helpPoint 
 	}
 	helpPoint.PersonaIDs = personaIDs
 
-	_, err := h.HelpPointCollection.InsertOne(ctx, helpPoint)
+	_, err = h.HelpPointCollection.InsertOne(ctx, helpPoint)
 	if err != nil {
 		return domain.PuntoAyuda{}, err
 	}
@@ -239,7 +243,3 @@ func (h *helpPointRepository) FindByIDAndUserID(ctx context.Context, id string, 
 	}
 	return nil
 }
-
-
-
-
