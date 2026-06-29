@@ -5,7 +5,7 @@
     "dockerfile": "Dockerfile"
   },
   "deploy": {
-    "startCommand": "./backend",
+    "startCommand": "/app/backend",
     "port": 8080
   }
 }
