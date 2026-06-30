@@ -21,5 +21,5 @@ RUN ls -la dist/ && test -f dist/index.html || (echo "ERROR: dist/index.html not
 FROM nginx:1.27-alpine
 COPY --from=build /app/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
+EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
