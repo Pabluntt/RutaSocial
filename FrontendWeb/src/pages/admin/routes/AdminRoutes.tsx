@@ -247,7 +247,7 @@ export default function AdminRoutes() {
                                                     </TableCell>
                                                     {computerDevice && (
                                                         <TableCell>
-                                                            <Typography variant="body2">{route.routeLeader.slice(-6)}</Typography>
+                                                            <Typography variant="body2">{route.routeLeaderName || route.routeLeader.slice(-6)}</Typography>
                                                         </TableCell>
                                                     )}
                                                     <TableCell align="center">

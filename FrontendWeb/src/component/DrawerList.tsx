@@ -115,6 +115,12 @@ export default function DrawerList({ onNavigate } : { onNavigate?: () => void } 
                     <Typography sx={{ whiteSpace: 'normal', textAlign: 'left' }}>Personas Ayudadas</Typography>
                 </div>
             </Button>
+            <Button data-tour-id="admin-routes" fullWidth onClick={onClickRutas} color='info' sx={btnSx}>
+                <div className="flex w-full justify-start px-2 gap-4 items-center min-w-0">
+                    <RouteIcon/>
+                    <Typography sx={{ whiteSpace: 'normal', textAlign: 'left' }}>Gestionar Rutas</Typography>
+                </div>
+            </Button>
             { role === Role.admin && (
                 <Button data-tour-id="admin-users" fullWidth onClick={onClickUsuarios} color='info' sx={btnSx}>
                     <div className="flex w-full justify-start px-2 gap-4 items-center min-w-0">

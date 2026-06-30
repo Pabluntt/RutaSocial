@@ -34,11 +34,12 @@ import ConfirmDialog from './Dialog/ConfirmDialog'
 import './Calendar.css'
 
 const isHexColor = (color: string | undefined): color is string => /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color ?? '')
-const ROUTE_STATUS_COLORS = {
+const ROUTE_STATUS_COLORS: Record<RouteStatus, string> = {
     [RouteStatus.Scheduled]: '#ef4444',
     [RouteStatus.Active]: '#2563eb',
     [RouteStatus.Completed]: '#22c55e',
-} satisfies Record<RouteStatus, string>
+    [RouteStatus.Deleted]: '#9ca3af',
+}
 
 export default function Calendar() {
 

@@ -16,7 +16,8 @@ import (
 // También define rutas para unirse a una ruta, finalizar una ruta y obtener la participación del usuario en una ruta.
 func SetupRouteRouter(r *gin.Engine) {
 	routeRepo := repository.NewRouteRepository(database.Client.Database(config.DBName).Collection("route"), database.Client.Database(config.DBName).Collection("helping_points"), database.Client.Database(config.DBName).Collection("personas"))
-	routeUseCase := usecase.NewRouteUseCase(routeRepo)
+	userRepo := repository.NewUserRepository(database.Client.Database(config.DBName).Collection("usuarios"))
+	routeUseCase := usecase.NewRouteUseCase(routeRepo, userRepo)
 	routeController := controller.NewRouteController(routeUseCase)
 
 	protected := r.Group("/route")
@@ -33,4 +34,5 @@ func SetupRouteRouter(r *gin.Engine) {
 	protected.GET("/participation/:id", routeController.GetMyParticipation)
 	protected.GET("/:id/report", routeController.ExportReport)
 	protected.GET("/user/:id", routeController.GetUserRoutes)
+	protected.GET("/institution/:id", routeController.GetRoutesByInstitution)
 }

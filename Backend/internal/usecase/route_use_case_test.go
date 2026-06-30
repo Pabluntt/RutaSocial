@@ -25,7 +25,8 @@ func TestFinishRoute_UserIsLeader_FinishesSuccessfully(t *testing.T) {
 	mockRepo.On("FinishRoute", mock.Anything, "route123", leaderID, false).
 		Return(nil)
 
-	uc := NewRouteUseCase(mockRepo)
+	mockUserRepo := new(MockUserRepository)
+	uc := NewRouteUseCase(mockRepo, mockUserRepo)
 	w := performRequestWithParams("PATCH", "/route/route123", ``, []gin.Param{{Key: "id", Value: "route123"}}, func(c *gin.Context) {
 		setJWTUser(c, leaderID, "voluntario")
 		uc.FinishRoute(c)
@@ -45,7 +46,8 @@ func TestFinishRoute_UserIsNotLeader_ReturnsForbidden(t *testing.T) {
 	mockRepo.On("FinishRoute", mock.Anything, "route123", otherUserID, false).
 		Return(assert.AnError)
 
-	uc := NewRouteUseCase(mockRepo)
+	mockUserRepo := new(MockUserRepository)
+	uc := NewRouteUseCase(mockRepo, mockUserRepo)
 	w := performRequestWithParams("PATCH", "/route/route123", ``, []gin.Param{{Key: "id", Value: "route123"}}, func(c *gin.Context) {
 		setJWTUser(c, otherUserID, "voluntario")
 		uc.FinishRoute(c)
@@ -60,7 +62,8 @@ func TestFinishRoute_RouteNotFound_ReturnsBadRequest(t *testing.T) {
 	mockRepo.On("FinishRoute", mock.Anything, "route_inexistente", "507f1f77bcf86cd799439011", false).
 		Return(assert.AnError)
 
-	uc := NewRouteUseCase(mockRepo)
+	mockUserRepo := new(MockUserRepository)
+	uc := NewRouteUseCase(mockRepo, mockUserRepo)
 	w := performRequestWithParams("PATCH", "/route/route_inexistente", ``, []gin.Param{{Key: "id", Value: "route_inexistente"}}, func(c *gin.Context) {
 		setJWTUser(c, "507f1f77bcf86cd799439011", "voluntario")
 		uc.FinishRoute(c)
@@ -73,7 +76,8 @@ func TestFinishRoute_RouteNotFound_ReturnsBadRequest(t *testing.T) {
 func TestFinishRoute_MissingAuthenticatedUser_ReturnsUnauthorized(t *testing.T) {
 	mockRepo := new(MockRouteRepository)
 
-	uc := NewRouteUseCase(mockRepo)
+	mockUserRepo := new(MockUserRepository)
+	uc := NewRouteUseCase(mockRepo, mockUserRepo)
 	w := performRequestWithParams("PATCH", "/route/route123", ``, []gin.Param{{Key: "id", Value: "route123"}}, func(c *gin.Context) {
 		uc.FinishRoute(c)
 	})

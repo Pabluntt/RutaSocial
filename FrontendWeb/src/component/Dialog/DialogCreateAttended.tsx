@@ -322,7 +322,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
             aria-labelledby='attended-titulo'
             keepMounted
         >
-            <DialogTitle sx={{ m: 0, p: 2.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <DialogTitle component="div" sx={{ m: 0, p: 2.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Chip 
                     label={isIdle ? 'Nuevo' : isPending ? 'Enviando...' : isSuccess ? 'Completado' : 'Error'} 
                     size="small"

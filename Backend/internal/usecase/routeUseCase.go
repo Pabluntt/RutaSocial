@@ -28,18 +28,50 @@ type RouteUseCase interface {
 	GetMyParticipation(c *gin.Context)
 	ExportReport(c *gin.Context)
 	GetUserRoutes(c *gin.Context)
+	GetRoutesByInstitution(c *gin.Context)
 }
 
 // routeUseCase implementa la interfaz RouteUseCase.
-// Contiene un repositorio de rutas para interactuar con la base de datos.
+// Contiene repositorios de rutas y usuarios para interactuar con la base de datos.
 type routeUseCase struct {
 	routeRepository repository.RouteRepository
+	userRepository  repository.UserRepository
 }
 
 // NewRouteUseCase crea una nueva instancia de routeUseCase.
-// Recibe un repositorio de rutas y retorna una instancia de RouteUseCase.
-func NewRouteUseCase(repo repository.RouteRepository) RouteUseCase {
-	return &routeUseCase{routeRepository: repo}
+// Recibe un repositorio de rutas y uno de usuarios, retorna una instancia de RouteUseCase.
+func NewRouteUseCase(routeRepo repository.RouteRepository, userRepo repository.UserRepository) RouteUseCase {
+	return &routeUseCase{routeRepository: routeRepo, userRepository: userRepo}
+}
+
+// enrichRoutesWithLeaderName consulta los nombres de los líderes de ruta y los asigna en batch.
+func (r routeUseCase) enrichRoutesWithLeaderName(ctx *gin.Context, routes []domain.Route) {
+	leaderIDs := make([]string, 0, len(routes))
+	seen := make(map[string]bool)
+	for i := range routes {
+		id := routes[i].RouteLeader.Hex()
+		if id == "000000000000000000000000" || seen[id] {
+			continue
+		}
+		seen[id] = true
+		leaderIDs = append(leaderIDs, id)
+	}
+	if len(leaderIDs) == 0 {
+		return
+	}
+	users, err := r.userRepository.GetUsersByIDs(ctx.Request.Context(), leaderIDs)
+	if err != nil {
+		return
+	}
+	nameByID := make(map[string]string, len(users))
+	for _, u := range users {
+		nameByID[u.ID.Hex()] = u.Name
+	}
+	for i := range routes {
+		if name, ok := nameByID[routes[i].RouteLeader.Hex()]; ok {
+			routes[i].RouteLeaderName = name
+		}
+	}
 }
 
 // FindAll maneja la solicitud para obtener todas las rutas.
@@ -51,6 +83,7 @@ func (r routeUseCase) FindAll(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener rutas"})
 		return
 	}
+	r.enrichRoutesWithLeaderName(c, routes)
 	if utils.HasPagination(c) {
 		paginated, meta := utils.PaginateSlice(c, routes)
 		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
@@ -98,6 +131,11 @@ func (r routeUseCase) CreateRoute(c *gin.Context) {
 	}
 	route.RouteLeader = userObjID
 	route.Team = []bson.ObjectID{userObjID}
+
+	user, err := r.userRepository.GetUserByID(c.Request.Context(), userID)
+	if err == nil {
+		route.InstitutionID = user.InstitutionID
+	}
 
 	err = r.routeRepository.CreateRoute(c.Request.Context(), &route)
 	if err != nil {
@@ -295,12 +333,36 @@ func (r routeUseCase) GetUserRoutes(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener rutas del usuario"})
 		return
 	}
+	r.enrichRoutesWithLeaderName(c, routes)
 	if utils.HasPagination(c) {
 		paginated, meta := utils.PaginateSlice(c, routes)
 		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
 		return
 	}
 
+	c.IndentedJSON(http.StatusOK, gin.H{"message": routes})
+}
+
+// GetRoutesByInstitution maneja la solicitud para obtener rutas filtradas por institución.
+func (r routeUseCase) GetRoutesByInstitution(c *gin.Context) {
+	institutionID := c.Param("id")
+	if institutionID == "" {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "ID de institución no proporcionado"})
+		return
+	}
+
+	routes, err := r.routeRepository.FindByInstitutionID(c.Request.Context(), institutionID)
+	if err != nil {
+		logUseCaseError(c, "route.get_by_institution", http.StatusBadRequest, err, "institution_id", institutionID)
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener rutas de la institución"})
+		return
+	}
+	r.enrichRoutesWithLeaderName(c, routes)
+	if utils.HasPagination(c) {
+		paginated, meta := utils.PaginateSlice(c, routes)
+		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
+		return
+	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": routes})
 }
 

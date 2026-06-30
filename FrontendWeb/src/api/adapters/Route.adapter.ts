@@ -7,11 +7,13 @@ export interface TRouteBackend {
     title : string 
     description : string 
     route_leader : string 
+    route_leader_name ?: string
     invite_code : string 
     team : string[]
     status : string 
     date_created : string 
     date_finished : string
+    institution_id ?: string
 }
 
 export type TCreateRoute = Pick<TRouteBackend, 
@@ -33,11 +35,13 @@ export function MapRouteFromBackend( data : Partial<TRouteBackend> ) : Route {
         title : data.title,
         description : data.description,
         routeLeader : data.route_leader,
+        routeLeaderName : data.route_leader_name,
         inviteCode : data.invite_code,
         team : data.team,
         status : data.status,
         dateCreated : (data.date_created === undefined ? undefined : new Date(data.date_created)),
-        dateFinished : (data.date_finished === undefined ? undefined : new Date(data.date_finished))
+        dateFinished : (data.date_finished === undefined ? undefined : new Date(data.date_finished)),
+        institutionID : data.institution_id
     }
     const requiredKeys: (keyof Route)[] = ['id', 'title', 'description', 'routeLeader', 'inviteCode', 'team', 'status', 'dateCreated']
     requiredKeys.forEach((key) => {

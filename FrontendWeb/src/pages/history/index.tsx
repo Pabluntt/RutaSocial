@@ -15,7 +15,7 @@ import Sidebar from "../../component/Sidebar";
 import { Route } from "../../api/models/Route";
 import { HelpPoint } from "../../api/models/HelpPoint";
 import { useProfile } from "../../api/hooks/UserHooks";
-import { useRoutes, useRoutesByUser } from "../../api/hooks/RouteHooks";
+import { useRoutes, useRoutesByUser, useRoutesByInstitution } from "../../api/hooks/RouteHooks";
 import { useHelpPoints } from "../../api/hooks/HelpPointHooks";
 import { RouteStatus } from "../../Enums/RouteStatus";
 
@@ -43,11 +43,14 @@ export default function RouteHistory() {
     const [ opFecha, setOPFecha ] = useState('Día')
 
     const [ onlyUser, setOnlyUser ] = useState(false)
+    const [ onlyInstitution, setOnlyInstitution ] = useState(false)
     const [ routes, setRoutes ] = useState<Route[]>([])
 
     const userID = useProfile().data?.id
+    const institutionID = useProfile().data?.institutionID
     const useQueryRouteAll = useRoutes()
     const useQueryRouteByUserID = useRoutesByUser(userID)
+    const useQueryRouteByInstitution = useRoutesByInstitution(institutionID, onlyInstitution)
     const useQueryHP= useHelpPoints()
 
     const [ countFetched, setCountFetched ] = useState(0)
@@ -78,19 +81,28 @@ export default function RouteHistory() {
     }, [useQueryHP.data])
 
     useEffect(() => {
-        if(onlyUser && userID) {
+        if (onlyInstitution && institutionID) {
+            useQueryRouteByInstitution.refetch()
+        } else if(onlyUser && userID) {
             useQueryRouteByUserID.refetch()
-        } else if(!onlyUser){
+        } else if(!onlyUser && !onlyInstitution){
             useQueryRouteAll.refetch()
         }
-    }, [onlyUser, userID])
+    }, [onlyUser, onlyInstitution, userID, institutionID])
 
     useEffect(() => {
-        const data = onlyUser ? useQueryRouteByUserID.data : useQueryRouteAll.data
+        let data: Route[] | undefined
+        if (onlyInstitution) {
+            data = useQueryRouteByInstitution.data
+        } else if (onlyUser) {
+            data = useQueryRouteByUserID.data
+        } else {
+            data = useQueryRouteAll.data
+        }
         if(data) {
             setRoutes(data.sort(compareSort))
-        }        
-    }, [onlyUser, useQueryRouteAll.data, useQueryRouteByUserID.data])
+        }
+    }, [onlyUser, onlyInstitution, useQueryRouteAll.data, useQueryRouteByUserID.data, useQueryRouteByInstitution.data])
 
 
     useEffect(() => {
@@ -137,6 +149,7 @@ export default function RouteHistory() {
                 <Paper variant="outlined" square className={"z-10 min-h-0 overflow-y-auto " + (computerDevice ? 'w-100 shadow-[4px_0_6px_-1px_rgba(0,0,0,0.1)]' : 'w-full flex-1')}>
                     <ListHistory 
                         stateOnlyUser={[onlyUser, setOnlyUser]}
+                        stateOnlyInstitution={[onlyInstitution, setOnlyInstitution]}
                         stateOPFecha={[opFecha, setOPFecha]}
                         stateLocation={[HPLocation, setHPLocation]} 
                         stateShowLocation={[showLocation, setShowLocation]} 
