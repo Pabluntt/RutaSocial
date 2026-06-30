@@ -181,6 +181,11 @@ func (r *routeController) GetMyParticipation(c *gin.Context) {
 	r.routeUseCase.GetMyParticipation(c)
 }
 
+// GetRoutesByInstitution maneja la solicitud para obtener rutas por institución.
+func (r *routeController) GetRoutesByInstitution(c *gin.Context) {
+	r.routeUseCase.GetRoutesByInstitution(c)
+}
+
 // GetUserRoutes maneja la solicitud para obtener todas las rutas de un usuario (admin).
 // @Summary Obtener rutas de un usuario
 // @Description Obtiene todas las rutas donde un usuario es líder o miembro del equipo. Requiere autenticación y rol de administrador.

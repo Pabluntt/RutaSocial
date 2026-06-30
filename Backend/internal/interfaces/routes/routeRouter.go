@@ -16,20 +16,22 @@ import (
 // También define rutas para unirse a una ruta, finalizar una ruta y obtener la participación del usuario en una ruta.
 func SetupRouteRouter(r *gin.Engine) {
 	routeRepo := repository.NewRouteRepository(database.Client.Database(config.DBName).Collection("route"), database.Client.Database(config.DBName).Collection("helping_points"), database.Client.Database(config.DBName).Collection("personas"))
-	routeUseCase := usecase.NewRouteUseCase(routeRepo)
+	userRepo := repository.NewUserRepository(database.Client.Database(config.DBName).Collection("usuarios"))
+	routeUseCase := usecase.NewRouteUseCase(routeRepo, userRepo)
 	routeController := controller.NewRouteController(routeUseCase)
 
 	protected := r.Group("/route")
 	protected.Use(middleware.AuthMiddleware())
 	protected.GET("", routeController.FindAll)
 	protected.GET("/:id", routeController.FindByID)
-	protected.POST("", routeController.CreateRoute)
+	protected.POST("", middleware.RoleMiddleware(domain.RoleAdmin), routeController.CreateRoute)
 	protected.PUT("/:id", middleware.RoleMiddleware(domain.RoleAdmin), routeController.UpdateRoute)
 	protected.DELETE("/:id", middleware.RoleMiddleware(domain.RoleAdmin), routeController.DeleteRoute)
-	protected.PATCH("/:id", routeController.FinishRoute)
+	protected.PATCH("/:id", middleware.RoleMiddleware(domain.RoleAdmin), routeController.FinishRoute)
 	protected.POST("/join/:code", routeController.JoinRoute)
 	protected.POST("/leave/:id", routeController.LeaveRoute)
 	protected.GET("/participation/:id", routeController.GetMyParticipation)
-	protected.GET("/:id/report", routeController.ExportReport)
+	protected.GET("/:id/report", middleware.RoleMiddleware(domain.RoleAdmin), routeController.ExportReport)
 	protected.GET("/user/:id", routeController.GetUserRoutes)
+	protected.GET("/institution/:id", routeController.GetRoutesByInstitution)
 }

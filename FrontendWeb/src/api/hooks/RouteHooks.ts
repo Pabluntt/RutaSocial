@@ -42,6 +42,14 @@ export function useRoutesByUser(userId ?: string, enabled ?: boolean) {
     })
 }
 
+export function useRoutesByInstitution(institutionId?: string, enabled?: boolean) {
+    return useQuery({
+        queryKey: ['routesByInstitution', institutionId],
+        queryFn: () => RouteService.FindByInstitutionId(institutionId!),
+        enabled: !!institutionId && enabled !== false,
+    })
+}
+
 export function useAdminUserRoutes(userId: string, enabled?: boolean) {
     return useQuery({
         queryKey: ['adminUserRoutes', userId],

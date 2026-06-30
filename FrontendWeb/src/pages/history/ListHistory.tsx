@@ -7,6 +7,7 @@ import { HelpPoint } from "../../api/models/HelpPoint";
 
 interface ListHistoryProps {
     stateOnlyUser : [ boolean, React.Dispatch<React.SetStateAction<boolean>>]
+    stateOnlyInstitution : [ boolean, React.Dispatch<React.SetStateAction<boolean>>]
     stateRoutes : [ Map<string, Route[]>, React.Dispatch<React.SetStateAction<Map<string, Route[]>>> ]
     stateHelpPoints : [ HelpPoint[], React.Dispatch<React.SetStateAction<HelpPoint[]>> ] 
     stateShowLocation : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
@@ -14,11 +15,12 @@ interface ListHistoryProps {
     stateOPFecha : [ string, React.Dispatch<React.SetStateAction<string>> ]
 }
 
-export default function ListHistory({ stateRoutes, stateHelpPoints, stateShowLocation, stateLocation, stateOPFecha, stateOnlyUser } : ListHistoryProps) {
+export default function ListHistory({ stateRoutes, stateHelpPoints, stateShowLocation, stateLocation, stateOPFecha, stateOnlyUser, stateOnlyInstitution } : ListHistoryProps) {
 
     const [ routes,  ] = stateRoutes
     const [ opFecha, setOPFecha ] = stateOPFecha
     const [ onlyUser, setOnlyUser ] = stateOnlyUser
+    const [ onlyInstitution, setOnlyInstitution ] = stateOnlyInstitution
     const theme = useTheme()
     const compact = !useMediaQuery(theme.breakpoints.up('sm'))
 
@@ -49,9 +51,15 @@ export default function ListHistory({ stateRoutes, stateHelpPoints, stateShowLoc
                                 />
                                 <FormControlLabel                                
                                     value={onlyUser}
-                                    control={<Checkbox onChange={(e : React.ChangeEvent<HTMLInputElement>) => {setOnlyUser(e.target.checked)}} size="small" />}
+                                    control={<Checkbox onChange={(e : React.ChangeEvent<HTMLInputElement>) => { setOnlyUser(e.target.checked); if (e.target.checked) setOnlyInstitution(false) }} size="small" />}
                                     label='Ver solo mis rutas'
                                     labelPlacement="end" 
+                                />
+                                <FormControlLabel
+                                    value={onlyInstitution}
+                                    control={<Checkbox onChange={(e : React.ChangeEvent<HTMLInputElement>) => { setOnlyInstitution(e.target.checked); if (e.target.checked) setOnlyUser(false) }} size="small" />}
+                                    label='Ver solo rutas de mi institución'
+                                    labelPlacement="end"
                                 />
                             </div>
                         </FormControl>

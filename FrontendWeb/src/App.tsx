@@ -19,7 +19,7 @@ import RouteHistory from './pages/history'
 import PeopleHelped from './pages/people-helped'
 import PersonaProfile from './pages/people-helped/PersonaProfile'
 import { HelpPointUpdateProvider } from './context/HelpPointUpdateContext'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { RiskUpdateProvider } from './context/RiskUpdateContext'
 import NotFound from './component/NotFound'
 import { EventCalendarUpdateProvider } from './context/EventCalendarUpdateContext'
@@ -28,11 +28,24 @@ import TourOverlay from './component/TourOverlay'
 import ErrorBoundary from './component/ErrorBoundary'
 import HydrationGate from './component/HydrationGate'
 import { SnackbarProvider } from './context/SnackbarContext'
+import { Role } from './Enums/Role'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const accessToken = useSessionStore((state) => state.accessToken)
   if (!accessToken) {
     return <Navigate to={`${import.meta.env.VITE_BASE_URL}/login`} replace />
+  }
+  return children
+}
+
+function AdminRoute({ children }: { children: ReactNode }) {
+  const accessToken = useSessionStore((state) => state.accessToken)
+  const { role } = useAuth()
+  if (!accessToken) {
+    return <Navigate to={`${import.meta.env.VITE_BASE_URL}/login`} replace />
+  }
+  if (role !== Role.admin) {
+    return <Navigate to={`${import.meta.env.VITE_BASE_URL}/`} replace />
   }
   return children
 }
@@ -113,7 +126,7 @@ function App() {
                     />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/admin/usuarios`} element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/admin/usuarios/:id`} element={<ProtectedRoute><UserDetail /></ProtectedRoute>} />
-                    <Route path={`${import.meta.env.VITE_BASE_URL}/admin/rutas`} element={<ProtectedRoute><AdminRoutes /></ProtectedRoute>} />
+                    <Route path={`${import.meta.env.VITE_BASE_URL}/admin/rutas`} element={<AdminRoute><AdminRoutes /></AdminRoute>} />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/historial`} element={
                       <ProtectedRoute>
                         <HelpPointUpdateProvider>

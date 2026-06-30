@@ -25,6 +25,7 @@ type RouteRepository interface {
 	GetMyParticipation(ctx context.Context, userID string) (map[string]int, error)
 	GetHelpPointsByRouteID(ctx context.Context, routeID string) ([]domain.PuntoAyuda, error)
 	GetRoutesByUserID(ctx context.Context, userID string) ([]domain.Route, error)
+	FindByInstitutionID(ctx context.Context, institutionID string) ([]domain.Route, error)
 }
 
 // routeRepository implementa la interfaz RouteRepository.
@@ -317,6 +318,30 @@ func (r *routeRepository) GetRoutesByUserID(ctx context.Context, userID string) 
 	var routes []domain.Route
 	if err := cursor.All(ctx, &routes); err != nil {
 		logRepositoryError(ctx, "route", "get_by_user.cursor_all", err, "collection", "routes", "user_id", userID)
+		return nil, err
+	}
+	return routes, nil
+}
+
+// FindByInstitutionID obtiene todas las rutas asociadas a una institución.
+func (r *routeRepository) FindByInstitutionID(ctx context.Context, institutionID string) ([]domain.Route, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	objID, err := bson.ObjectIDFromHex(institutionID)
+	if err != nil {
+		return nil, errors.New("ID de institución inválido")
+	}
+
+	cursor, err := r.RouteCollection.Find(ctx, bson.M{"institution_id": objID})
+	if err != nil {
+		logRepositoryError(ctx, "route", "find_by_institution.find", err, "collection", "routes", "institution_id", institutionID)
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var routes []domain.Route
+	if err := cursor.All(ctx, &routes); err != nil {
+		logRepositoryError(ctx, "route", "find_by_institution.cursor_all", err, "collection", "routes", "institution_id", institutionID)
 		return nil, err
 	}
 	return routes, nil
