@@ -220,7 +220,7 @@ export default function Calendar() {
                     height="auto" 
                     contentHeight="auto"
                     selectMirror={true}
-                    dayMaxEvents={(computerDevice ? true : 2)}
+                    dayMaxEvents={(computerDevice ? true : 3)}
                     unselectAuto
                     locale={esLocale}
                     events={data.map((event) => ({
@@ -238,16 +238,14 @@ export default function Calendar() {
                     dayHeaderFormat={computerDevice ? { weekday: 'long' } : { weekday: 'short' }}
                     titleFormat={computerDevice ? { year: 'numeric', month: 'long' } : { year: 'numeric', month: 'short' }}
                     eventContent={(arg) => (
-                        <span className="flex items-center gap-1.5 truncate w-full px-0.5">
+                        <span className="calendar-event-content flex items-center gap-1.5 truncate w-full px-0.5">
                             <span
                                 className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
                                 style={{ backgroundColor: isHexColor(arg.event.backgroundColor) ? arg.event.backgroundColor : '#3b82f6' }}
                             />
-                            {computerDevice && (
-                                <span className="truncate text-gray-700 font-medium leading-tight">
-                                    {arg.event.title}
-                                </span>
-                            )}
+                            <span className="calendar-event-title truncate text-gray-700 font-medium leading-tight">
+                                {arg.event.title}
+                            </span>
                         </span>
                     )}
                     moreLinkContent={(arg) => (

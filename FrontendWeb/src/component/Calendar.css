@@ -85,6 +85,47 @@
   color: #009ba5;
 }
 
+.fc .fc-popover {
+  max-width: calc(100vw - 32px);
+  border: 1px solid #d1d5db !important;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+  z-index: 30;
+}
+
+.fc .fc-popover-header {
+  align-items: center;
+  background: #f8fafc;
+  color: #111827;
+  display: flex;
+  font-size: 0.82rem;
+  font-weight: 600;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 8px 10px;
+}
+
+.fc .fc-popover-body {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.fc .fc-popover .fc-daygrid-event {
+  border-radius: 8px !important;
+  margin-bottom: 4px !important;
+  padding: 6px 8px !important;
+}
+
+.fc .fc-popover .calendar-event-content {
+  max-width: 100%;
+}
+
+.fc .fc-popover .calendar-event-title {
+  display: inline;
+}
+
 .fc .fc-toolbar-title {
   font-size: 1.1rem !important;
   font-weight: 500;
@@ -118,4 +159,48 @@
   background: #009ba5 !important;
   color: #fff !important;
   border-color: #009ba5 !important;
+}
+
+@media (max-width: 599px) {
+  .fc .fc-daygrid-day-frame {
+    min-height: 88px;
+  }
+
+  .fc .fc-daygrid-day-events {
+    margin-top: 2px;
+  }
+
+  .fc .fc-daygrid-day-frame .calendar-event-title {
+    display: none;
+  }
+
+  .fc .fc-daygrid-day-frame .calendar-event-content {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .fc .fc-daygrid-event {
+    display: inline-flex;
+    width: auto;
+    padding: 2px !important;
+  }
+
+  .fc .fc-daygrid-event-harness {
+    display: inline-block;
+    margin: 0 1px 1px 0;
+  }
+
+  .fc .fc-more-link {
+    display: inline-block;
+    font-size: 0.68rem;
+    line-height: 1.1;
+    padding: 1px 2px;
+    vertical-align: top;
+  }
+
+  .fc .fc-popover {
+    left: 16px !important;
+    right: 16px !important;
+    width: auto !important;
+  }
 }
