@@ -19,6 +19,8 @@ export default function ListHistory({ stateRoutes, stateHelpPoints, stateShowLoc
     const [ routes,  ] = stateRoutes
     const [ opFecha, setOPFecha ] = stateOPFecha
     const [ onlyUser, setOnlyUser ] = stateOnlyUser
+    const theme = useTheme()
+    const compact = !useMediaQuery(theme.breakpoints.up('sm'))
 
     return (
         <List 
@@ -73,6 +75,7 @@ export default function ListHistory({ stateRoutes, stateHelpPoints, stateShowLoc
                         stateHelpPoints={stateHelpPoints} 
                         routes={routes} 
                         date={date} 
+                        compact={compact}
                         key={date} 
                         defaultOpen={index == 0} 
                         sx={{

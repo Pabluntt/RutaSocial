@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { ListItemButton, ListItemText, Collapse, List, Divider, ListItemButtonProps } from "@mui/material"
+import { ListItemButton, ListItemText, Collapse, List, Divider, ListItemButtonProps, Chip } from "@mui/material"
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ListRouteItem from "./ListRouteItem";
@@ -16,9 +16,33 @@ type ListRouteItemProps = {
     stateShowLocation : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateLocation : [ number[], React.Dispatch<React.SetStateAction<number[]>> ] 
     onlyUser : boolean
+    compact ?: boolean
 } & ListItemButtonProps
 
-export default function ListDateItem({ date, defaultOpen = false, routes, stateHelpPoints, stateLocation, stateShowLocation, onlyUser, onClick, ...props } : ListRouteItemProps) {
+const monthMap: Record<string, string> = {
+    enero: 'ene.',
+    febrero: 'feb.',
+    marzo: 'mar.',
+    abril: 'abr.',
+    mayo: 'may.',
+    junio: 'jun.',
+    julio: 'jul.',
+    agosto: 'ago.',
+    septiembre: 'sept.',
+    octubre: 'oct.',
+    noviembre: 'nov.',
+    diciembre: 'dic.',
+}
+
+const formatCompactDate = (date: string) => {
+    const match = date.match(/^(\d{1,2}) de ([a-záéíóúñ]+) de (\d{4})$/i)
+    if (!match) return date
+
+    const [, day, month, year] = match
+    return `${day.padStart(2, '0')} ${monthMap[month.toLowerCase()] ?? month.slice(0, 3)} ${year}`
+}
+
+export default function ListDateItem({ date, defaultOpen = false, routes, stateHelpPoints, stateLocation, stateShowLocation, onlyUser, compact = false, onClick, ...props } : ListRouteItemProps) {
     
     const [ open, setOpen ] = useState(defaultOpen)
     const [ helpPoints , setHelpPoints ] = stateHelpPoints
@@ -46,8 +70,15 @@ export default function ListDateItem({ date, defaultOpen = false, routes, stateH
 
     return ( 
         <>
-            <ListItemButton onClick={handleClick} {...props} selected={open}>
-                <ListItemText primary={date} />
+            <ListItemButton onClick={handleClick} {...props} selected={open} sx={[{ pr: 1, gap: 1 }, ...(Array.isArray(props.sx) ? props.sx : props.sx ? [props.sx] : [])]}>
+                <ListItemText
+                    primary={compact ? formatCompactDate(date) : date}
+                    secondary={compact ? `${routes.length} ${routes.length === 1 ? 'ruta' : 'rutas'}` : undefined}
+                    primaryTypographyProps={{ noWrap: true, fontWeight: 600, fontSize: compact ? 14 : undefined }}
+                    secondaryTypographyProps={{ fontSize: 12 }}
+                    title={date}
+                />
+                {!compact ? <Chip label={routes.length} size="small" variant="outlined" /> : null}
                 {open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </ListItemButton>
             <Collapse in={open} timeout="auto" unmountOnExit>
@@ -60,6 +91,8 @@ export default function ListDateItem({ date, defaultOpen = false, routes, stateH
                             stateHelpPoints={stateHelpPoints} 
                             route={route} 
                             key={i}
+                            defaultOpen={!compact && i === 0}
+                            compact={compact}
                             
 
                         />

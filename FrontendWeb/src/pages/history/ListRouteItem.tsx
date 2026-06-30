@@ -19,14 +19,16 @@ type ListRouteItemProps = {
     stateShowLocation : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateLocation : [ number[], React.Dispatch<React.SetStateAction<number[]>> ] 
     openRoot : boolean
+    defaultOpen ?: boolean
+    compact ?: boolean
 } & ListItemButtonProps
 
-export default function ListRouteItem({ route, stateHelpPoints, stateShowLocation, stateLocation, openRoot, onClick, ...props} : ListRouteItemProps) {
+export default function ListRouteItem({ route, stateHelpPoints, stateShowLocation, stateLocation, openRoot, defaultOpen = false, compact = false, onClick, ...props} : ListRouteItemProps) {
     
 
     const userID = useProfile().data?.id
     const { role } = useAuth()
-    const [ open, setOpen ] = useState(openRoot)
+    const [ open, setOpen ] = useState(defaultOpen)
     const [ helpPoints, setHelpPoints ] = stateHelpPoints
     const [ hpRoutes, setHPRoutes ] = useState<HelpPoint[]>([])
     const [ _, setHelpPointUpdate ] = useHelpPointUpdateDialog()
@@ -96,8 +98,11 @@ export default function ListRouteItem({ route, stateHelpPoints, stateShowLocatio
                 }
                 disablePadding
             >
-                <ListItemButton {...props} onClick={handleClick} sx={{ pl: 4 }} selected={open}>
-                    <ListItemText primary={route.title} />
+                <ListItemButton {...props} onClick={handleClick} sx={{ pl: compact ? 2 : 4, pr: 6, minWidth: 0 }} selected={open}>
+                    <ListItemText
+                        primary={route.title}
+                        primaryTypographyProps={{ noWrap: true, fontSize: compact ? 14 : undefined }}
+                    />
                     {open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                 </ListItemButton>
             </ListItem>
@@ -126,7 +131,7 @@ export default function ListRouteItem({ route, stateHelpPoints, stateShowLocatio
                                 <ListItemButton
                                     
                                     selected={selectedIndex === index}
-                                    sx={{ pl: 8 }} 
+                                    sx={{ pl: compact ? 4 : 8, pr: 6, minWidth: 0 }}
                                     onClick={(e) => {
                                         if(selectedIndex !== index) {
                                             setLocation(hp.coords)
@@ -135,7 +140,10 @@ export default function ListRouteItem({ route, stateHelpPoints, stateShowLocatio
                                         handleClickSelected(e, index)
                                     }}
                                     >
-                                    <ListItemText primary={`Punto de Ayuda N°${index+1}`} />
+                                    <ListItemText
+                                        primary={`Punto de Ayuda N°${index+1}`}
+                                        primaryTypographyProps={{ noWrap: true, fontSize: compact ? 13 : undefined }}
+                                    />
                                 </ListItemButton>
                             </ListItem> 
                         ))
