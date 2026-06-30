@@ -34,6 +34,8 @@ export default function UserDetail() {
     const [editing, setEditing] = useState(false)
     const [formData, setFormData] = useState({ name: '', phone: '', email: '', role: '' })
     const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+    const uniqueRoutes = routes ? Array.from(new Map(routes.map((route) => [route.id, route])).values()) : []
+    const uniqueCalendarEvents = calendarEvents ? Array.from(new Map(calendarEvents.map((event) => [event.id, event])).values()) : []
 
     useEffect(() => {
         if (user) {
@@ -194,7 +196,7 @@ export default function UserDetail() {
                     <Divider sx={{ mb: 2 }} />
                     {routesLoading ? (
                         <div className="flex justify-center p-4"><CircularProgress size={30} /></div>
-                    ) : !routes || routes.length === 0 ? (
+                    ) : uniqueRoutes.length === 0 ? (
                         <Typography color="text.secondary">Este usuario no tiene rutas asociadas.</Typography>
                     ) : (
                         <TableContainer>
@@ -208,7 +210,7 @@ export default function UserDetail() {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {routes.map((route) => (
+                                    {uniqueRoutes.map((route) => (
                                         <TableRow key={route.id} hover>
                                             <TableCell>{route.title}</TableCell>
                                             <TableCell>
@@ -240,7 +242,7 @@ export default function UserDetail() {
                     <Divider sx={{ mb: 2 }} />
                     {eventsLoading ? (
                         <div className="flex justify-center p-4"><CircularProgress size={30} /></div>
-                    ) : !calendarEvents || calendarEvents.length === 0 ? (
+                    ) : uniqueCalendarEvents.length === 0 ? (
                         <Typography color="text.secondary">Este usuario no tiene eventos agendados.</Typography>
                     ) : (
                         <TableContainer>
@@ -253,7 +255,7 @@ export default function UserDetail() {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {calendarEvents.map((event) => (
+                                    {uniqueCalendarEvents.map((event) => (
                                         <TableRow key={event.id} hover>
                                             <TableCell>{event.title}</TableCell>
                                             <TableCell>{format(new Date(event.dateStart), 'dd/MM/yyyy', { locale: es })}</TableCell>

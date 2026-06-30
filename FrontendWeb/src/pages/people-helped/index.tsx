@@ -54,8 +54,8 @@ export default function PeopleHelped() {
                 rut: p.rut,
                 edad: p.edad,
                 genero: p.genero,
-                antecedentesCount: p.antecedentes.length,
-                infoMedicaCount: p.infoMedica.length,
+                antecedentesCount: p.antecedentesCount,
+                infoMedicaCount: p.infoMedicaCount,
             } as PersonaEntry))
     }, [personas, search])
 

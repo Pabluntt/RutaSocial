@@ -17,9 +17,11 @@ import (
 // Contiene métodos para obtener un usuario por ID, obtener el perfil del usuario, actualizar la información del usuario,
 type UserUseCase interface {
 	GetUserByID(c *gin.Context)
+	GetUserByIDAdmin(c *gin.Context)
 	GetUserProfile(c *gin.Context)
 	UpdateUserInfo(c *gin.Context)
 	GetAllUsers(c *gin.Context)
+	GetAllUsersAdmin(c *gin.Context)
 	GetUsersBatch(c *gin.Context)
 	GetPublicInfoByID(c *gin.Context)
 	CreateUserByAdmin(c *gin.Context)
@@ -51,6 +53,17 @@ func (u userUseCase) GetUserByID(c *gin.Context) {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"error": "Usuario no encontrado"})
 		return
 	}
+	c.IndentedJSON(http.StatusOK, gin.H{"message": dto.MapUserToPublicResponse(user)})
+}
+
+func (u userUseCase) GetUserByIDAdmin(c *gin.Context) {
+	id := c.Param("id")
+	user, err := u.userRepository.GetUserByID(c.Request.Context(), id)
+	if err != nil {
+		logUseCaseWarn(c, "user.admin_get_by_id", http.StatusNotFound, err, "target_user_id", id)
+		c.IndentedJSON(http.StatusNotFound, gin.H{"error": "Usuario no encontrado"})
+		return
+	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": dto.MapUserToResponse(user)})
 }
 
@@ -63,7 +76,7 @@ func (u userUseCase) GetPublicInfoByID(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Usuario no encontrado"})
 		return
 	}
-	c.IndentedJSON(http.StatusOK, gin.H{"message": result})
+	c.IndentedJSON(http.StatusOK, gin.H{"message": gin.H{"name": result["name"], "institutionID": result["institutionID"]}})
 }
 
 // GetUserProfile maneja la solicitud para obtener el perfil del usuario autenticado.
@@ -149,6 +162,21 @@ func (u userUseCase) GetAllUsers(c *gin.Context) {
 	users, err := u.userRepository.GetAllUsers(c.Request.Context())
 	if err != nil {
 		logUseCaseError(c, "user.get_all", http.StatusBadRequest, err)
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener usuarios"})
+		return
+	}
+	if utils.HasPagination(c) {
+		paginated, meta := utils.PaginateSlice(c, dto.MapUsersToPublicResponse(users))
+		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, gin.H{"message": dto.MapUsersToPublicResponse(users)})
+}
+
+func (u userUseCase) GetAllUsersAdmin(c *gin.Context) {
+	users, err := u.userRepository.GetAllUsers(c.Request.Context())
+	if err != nil {
+		logUseCaseError(c, "user.admin_get_all", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener usuarios"})
 		return
 	}

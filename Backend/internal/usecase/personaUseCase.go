@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/SebaVCH/hdcProject/internal/domain"
+	"github.com/SebaVCH/hdcProject/internal/dto"
 	"github.com/SebaVCH/hdcProject/internal/repository"
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"github.com/gin-gonic/gin"
@@ -37,12 +38,13 @@ func (uc *personaUseCase) GetAll(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener personas"})
 		return
 	}
+	response := dto.MapPersonasToSummaryResponse(personas)
 	if utils.HasPagination(c) {
-		paginated, meta := utils.PaginateSlice(c, personas)
+		paginated, meta := utils.PaginateSlice(c, response)
 		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
 		return
 	}
-	c.IndentedJSON(http.StatusOK, gin.H{"message": personas})
+	c.IndentedJSON(http.StatusOK, gin.H{"message": response})
 }
 
 func (uc *personaUseCase) GetByID(c *gin.Context) {
@@ -74,12 +76,13 @@ func (uc *personaUseCase) Search(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al buscar personas"})
 		return
 	}
+	response := dto.MapPersonasToSummaryResponse(personas)
 	if utils.HasPagination(c) {
-		paginated, meta := utils.PaginateSlice(c, personas)
+		paginated, meta := utils.PaginateSlice(c, response)
 		c.IndentedJSON(http.StatusOK, gin.H{"message": paginated, "pagination": meta})
 		return
 	}
-	c.IndentedJSON(http.StatusOK, gin.H{"message": personas})
+	c.IndentedJSON(http.StatusOK, gin.H{"message": response})
 }
 
 func (uc *personaUseCase) Create(c *gin.Context) {

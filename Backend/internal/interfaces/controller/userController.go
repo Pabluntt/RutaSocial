@@ -37,6 +37,10 @@ func (u *userController) GetAllUsers(c *gin.Context) {
 	u.userUseCase.GetAllUsers(c)
 }
 
+func (u *userController) GetAllUsersAdmin(c *gin.Context) {
+	u.userUseCase.GetAllUsersAdmin(c)
+}
+
 func (u *userController) GetUsersBatch(c *gin.Context) {
 	u.userUseCase.GetUsersBatch(c)
 }
@@ -103,6 +107,10 @@ func (u *userController) GetUserProfile(c *gin.Context) {
 // @Router /user/{id} [get]
 func (u *userController) GetUserByID(c *gin.Context) {
 	u.userUseCase.GetUserByID(c)
+}
+
+func (u *userController) GetUserByIDAdmin(c *gin.Context) {
+	u.userUseCase.GetUserByIDAdmin(c)
 }
 
 // GetPublicInfoByID maneja la solicitud para obtener información pública de un usuario por su ID.

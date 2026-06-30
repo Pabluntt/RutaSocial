@@ -25,7 +25,6 @@ type PublicUserResponse struct {
 	ID            string `json:"_id"`
 	Name          string `json:"name"`
 	InstitutionID string `json:"institutionID"`
-	Phone         string `json:"phone"`
 }
 
 func MapUserToResponse(u domain.Usuario) UserResponse {
@@ -57,7 +56,6 @@ func MapUserToPublicResponse(u domain.Usuario) PublicUserResponse {
 		ID:            u.ID.Hex(),
 		Name:          u.Name,
 		InstitutionID: u.InstitutionID.Hex(),
-		Phone:         u.Phone,
 	}
 }
 

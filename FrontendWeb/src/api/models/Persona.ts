@@ -12,6 +12,8 @@ export interface Persona {
     genero: string
     antecedentes: AntecedenteEntry[]
     infoMedica: AntecedenteEntry[]
+    antecedentesCount: number
+    infoMedicaCount: number
     fechaCreacion: Date
     fechaActualizacion: Date
 }
