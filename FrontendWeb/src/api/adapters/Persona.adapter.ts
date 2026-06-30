@@ -14,6 +14,8 @@ export interface TPersonaBackend {
     genero: string
     antecedentes?: TAntecedenteEntryBackend[]
     info_medica?: TAntecedenteEntryBackend[]
+    antecedentes_count?: number
+    info_medica_count?: number
     fecha_creacion: string
     fecha_actualizacion: string
 }
@@ -50,6 +52,8 @@ export function MapPersonaFromBackend(data: TPersonaBackend): Persona {
         genero: data.genero,
         antecedentes,
         infoMedica,
+        antecedentesCount: data.antecedentes_count ?? antecedentes.length,
+        infoMedicaCount: data.info_medica_count ?? infoMedica.length,
         fechaCreacion: new Date(data.fecha_creacion),
         fechaActualizacion: new Date(data.fecha_actualizacion),
     }

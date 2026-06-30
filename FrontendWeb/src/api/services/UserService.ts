@@ -9,7 +9,7 @@ export interface TParticipationRespone {
     total_helpingpoints : number
 }
 
-export interface TPublicUserInfo { name: string; institutionID: string; phone: string }
+export interface TPublicUserInfo { name: string; institutionID: string; phone?: string }
 
 
 export class UserService {
@@ -40,7 +40,7 @@ export class UserService {
     }
 
     static async FindAllUsers() : Promise<IUser[]> {
-        const { data } = await axiosInstance.get(`/user/`)
+        const { data } = await axiosInstance.get(`/user/admin`)
         return (data?.message as TUserBackend[]).map((user, _) => (
             MapUserFromBackend(user)
         ))
@@ -90,7 +90,7 @@ export class UserService {
     }
 
     static async FindUserById(id : string) : Promise<IUser> {
-        const { data } = await axiosInstance.get(`/user/${id}`)
+        const { data } = await axiosInstance.get(`/user/admin/${id}`)
         return MapUserFromBackend(data?.message as TUserBackend)
     }
 

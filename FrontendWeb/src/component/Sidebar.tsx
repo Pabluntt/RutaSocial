@@ -76,11 +76,6 @@ export default function Sidebar() {
                 <Tooltip title="Mapa"><IconButton data-tour-id="map" onClick={onClickSchedule} sx={{ ...hoverStyles }}><MapIcon htmlColor="#374151" fontSize="large"/></IconButton></Tooltip>
                 <Tooltip title="Enviar aviso"><IconButton data-tour-id="send-notice" onClick={handleClickOpen} sx={{ ...hoverStyles }}><CampaignIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
                 <Tooltip title="Personas Ayudadas"><IconButton data-tour-id="people-helped" onClick={onClickPeopleHelped} sx={{ ...hoverStyles }}><GroupAddIcon htmlColor="#374151" fontSize="large" /></IconButton></Tooltip>
-                <Tooltip title="Gestionar Rutas">
-                    <IconButton data-tour-id="admin-routes" onClick={onClickRoutes}  sx={{ ...hoverStyles }}>
-                        <RouteIcon htmlColor='#374151' fontSize='large'/>
-                    </IconButton>
-                </Tooltip>
                 { role === Role.admin  &&
                     <Tooltip title="Gestionar Usuarios">
                         <IconButton data-tour-id="admin-users" onClick={onClickUsers}  sx={{ ...hoverStyles }}>
@@ -88,6 +83,11 @@ export default function Sidebar() {
                         </IconButton>
                     </Tooltip>
                 }
+                <Tooltip title="Gestionar Rutas">
+                    <IconButton data-tour-id="admin-routes" onClick={onClickRoutes}  sx={{ ...hoverStyles }}>
+                        <RouteIcon htmlColor='#374151' fontSize='large'/>
+                    </IconButton>
+                </Tooltip>
             </div>
             <div className="flex flex-col grow justify-end items-center py-4 gap-3">
                 <Tooltip title="Cerrar sesión"><IconButton data-tour-id="logout" onClick={onClickCerrarSesion}><LogoutIcon color="error" fontSize="large" /></IconButton></Tooltip>

@@ -9,6 +9,7 @@ import { useInstitution } from "../api/hooks/InstitutionHooks";
 import { Institution } from "../api/models/Institution";
 import { useDeleteUser } from "../api/hooks/UserHooks";
 import { useNavigate } from "react-router-dom";
+import { UserService } from "../api/services/UserService";
 
 type SortableUserKeys = keyof Omit<IUser, 'listRoutes' | 'dateRegister' | 'completedRoutes'>;
 
@@ -118,9 +119,10 @@ function EnhancedTableHead(props: EnhancedTableProps) {
 interface EnhancedTableToolbarProps {
   numSelected: number
   onDeleteUsers : () => void
+  isAdmin: boolean
 }
 function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
-  const { numSelected, onDeleteUsers } = props;
+  const { numSelected, onDeleteUsers, isAdmin } = props;
 
   return (
     <Toolbar
@@ -157,16 +159,12 @@ function EnhancedTableToolbar(props: EnhancedTableToolbarProps) {
           <Divider /> 
         </div>
       )}
-      {numSelected > 0 ? (
-        <>
-        {/*
-          <Tooltip title="Delete">
+      {numSelected > 0 && isAdmin ? (
+          <Tooltip title="Eliminar seleccionados">
             <IconButton onClick={onDeleteUsers}>
-              <DeleteIcon />
+              <DeleteIcon color="error" />
             </IconButton>
           </Tooltip>
-        */}
-        </>
       ) : (
         <>
         </>
@@ -198,19 +196,19 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
 
   const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
-      const newSelected = users.map((n) => (n.email));
+      const newSelected = users.map((n) => (n.id));
       setSelected(newSelected);
       return;
     }
     setSelected([]);
   };
 
-  const handleClick = (event: React.MouseEvent<unknown>, email: string) => {
-    const selectedIndex = selected.indexOf(email);
+  const handleClick = (event: React.MouseEvent<unknown>, id: string) => {
+    const selectedIndex = selected.indexOf(id);
     let newSelected: readonly string[] = [];
 
     if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, email);
+      newSelected = newSelected.concat(selected, id);
     } else if (selectedIndex === 0) {
       newSelected = newSelected.concat(selected.slice(1));
     } else if (selectedIndex === selected.length - 1) {
@@ -233,9 +231,32 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
     [order, orderBy, users, prefixSearch],
   );
 
-  const onDeleteUsers = () => {
-    setUsers(users.filter((user, _) => (!selected.includes(user.email))))
+  const onDeleteUsers = async () => {
+    if (!isAdmin || selected.length === 0) return
+
+    const usersToDelete = users.filter((user) => selected.includes(user.id))
+    const label = usersToDelete.length === 1 ? usersToDelete[0].name : `${usersToDelete.length} usuarios seleccionados`
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar ${label}?`)) return
+
+    const results = await Promise.allSettled(usersToDelete.map((user) => UserService.DeleteUser(user.id)))
+    const deletedIds = usersToDelete
+      .filter((_, index) => results[index].status === 'fulfilled')
+      .map((user) => user.id)
+
+    if (deletedIds.length > 0) {
+      setUsers(users.filter((user) => !deletedIds.includes(user.id)))
+    }
     setSelected([])
+
+    if (deletedIds.length === usersToDelete.length) {
+      setAlertMessage(deletedIds.length === 1 ? 'Usuario eliminado exitosamente' : 'Usuarios eliminados exitosamente')
+      setAlertSeverity('success')
+    } else {
+      setAlertMessage(deletedIds.length === 0 ? 'No se pudo eliminar ningún usuario' : 'Algunos usuarios no pudieron eliminarse')
+      setAlertSeverity('error')
+    }
+    setShowAlert(true)
+    setTimeout(() => { setShowAlert(false); }, 3000)
   }
 
   const handleEditClick = (user: IUser) => {
@@ -270,7 +291,7 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
         </Alert>
       )}
       <Paper sx={{ width: '100%', mb: 2 }}>
-        <EnhancedTableToolbar numSelected={selected.length} onDeleteUsers={onDeleteUsers}/>
+        <EnhancedTableToolbar numSelected={selected.length} onDeleteUsers={onDeleteUsers} isAdmin={isAdmin}/>
         <TableContainer sx={{ overflowX: 'auto' }}>
           <Table
             sx={{ minWidth: computerDevice ? 600 : 'auto', tableLayout: computerDevice ? 'fixed' : 'auto', width: '100%' }}
@@ -289,14 +310,14 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
             />
             <TableBody>
               {visibleRows.map((row, index) => {
-                const isItemSelected = selected.includes(row.email);
+                const isItemSelected = selected.includes(row.id);
                 const labelId = `enhanced-table-checkbox-${index}`;
                 const institution = institutions.find(v => v.id === row.institutionID) ??   { name : 'Institución eliminada', color: '#000000'}
             
                 return (
                   <TableRow
                     hover
-                    onClick={(event) => { handleClick(event, row.email); }}
+                    onClick={(event) => { handleClick(event, row.id); }}
                     role="checkbox"
                     aria-checked={isItemSelected}
                     tabIndex={-1}
@@ -355,24 +376,28 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
                     <TableCell align={("center")}>{row.phone}</TableCell>
                     {isAdmin && (
                       <TableCell align="center" onClick={(e) => { e.stopPropagation(); }}>
-                        <Tooltip title="Editar">
-                          <IconButton
-                            size="small"
-                            onClick={() => { handleEditClick(row); }}
-                            color="primary"
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Eliminar">
-                          <IconButton
-                            size="small"
-                            onClick={() => { handleDeleteClick(row); }}
-                            color="error"
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                        {selected.length === 0 ? (
+                          <>
+                            <Tooltip title="Editar">
+                              <IconButton
+                                size="small"
+                                onClick={() => { handleEditClick(row); }}
+                                color="primary"
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Eliminar">
+                              <IconButton
+                                size="small"
+                                onClick={() => { handleDeleteClick(row); }}
+                                color="error"
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                          </>
+                        ) : null}
                       </TableCell>
                     )}
                   </TableRow>

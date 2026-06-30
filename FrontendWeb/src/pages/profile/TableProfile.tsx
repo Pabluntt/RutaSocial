@@ -14,6 +14,7 @@ import { useUserParticipation } from "../../api/hooks/UserHooks";
 import { useRoutesByUser } from "../../api/hooks/RouteHooks";
 import compareSort from "../../utils/compareDate";
 import { es } from "date-fns/locale";
+import { RouteStatus } from "../../Enums/RouteStatus";
 
 interface TableProfileProps {
      stateResumenActividad : [ TResumenActividad, React.Dispatch<React.SetStateAction<TResumenActividad>> ]
@@ -32,11 +33,14 @@ export default function TableProfile({ stateUser, stateHasChanges, stateResumenA
 
      useEffect(() => { // Calcular total rutas completadas & última fecha ruta
           if(useQueryRoutesByUser.data) {
-               const routes = useQueryRoutesByUser.data.sort((a, b) => compareSort(a, b))
-               setResumenActividad({...resumen, 
-                    amountCompletedRoutes : routes.length, 
-                    lastRouteDate : routes.length != 0 ? format(routes[0].dateCreated, "d 'de' MMMM 'de' yyyy ", { locale: es}) : 'Sin realizar aún'
-               })
+               const uniqueRoutes = Array.from(new Map(useQueryRoutesByUser.data.map((route) => [route.id, route])).values())
+               const routes = uniqueRoutes
+                    .filter((route) => route.status === RouteStatus.Completed)
+                    .sort((a, b) => compareSort(a, b))
+                setResumenActividad({...resumen, 
+                     amountCompletedRoutes : routes.length, 
+                     lastRouteDate : routes.length != 0 ? format(routes[0].dateFinished ?? routes[0].dateCreated, "d 'de' MMMM 'de' yyyy ", { locale: es}) : 'Sin realizar aún'
+                })
           } 
      
      }, [useQueryRoutesByUser.data])

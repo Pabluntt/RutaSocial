@@ -319,7 +319,16 @@ func (r *routeRepository) GetRoutesByUserID(ctx context.Context, userID string) 
 		logRepositoryError(ctx, "route", "get_by_user.cursor_all", err, "collection", "routes", "user_id", userID)
 		return nil, err
 	}
-	return routes, nil
+	unique := make([]domain.Route, 0, len(routes))
+	seen := make(map[bson.ObjectID]struct{}, len(routes))
+	for _, route := range routes {
+		if _, ok := seen[route.ID]; ok {
+			continue
+		}
+		seen[route.ID] = struct{}{}
+		unique = append(unique, route)
+	}
+	return unique, nil
 }
 
 // GetHelpPointsByRouteID obtiene todos los puntos de ayuda asociados a una ruta.

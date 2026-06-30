@@ -134,3 +134,16 @@ func SafeFilename(name string) string {
 	}
 	return name
 }
+
+// SafeExcelText neutraliza texto controlado por usuarios para evitar formula injection.
+func SafeExcelText(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return value
+	}
+
+	if strings.HasPrefix(value, "=") || strings.HasPrefix(value, "+") || strings.HasPrefix(value, "-") || strings.HasPrefix(value, "@") {
+		return "'" + value
+	}
+	return value
+}

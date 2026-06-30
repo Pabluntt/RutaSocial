@@ -361,8 +361,8 @@ func (r routeUseCase) ExportReport(c *gin.Context) {
 		label string
 		value string
 	}{
-		{"Título", route.Title},
-		{"Descripción", route.Description},
+		{"Título", utils.SafeExcelText(route.Title)},
+		{"Descripción", utils.SafeExcelText(route.Description)},
 		{"Estado", route.Status},
 		{"Fecha de creación", route.DateCreated.Format("2006-01-02 15:04:05")},
 		{"Fecha de finalización", func() string {
@@ -371,7 +371,7 @@ func (r routeUseCase) ExportReport(c *gin.Context) {
 			}
 			return "No finalizada"
 		}()},
-		{"Código de invitación", route.InviteCode},
+		{"Código de invitación", utils.SafeExcelText(route.InviteCode)},
 	}
 
 	for i, info := range infoData {
@@ -410,10 +410,10 @@ func (r routeUseCase) ExportReport(c *gin.Context) {
 		}
 		for _, p := range people {
 			currentRow++
-			f.SetCellValue(sheetName, fmt.Sprintf("A%d", currentRow), p.Name)
+			f.SetCellValue(sheetName, fmt.Sprintf("A%d", currentRow), utils.SafeExcelText(p.Name))
 			f.SetCellValue(sheetName, fmt.Sprintf("B%d", currentRow), p.Age)
-			f.SetCellValue(sheetName, fmt.Sprintf("C%d", currentRow), p.Gender)
-			f.SetCellValue(sheetName, fmt.Sprintf("D%d", currentRow), getComment(hp))
+			f.SetCellValue(sheetName, fmt.Sprintf("C%d", currentRow), utils.SafeExcelText(p.Gender))
+			f.SetCellValue(sheetName, fmt.Sprintf("D%d", currentRow), utils.SafeExcelText(getComment(hp)))
 			f.SetCellValue(sheetName, fmt.Sprintf("E%d", currentRow), pi+1)
 			f.SetCellValue(sheetName, fmt.Sprintf("F%d", currentRow), hp.DateRegister.Format("2006-01-02 15:04:05"))
 			f.SetCellStyle(sheetName, fmt.Sprintf("A%d", currentRow), fmt.Sprintf("F%d", currentRow), dataStyle)
@@ -441,7 +441,7 @@ func (r routeUseCase) ExportReport(c *gin.Context) {
 		}
 		f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), hp.DateRegister.Format("2006-01-02 15:04:05"))
 
-		f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), hp.Comment)
+		f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), utils.SafeExcelText(hp.Comment))
 		f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("D%d", row), dataStyle)
 	}
 

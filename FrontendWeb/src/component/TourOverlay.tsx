@@ -43,8 +43,6 @@ export default function TourOverlay() {
   const isFirst = currentStep === 0
   const isLast = currentStep === steps.length - 1
 
-  const panelBottomZone = 240
-
   let mascotTop: number | undefined
   let mascotLeft: number | undefined
 
@@ -52,21 +50,38 @@ export default function TourOverlay() {
     const viewW = window.innerWidth
     const viewH = window.innerHeight
     const mascotW = isDesktop ? 384 : viewW * 0.85
-    const estMascotH = 170
     const gap = 12
-    const isLeftSide = targetRect.left < viewW / 2
-    const maxTop = viewH - panelBottomZone - estMascotH - gap
 
-    const belowPos = targetRect.bottom + gap
-    if (belowPos + estMascotH + gap <= viewH - panelBottomZone) {
-      mascotTop = Math.max(24, belowPos)
+    if (isDesktop) {
+      const estMascotH = 150
+      const verticalMargin = 24
+      const centeredTop = targetRect.top + targetRect.height / 2 - estMascotH / 2
+      const maxTop = viewH - estMascotH - verticalMargin
+
+      mascotTop = Math.max(verticalMargin, Math.min(centeredTop, maxTop))
+
+      if (targetRect.right + gap + mascotW <= viewW - gap) {
+        mascotLeft = targetRect.right + gap
+      } else {
+        mascotLeft = Math.max(gap, targetRect.left - mascotW - gap)
+      }
     } else {
-      mascotTop = Math.max(24, Math.min(targetRect.top - estMascotH - gap, maxTop))
-    }
-    if (isLeftSide) {
-      mascotLeft = Math.min(targetRect.right + gap, viewW - mascotW - 8)
-    } else {
-      mascotLeft = Math.max(16, targetRect.left - mascotW - gap)
+      const panelBottomZone = 240
+      const estMascotH = 170
+      const isLeftSide = targetRect.left < viewW / 2
+      const maxTop = viewH - panelBottomZone - estMascotH - gap
+
+      const belowPos = targetRect.bottom + gap
+      if (belowPos + estMascotH + gap <= viewH - panelBottomZone) {
+        mascotTop = Math.max(24, belowPos)
+      } else {
+        mascotTop = Math.max(24, Math.min(targetRect.top - estMascotH - gap, maxTop))
+      }
+      if (isLeftSide) {
+        mascotLeft = Math.min(targetRect.right + gap, viewW - mascotW - 8)
+      } else {
+        mascotLeft = Math.max(16, targetRect.left - mascotW - gap)
+      }
     }
   }
 
