@@ -25,7 +25,7 @@ func EnsureIndexes(db *mongo.Database) error {
 			{Keys: bson.D{{Key: "route_leader", Value: 1}}},
 			{Keys: bson.D{{Key: "team", Value: 1}}},
 			{Keys: bson.D{{Key: "status", Value: 1}}},
-			{Keys: bson.D{{Key: "code", Value: 1}}, Options: options.Index().SetUnique(true).SetSparse(true)},
+			{Keys: bson.D{{Key: "invite_code", Value: 1}}, Options: options.Index().SetUnique(true).SetSparse(true)},
 		},
 		"helping_points": {
 			{Keys: bson.D{{Key: "route_id", Value: 1}}},
@@ -72,7 +72,8 @@ func EnsureIndexes(db *mongo.Database) error {
 			continue
 		}
 		if _, err := db.Collection(collection).Indexes().CreateMany(ctx, models); err != nil {
-			slog.Warn("No se pudieron crear todos los índices MongoDB", "collection", collection, "error", err)
+			slog.Error("No se pudieron crear todos los índices MongoDB", "collection", collection, "error", err)
+			return err
 		}
 	}
 

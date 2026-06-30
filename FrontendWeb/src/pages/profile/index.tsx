@@ -13,6 +13,7 @@ import { IUser } from "../../api/models/User"
 import { useProfile, useUpdateUser } from "../../api/hooks/UserHooks"
 import { useRoutesByUser } from "../../api/hooks/RouteHooks"
 import { TUpdateUserRequest } from "../../api/adapters/User.adapter";
+import ConfirmDialog from "../../component/Dialog/ConfirmDialog";
 
 
 export interface TResumenActividad {
@@ -28,6 +29,7 @@ export default function Profile() {
 
     const [ user, setUser ] = useState<IUser>()
     const [ hasChange, setHasChange ] = useState(false)
+    const [ confirmUnsavedOpen, setConfirmUnsavedOpen ] = useState(false)
     const [ resumenActividad, setResumenActividad ] = useState<TResumenActividad>({})
     
     const { data, isLoading, isSuccess, refetch, isError } = useProfile()
@@ -58,15 +60,26 @@ export default function Profile() {
         if(mutation.isSuccess)
             return 
         mutation.mutate(user as TUpdateUserRequest)
+        setHasChange(false)
     }
 
     const handleClickAway = (e : MouseEvent | TouchEvent) => {
         if(hasChange && mutation.isIdle) {
-            const save = confirm("Tienes cambios por hacer, ¿Deseas Guardar los cambios?")
-            if(save) {
-                onSubmitChanges()
-            }
+            setConfirmUnsavedOpen(true)
         }
+    }
+
+    const discardChanges = () => {
+        if(data) {
+            setUser(data)
+        }
+        setHasChange(false)
+        setConfirmUnsavedOpen(false)
+    }
+
+    const saveChanges = () => {
+        onSubmitChanges()
+        setConfirmUnsavedOpen(false)
     }
 
     const theme = useTheme();
@@ -135,6 +148,18 @@ export default function Profile() {
                         </div>
                 </div>
             </ClickAwayListener>
+            <ConfirmDialog
+                open={confirmUnsavedOpen}
+                title="Cambios sin guardar"
+                message="Tienes cambios pendientes. ¿Quieres guardarlos o descartarlos?"
+                confirmText="Guardar cambios"
+                cancelText="Descartar cambios"
+                confirmColor="success"
+                severity="warning"
+                loading={mutation.isPending}
+                onConfirm={saveChanges}
+                onCancel={discardChanges}
+            />
         </div>
 
 

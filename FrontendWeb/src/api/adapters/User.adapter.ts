@@ -13,6 +13,7 @@ export interface TUserBackend {
     role : string 
     institutionID : string 
     date_register : string 
+    is_active : boolean
 }
 
 
@@ -61,7 +62,8 @@ export function MapUserFromBackend( data : Partial<TUserBackend>) : IUser {
         role: data.role,
         completedRoutes : data.completed_routes,
         listRoutes : data.list_routes,
-        dateRegister : data.date_register === undefined ? undefined : new Date(data.date_register)
+        dateRegister : data.date_register === undefined ? undefined : new Date(data.date_register),
+        isActive : data.is_active ?? true
     }
 
     for (const [key, value] of Object.entries(user)) {

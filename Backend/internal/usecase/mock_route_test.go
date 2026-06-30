@@ -27,6 +27,11 @@ func (m *MockRouteRepository) CreateRoute(ctx context.Context, route *domain.Rou
 	return args.Error(0)
 }
 
+func (m *MockRouteRepository) CreateScheduledRoute(ctx context.Context, route *domain.Route) error {
+	args := m.Called(ctx, route)
+	return args.Error(0)
+}
+
 func (m *MockRouteRepository) UpdateRoute(ctx context.Context, data map[string]interface{}) (domain.Route, error) {
 	args := m.Called(ctx, data)
 	return args.Get(0).(domain.Route), args.Error(1)
@@ -35,6 +40,16 @@ func (m *MockRouteRepository) UpdateRoute(ctx context.Context, data map[string]i
 func (m *MockRouteRepository) DeleteRoute(ctx context.Context, routeId string) error {
 	args := m.Called(ctx, routeId)
 	return args.Error(0)
+}
+
+func (m *MockRouteRepository) SoftDeleteRoute(ctx context.Context, routeId string) error {
+	args := m.Called(ctx, routeId)
+	return args.Error(0)
+}
+
+func (m *MockRouteRepository) StartRoute(ctx context.Context, routeId string, userID string) (domain.Route, error) {
+	args := m.Called(ctx, routeId, userID)
+	return args.Get(0).(domain.Route), args.Error(1)
 }
 
 func (m *MockRouteRepository) FinishRoute(ctx context.Context, id string, leaderID string, allowAny bool) error {

@@ -39,7 +39,7 @@ func MapUserToResponse(u domain.Usuario) UserResponse {
 		Role:            u.Role,
 		InstitutionID:   u.InstitutionID.Hex(),
 		DateRegister:    u.DateRegister.Format("2006-01-02T15:04:05Z"),
-		IsActive:        u.IsActive,
+		IsActive:        u.Active(),
 	}
 }
 

@@ -60,6 +60,11 @@ export class RouteService {
         return data?.message
     }
 
+    static async StartRoute( routeId : string ) : Promise<Route> {
+        const { data } = await axiosInstance.patch(`/${this.RESOURCE_NAME}/${routeId}/start`)
+        return MapRouteFromBackend(data?.message as TRouteBackend)
+    }
+
     static async GetAdminUserRoutes(userId: string): Promise<Route[]> {
         const { data } = await axiosInstance.get(`/route/user/${userId}`)
         if (data?.message === null) return []

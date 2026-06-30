@@ -166,7 +166,13 @@ export default function Usuarios() {
                     }
                 </div>
             </div>
-            <DialogCreateUser open={open} setOpen={setOpen} />
+            <DialogCreateUser
+                open={open}
+                setOpen={setOpen}
+                onCreated={(createdUser) => {
+                    setUsers((current) => current.some((user) => user.id === createdUser.id) ? current : [...current, createdUser])
+                }}
+            />
             <DialogCreateInstitution stateOpen={[openAddInstitution, setOpenAddInstitution]} />
         </div>
     )

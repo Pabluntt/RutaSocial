@@ -68,6 +68,12 @@ export function useFinishRoute() {
     })
 }
 
+export function useStartRoute() {
+    return useMutation({
+        mutationFn : (routeId : string) => (RouteService.StartRoute(routeId))
+    })
+}
+
 export function useDeleteRoute() {
     return useMutation({
         mutationFn: (routeId: string) => RouteService.DeleteRoute(routeId),

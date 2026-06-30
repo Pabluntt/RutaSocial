@@ -19,6 +19,7 @@ type CalendarEventRepository interface {
 	UpdateCalendarEvent(ctx context.Context, updateData map[string]interface{}) (domain.EventoCalendario, error)
 	FindByIDAndUserID(ctx context.Context, id string, userID string) error
 	GetCalendarEventsByUserID(ctx context.Context, userID string) ([]domain.EventoCalendario, error)
+	FindByID(ctx context.Context, id string) (domain.EventoCalendario, error)
 }
 
 // calendarEventRepository implementa la interfaz CalendarEventRepository.
@@ -196,6 +197,26 @@ func (c calendarEventRepository) UpdateCalendarEvent(ctx context.Context, update
 
 // FindByIDAndUserID busca un evento de calendario por su ID y el ID del usuario.
 // Convierte el ID de cadena a ObjectID y verifica si el evento pertenece al usuario especificado.
+// FindByID obtiene un evento de calendario por su ID.
+func (c calendarEventRepository) FindByID(ctx context.Context, id string) (domain.EventoCalendario, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	objID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return domain.EventoCalendario{}, errors.New("ID de evento de calendario inválido")
+	}
+	var event domain.EventoCalendario
+	err = c.CalendarEventCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&event)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return domain.EventoCalendario{}, errors.New("evento no encontrado")
+		}
+		logRepositoryError(ctx, "calendar_event", "find_by_id.find_one", err, "collection", "calendar_events", "event_id", id)
+		return domain.EventoCalendario{}, err
+	}
+	return event, nil
+}
+
 func (c calendarEventRepository) FindByIDAndUserID(ctx context.Context, id string, userID string) error {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()

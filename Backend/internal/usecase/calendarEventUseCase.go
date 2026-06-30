@@ -1,13 +1,15 @@
 package usecase
 
 import (
+	"errors"
+	"net/http"
+	"time"
+
 	"github.com/SebaVCH/hdcProject/internal/domain"
 	"github.com/SebaVCH/hdcProject/internal/repository"
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"net/http"
-	"time"
 )
 
 type calendarEventRequest struct {
@@ -33,13 +35,15 @@ type CalendarEventUseCase interface {
 // Contiene un repositorio de eventos de calendario para interactuar con la base de datos.
 type calendarEventUseCase struct {
 	calendarRepository repository.CalendarEventRepository
+	routeRepository    repository.RouteRepository
 }
 
 // NewCalendarEventUseCase crea una nueva instancia de calendarEventUseCase.
 // Recibe un repositorio de eventos de calendario y retorna una instancia de CalendarEventUseCase.
-func NewCalendarEventUseCase(calendarRepository repository.CalendarEventRepository) CalendarEventUseCase {
+func NewCalendarEventUseCase(calendarRepository repository.CalendarEventRepository, routeRepository repository.RouteRepository) CalendarEventUseCase {
 	return &calendarEventUseCase{
 		calendarRepository: calendarRepository,
+		routeRepository:    routeRepository,
 	}
 }
 
@@ -64,6 +68,9 @@ func (ce calendarEventUseCase) GetUserCalendarEvents(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "ID de usuario no proporcionado"})
+		return
+	}
+	if !requireSelfOrAdmin(c, userID) {
 		return
 	}
 
@@ -115,7 +122,7 @@ func (ce calendarEventUseCase) CreateCalendarEvent(c *gin.Context) {
 		event.RouteID = routeID
 	}
 
-	if !utils.IsValidString(event.Title) || !utils.IsValidString(event.Description) {
+	if !utils.IsValidString(event.Title) || (event.Description != "" && !utils.IsValidString(event.Description)) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "El título o la descripción contienen caracteres inválidos"})
 		return
 	}
@@ -125,8 +132,38 @@ func (ce calendarEventUseCase) CreateCalendarEvent(c *gin.Context) {
 		return
 	}
 
+	var createdRouteID string
+	if event.RouteID.IsZero() {
+		userObjID, err := bson.ObjectIDFromHex(userID)
+		if err != nil {
+			c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Token inválido"})
+			return
+		}
+
+		route := domain.Route{
+			Title:       event.Title,
+			Description: event.Description,
+			RouteLeader: userObjID,
+			Team:        []bson.ObjectID{userObjID},
+		}
+		if err := ce.routeRepository.CreateScheduledRoute(c.Request.Context(), &route); err != nil {
+			if errors.Is(err, repository.ErrRouteTitleAlreadyExists) {
+				c.IndentedJSON(http.StatusConflict, gin.H{"error": "El nombre de la ruta ya está ocupado"})
+				return
+			}
+			logUseCaseError(c, "calendar_event.create_route", http.StatusBadRequest, err)
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear la ruta del evento"})
+			return
+		}
+		event.RouteID = route.ID
+		createdRouteID = route.ID.Hex()
+	}
+
 	createdEvent, err := ce.calendarRepository.CreateCalendarEvent(c.Request.Context(), event, userID)
 	if err != nil {
+		if createdRouteID != "" {
+			_ = ce.routeRepository.DeleteRoute(c.Request.Context(), createdRouteID)
+		}
 		logUseCaseError(c, "calendar_event.create", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear el evento: "})
 		return
@@ -136,6 +173,7 @@ func (ce calendarEventUseCase) CreateCalendarEvent(c *gin.Context) {
 
 // DeleteCalendarEvent maneja la solicitud para eliminar un evento de calendario.
 // Verifica que el usuario tenga permisos para eliminar el evento y que el ID del evento sea válido.
+// Si el evento tiene una ruta asociada, la marca como "Eliminada".
 func (ce calendarEventUseCase) DeleteCalendarEvent(c *gin.Context) {
 	eventID := c.Param("id")
 
@@ -157,12 +195,26 @@ func (ce calendarEventUseCase) DeleteCalendarEvent(c *gin.Context) {
 		}
 	}
 
+	event, findErr := ce.calendarRepository.FindByID(c.Request.Context(), eventID)
+	if findErr != nil {
+		logUseCaseError(c, "calendar_event.delete.find", http.StatusBadRequest, findErr, "event_id", eventID)
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al obtener el evento"})
+		return
+	}
+
 	err := ce.calendarRepository.DeleteCalendarEvent(c.Request.Context(), eventID)
 	if err != nil {
 		logUseCaseError(c, "calendar_event.delete", http.StatusBadRequest, err, "event_id", eventID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al eliminar el evento"})
 		return
 	}
+
+	if !event.RouteID.IsZero() {
+		if softErr := ce.routeRepository.SoftDeleteRoute(c.Request.Context(), event.RouteID.Hex()); softErr != nil {
+			logUseCaseWarn(c, "calendar_event.delete.soft_delete_route", http.StatusBadRequest, softErr, "route_id", event.RouteID.Hex())
+		}
+	}
+
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Evento eliminado correctamente"})
 }
 

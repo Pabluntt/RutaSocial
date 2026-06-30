@@ -10,4 +10,5 @@ export interface IUser {
     completedRoutes : number 
     listRoutes : string[]
     dateRegister : Date
+    isActive : boolean
 }

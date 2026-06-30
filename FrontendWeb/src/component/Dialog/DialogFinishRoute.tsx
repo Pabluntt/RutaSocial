@@ -66,7 +66,7 @@ export default function DialogFinishRoute({ open, setOpen } : { open : boolean, 
                 <DialogContent>
                     { isIdle ?
                         <Typography>
-                            ¿Estás seguro que quieres finalizar la Ruta?
+                            ¿Estás seguro que quieres finalizar la Ruta? Después de finalizarla, nadie podrá unirse ni reanudarla.
                         </Typography>
                         :
                         isPending ? 

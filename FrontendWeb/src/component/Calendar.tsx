@@ -2,7 +2,7 @@ import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { DateSelectArg, EventClickArg } from '@fullcalendar/core'
 import { IconButton, Popover, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material'
 import esLocale from '@fullcalendar/core/locales/es';
@@ -28,9 +28,17 @@ import useSessionStore from '../stores/useSessionStore'
 import { RouteService } from '../api/services/RouteService'
 import { CalendarService } from '../api/services/CalendarService'
 import { useAppSnackbar } from '../context/SnackbarContext'
+import { useRoutes } from '../api/hooks/RouteHooks'
+import { RouteStatus } from '../Enums/RouteStatus'
+import ConfirmDialog from './Dialog/ConfirmDialog'
 import './Calendar.css'
 
 const isHexColor = (color: string | undefined): color is string => /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(color ?? '')
+const ROUTE_STATUS_COLORS = {
+    [RouteStatus.Scheduled]: '#ef4444',
+    [RouteStatus.Active]: '#2563eb',
+    [RouteStatus.Completed]: '#22c55e',
+} satisfies Record<RouteStatus, string>
 
 export default function Calendar() {
 
@@ -44,17 +52,28 @@ export default function Calendar() {
     const [open, setOpen] = useState(false)
     const [ eventCalendar, setEventCalendar ] = useEventCalendarUpdateDialog()
     const { isError, isPending, isSuccess, data, refetch} = useCalendarEvents(!!accessToken)
+    const routesQuery = useRoutes(!!accessToken)
     const deleteQuery = useDeleteCalendarEvent()
     const mutate = deleteQuery.mutate
     const [ eventClicked, setEventClicked ] = useState<CalendarEvent | undefined>(undefined)
     const [ anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
     const [routeInviteCode, setRouteInviteCode] = useState<string | undefined>(undefined)
     const [routeInviteCodeLoading, setRouteInviteCodeLoading] = useState(false)
+    const [confirmDeleteEvent, setConfirmDeleteEvent] = useState<string | undefined>(undefined)
     const theme = useTheme()
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'))
     const openPopover = Boolean(anchorEl)
     const id =  openPopover ? 'view-event-popover' : undefined
     const { showSnackbar } = useAppSnackbar()
+
+    const routesById = useMemo(() => new Map((routesQuery.data ?? []).map((route) => [route.id, route])), [routesQuery.data])
+
+    const getEventRouteStatus = (event: CalendarEvent) => {
+        if(!event.routeID) return RouteStatus.Scheduled
+        return (routesById.get(event.routeID)?.status as RouteStatus | undefined) ?? RouteStatus.Scheduled
+    }
+
+    const getEventRouteColor = (event: CalendarEvent) => ROUTE_STATUS_COLORS[getEventRouteStatus(event)]
 
 
     
@@ -160,21 +179,33 @@ export default function Calendar() {
                     route_id: routeId
                 })
 
-                refetch()
+                await refetch()
+                await routesQuery.refetch()
             } catch (error) {
                 console.error('Error al crear ruta automática', error)
+                const routeCreationError = error as { status?: number } | null
+                if(routeCreationError?.status === 409) {
+                    showSnackbar('Ya existe una ruta con ese nombre. Cambia el nombre del evento o usa una ruta existente.', 'warning')
+                    return
+                }
                 showSnackbar('Error al crear la ruta automática. Intenta de nuevo.', 'error')
                 return
             }
-        } else {
-            // Validar que la ruta exista en el backend
-            try {
-                await RouteService.FindRouteByID(routeId)
-            } catch (error) {
-                console.error('Ruta vinculada no disponible', error)
-                showSnackbar('La ruta vinculada a este evento no existe o no está disponible. Crea una nueva ruta y vincúlala al evento.', 'error')
+        }
+
+        try {
+            const route = await RouteService.StartRoute(routeId)
+            if(route.status === RouteStatus.Completed) {
+                showSnackbar('Esta ruta ya fue finalizada y no puede reanudarse.', 'warning')
                 return
             }
+            await refetch()
+            await routesQuery.refetch()
+        } catch (error) {
+            console.error('Ruta vinculada no disponible', error)
+            const routeStartError = error as { error?: string } | null
+            showSnackbar(routeStartError?.error || 'La ruta vinculada a este evento no existe o no está disponible.', 'error')
+            return
         }
 
         // Establecer la ruta como activa
@@ -206,6 +237,12 @@ export default function Calendar() {
             )}
             {!isPending && !isError && (
             <div className='px-2 sm:px-10 w-full'>
+                <div className='mb-3 flex flex-wrap items-center gap-3 rounded-lg bg-white/80 px-3 py-2 text-xs text-gray-700 shadow-sm'>
+                    <span className='font-semibold'>Leyenda:</span>
+                    <span className='inline-flex items-center gap-1'><span className='inline-block h-2.5 w-2.5 rounded-full' style={{ backgroundColor: ROUTE_STATUS_COLORS[RouteStatus.Scheduled] }} /> Ruta no iniciada</span>
+                    <span className='inline-flex items-center gap-1'><span className='inline-block h-2.5 w-2.5 rounded-full' style={{ backgroundColor: ROUTE_STATUS_COLORS[RouteStatus.Active] }} /> Ruta en curso</span>
+                    <span className='inline-flex items-center gap-1'><span className='inline-block h-2.5 w-2.5 rounded-full' style={{ backgroundColor: ROUTE_STATUS_COLORS[RouteStatus.Completed] }} /> Ruta finalizada</span>
+                </div>
                 <FullCalendar 
                     longPressDelay={100}
                     plugins={[ dayGridPlugin, timeGridPlugin, interactionPlugin ]}
@@ -228,7 +265,10 @@ export default function Calendar() {
                         start : event.dateStart.toISOString().slice(0, 10),
                         title : event.title,
                         allDay : true,
-                        color: event.colorInstitution
+                        color: getEventRouteColor(event),
+                        extendedProps: {
+                            routeStatus: getEventRouteStatus(event)
+                        }
                     }))}
                     select={handleDateSelect}
                     selectable={true}
@@ -294,7 +334,7 @@ export default function Calendar() {
                                     <Tooltip title={'Eliminar Evento'}>
                                         <IconButton onClick={() => {
                                             if(eventClicked === undefined) return
-                                            mutate(eventClicked.id)
+                                            setConfirmDeleteEvent(eventClicked.id)
                                         }}>
                                             <DeleteIcon htmlColor="black" fontSize="small" />
                                         </IconButton>
@@ -304,7 +344,7 @@ export default function Calendar() {
                                 <>
                                 </>
                             }
-                            {eventClicked && isToday(eventClicked.dateStart) ? 
+                            {eventClicked && isToday(eventClicked.dateStart) && getEventRouteStatus(eventClicked) !== RouteStatus.Completed ? 
                                 <Tooltip title={'Iniciar Ruta'}>
                                     <IconButton onClick={handleStartRoute} sx={{ color: 'success.main' }}>
                                         <PlayArrowIcon htmlColor="green" fontSize="small" />
@@ -378,6 +418,21 @@ export default function Calendar() {
                     }
                 </div>
             </Popover>
+            <ConfirmDialog
+                open={Boolean(confirmDeleteEvent)}
+                title="Eliminar evento"
+                message="¿Estás seguro de eliminar este evento del calendario? Esta acción no se puede deshacer."
+                confirmText="Eliminar"
+                cancelText="Cancelar"
+                confirmColor="error"
+                onConfirm={() => {
+                    if(confirmDeleteEvent) {
+                        mutate(confirmDeleteEvent)
+                    }
+                    setConfirmDeleteEvent(undefined)
+                }}
+                onCancel={() => setConfirmDeleteEvent(undefined)}
+            />
             <DialogUpdateEventCalendar />
             <DialogCreateEventCalendar stateOpen={[open, setOpen]} stateSelectInfo={[selectInfo, setSelectInfo]}  />
         </div>

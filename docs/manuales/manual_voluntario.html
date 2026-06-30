@@ -20,38 +20,110 @@
   <p><strong>Perfil:</strong> usuario con rol <strong>voluntario</strong>.</p>
 
   <h2>Alcance del Rol</h2>
-  <p>El voluntario usa RutaSocial para participar en rutas, registrar atenciones, revisar datos operativos y descargar informes disponibles.</p>
+  <p>El voluntario usa RutaSocial para participar en rutas, registrar atenciones en terreno, revisar datos operativos de personas beneficiadas y descargar informes disponibles. Es el perfil principal de operaci&oacute;n.</p>
 
   <h2>Permisos del Voluntario</h2>
   <table>
-    <thead><tr><th>Módulo</th><th>Permitido</th><th>No permitido</th></tr></thead>
+    <thead><tr><th>M&oacute;dulo</th><th>Permitido</th><th>No permitido</th></tr></thead>
     <tbody>
-      <tr><td>Usuarios</td><td>Ver usuarios y detalles necesarios para operación.</td><td>Crear, editar o eliminar usuarios.</td></tr>
-      <tr><td>Instituciones</td><td>Ver instituciones.</td><td>Crear, editar o eliminar instituciones.</td></tr>
-      <tr><td>Rutas</td><td>Crear rutas, unirse a rutas, ver datos de rutas y descargar informes.</td><td>Editar rutas, eliminar rutas o finalizar rutas ajenas.</td></tr>
-      <tr><td>Finalizar ruta</td><td>Finalizar una ruta propia cuando es líder de esa ruta.</td><td>Finalizar rutas de otros líderes.</td></tr>
-      <tr><td>Mapa</td><td>Ver mapa, rutas, puntos de ayuda, riesgos, alojamientos y mapas de calor.</td><td>Crear alojamientos.</td></tr>
-      <tr><td>Alojamientos</td><td>Ver alojamientos disponibles en el mapa.</td><td>El botón para crear alojamiento no aparece para voluntarios.</td></tr>
-      <tr><td>Personas ayudadas</td><td>Ver, crear y editar perfiles de personas beneficiadas.</td><td>Eliminar personas beneficiadas.</td></tr>
-      <tr><td>Antecedentes e información médica</td><td>Agregar y editar información operativa/social y médica.</td><td>Eliminar registros de antecedentes o información médica.</td></tr>
-      <tr><td>Puntos de ayuda</td><td>Crear puntos de ayuda y vincularlos con personas beneficiadas.</td><td>Eliminar registros protegidos cuando la acción esté reservada al administrador.</td></tr>
-      <tr><td>Avisos</td><td>Crear avisos para voluntarios y revisar avisos fijados.</td><td>Elegir envío por correo electrónico desde la interfaz.</td></tr>
+      <tr><td>Usuarios</td><td>Ver nombre e instituci&oacute;n de otros usuarios.</td><td>Ver email, tel&eacute;fono o datos completos de otros usuarios. Crear, editar o eliminar cuentas.</td></tr>
+      <tr><td>Instituciones</td><td>Ver instituciones disponibles.</td><td>Crear, editar o eliminar instituciones.</td></tr>
+      <tr><td>Rutas</td><td>Crear rutas, unirse a rutas mediante c&oacute;digo de invitaci&oacute;n, ver datos de rutas, iniciar una ruta (la pone "on progress"), descargar informes.</td><td>Editar, eliminar o finalizar rutas ajenas.</td></tr>
+      <tr><td>Finalizar ruta</td><td>Finalizar una ruta solo si es el l&iacute;der de esa ruta.</td><td>Finalizar rutas de las que no es l&iacute;der.</td></tr>
+      <tr><td>Mapa</td><td>Ver mapa, trazado de rutas, puntos de ayuda, riesgos, mapas de calor y alojamientos.</td><td>Crear alojamientos (el bot&oacute;n no aparece).</td></tr>
+      <tr><td>Personas ayudadas</td><td>Ver detalle completo con RUT, antecedentes e informaci&oacute;n m&eacute;dica. Crear y editar perfiles.</td><td>Eliminar personas beneficiadas.</td></tr>
+      <tr><td>Antecedentes / Info m&eacute;dica</td><td>Agregar y editar antecedentes e informaci&oacute;n m&eacute;dica.</td><td>Eliminar registros de antecedentes o informaci&oacute;n m&eacute;dica.</td></tr>
+      <tr><td>Puntos de ayuda</td><td>Crear puntos de ayuda, editarlos, eliminarlos (solo los propios) y vincularlos con personas beneficiadas.</td><td>Editar o eliminar puntos de ayuda creados por otros usuarios.</td></tr>
+      <tr><td>Avisos</td><td>Crear avisos personales y revisar avisos fijados.</td><td>Crear avisos con env&iacute;o a todos los usuarios (solo admin).</td></tr>
+      <tr><td>Calendario</td><td>Ver eventos de calendario y gestionar sus propios eventos (crear, editar, eliminar).</td><td>Editar o eliminar eventos de otros usuarios.</td></tr>
+      <tr><td>Exportar datos</td><td>Descargar informe de ruta en Excel.</td><td>Exportar listado completo de personas ayudadas (solo admin).</td></tr>
     </tbody>
   </table>
 
-  <h2>Uso Diario</h2>
+  <h2>Ciclo de Vida de las Rutas</h2>
+  <p>Las rutas son el elemento central de la operaci&oacute;n. Pasan por tres estados:</p>
   <ol>
-    <li>Iniciar sesión con correo y contraseña.</li>
-    <li>Revisar calendario, mapa o historial según la actividad.</li>
-    <li>Crear una ruta o unirse a una ruta existente.</li>
-    <li>Registrar puntos de ayuda, riesgos y personas beneficiadas durante la salida.</li>
-    <li>Revisar datos de la ruta y descargar informe cuando sea necesario.</li>
-    <li>Cerrar sesión al finalizar.</li>
+    <li><strong>No iniciada</strong> &ndash; La ruta se acaba de crear o agendar. A&uacute;n no se ha empezado a trabajar.</li>
+    <li><strong>on progress</strong> &ndash; Alguien presion&oacute; el bot&oacute;n "Iniciar" (el bot&oacute;n de reproducci&oacute;n). La ruta est&aacute; activa y se pueden registrar puntos, riesgos y personas.</li>
+    <li><strong>Finalizada</strong> &ndash; La ruta se complet&oacute;. No se puede reiniciar ni unir nuevos participantes. Solo el l&iacute;der o un administrador pueden finalizarla.</li>
   </ol>
 
-  <h2>Guía Integrada</h2>
-  <p>El botón de ayuda abre una guía visual. En móvil, la guía abre el menú y explica cada sección manteniendo el panel de navegación fijo.</p>
+  <h3>Creaci&oacute;n de Rutas</h3>
+  <p>Hay dos formas de crear una ruta:</p>
+  <ul>
+    <li><strong>Desde el calendario:</strong> Al agendar un evento sin seleccionar una ruta existente, el sistema crea autom&aacute;ticamente una nueva ruta con el t&iacute;tulo del evento. El creador se convierte en <strong>l&iacute;der</strong> de esa ruta.</li>
+    <li><strong>Manual:</strong> Usando el formulario de creaci&oacute;n de rutas, donde se ingresa nombre, descripci&oacute;n y ubicaci&oacute;n.</li>
+  </ul>
+  <p><strong>Importante:</strong> El nombre de la ruta debe ser &uacute;nico en todo el sistema. Si ya existe una ruta con el mismo nombre (sin importar may&uacute;sculas/min&uacute;sculas), aparecer&aacute; un mensaje de error y deber&aacute;s elegir otro nombre.</p>
 
-  <div class="note">Si una acción no corresponde al rol voluntario, la interfaz debe ocultar el botón o mostrar un mensaje de permisos insuficientes.</div>
+  <h3>Iniciar una Ruta</h3>
+  <p>Para empezar a trabajar en una ruta:</p>
+  <ol>
+    <li>Ve al calendario o a la lista de rutas.</li>
+    <li>Busca una ruta con estado "No iniciada".</li>
+    <li>Presiona el bot&oacute;n de <strong>reproducci&oacute;n (play)</strong> junto a la ruta o evento.</li>
+    <li>El sistema cambiar&aacute; el estado a "on progress", te agregar&aacute; autom&aacute;ticamente al equipo y te llevar&aacute; al mapa.</li>
+  </ol>
+  <p>No es necesario ser el l&iacute;der para iniciar una ruta. Cualquier usuario autenticado puede iniciarla.</p>
+
+  <h3>Unirse a una Ruta por C&oacute;digo</h3>
+  <p>Si un compa&ntilde;ero comparte un c&oacute;digo de invitaci&oacute;n:</p>
+  <ol>
+    <li>Usa la opci&oacute;n "Unirse a ruta" en la interfaz.</li>
+    <li>Ingresa el c&oacute;digo de invitaci&oacute;n.</li>
+    <li>El sistema te agregar&aacute; al equipo de la ruta y actualizar&aacute; el calendario autom&aacute;ticamente.</li>
+  </ol>
+  <p>No puedes unirte a una ruta que ya est&eacute; finalizada.</p>
+
+  <h3>Datos Registrados en una Ruta</h3>
+  <ul>
+    <li><strong>Nombre y descripci&oacute;n</strong> de la ruta.</li>
+    <li><strong>Ubicaci&oacute;n</strong> con coordenadas en el mapa.</li>
+    <li><strong>L&iacute;der</strong> de la ruta (quien la cre&oacute;).</li>
+    <li><strong>Equipo</strong> de participantes.</li>
+    <li><strong>Puntos de ayuda</strong> registrados durante la ruta.</li>
+    <li><strong>Riesgos</strong> identificados en el camino.</li>
+    <li><strong>Personas beneficiadas</strong> vinculadas a puntos de ayuda.</li>
+    <li><strong>Fecha de inicio y finalizaci&oacute;n.</strong></li>
+  </ul>
+
+  <h3>Finalizar una Ruta</h3>
+  <p>Solo el <strong>l&iacute;der</strong> (quien cre&oacute; la ruta o el evento de calendario) o un <strong>administrador</strong> pueden finalizarla. Al finalizar, nadie podr&aacute; unirse ni reanudarla. Aseg&uacute;rate de haber registrado toda la informaci&oacute;n necesaria antes de finalizar.</p>
+
+  <h2>Calendario</h2>
+  <p>El calendario muestra los eventos agendados. Cada evento puede tener o no una ruta asociada. Los colores indican el estado de la ruta:</p>
+  <ul>
+    <li><span style="color:#d32f2f;">&bull; Rojo:</span> La ruta a&uacute;n no se ha iniciado.</li>
+    <li><span style="color:#1976d2;">&bull; Azul:</span> La ruta est&aacute; en curso (on progress).</li>
+    <li><span style="color:#388e3c;">&bull; Verde:</span> La ruta ya finaliz&oacute;.</li>
+  </ul>
+  <p>Puedes crear eventos desde el calendario. Si no seleccionas una ruta existente, se crear&aacute; una nueva autom&aacute;ticamente.</p>
+
+  <h2>Personas Beneficiadas</h2>
+  <p>Los perfiles de personas beneficiadas incluyen datos personales, RUT, antecedentes sociales e informaci&oacute;n m&eacute;dica. Como voluntario puedes:</p>
+  <ul>
+    <li>Ver el detalle completo de cualquier persona beneficiada.</li>
+    <li>Crear nuevos perfiles.</li>
+    <li>Editar perfiles existentes.</li>
+    <li>Agregar antecedentes e informaci&oacute;n m&eacute;dica.</li>
+    <li>Vincular personas a puntos de ayuda.</li>
+  </ul>
+  <p><strong>No puedes</strong> eliminar perfiles, antecedentes ni informaci&oacute;n m&eacute;dica. Esas acciones est&aacute;n reservadas al administrador.</p>
+
+  <h2>Uso Diario</h2>
+  <ol>
+    <li>Iniciar sesi&oacute;n con correo y contrase&ntilde;a (si tu cuenta fue aprobada por un administrador).</li>
+    <li>Revisar el calendario para ver las rutas agendadas.</li>
+    <li>Iniciar la ruta del d&iacute;a (bot&oacute;n play) o unirse a una existente.</li>
+    <li>Durante el recorrido, registrar puntos de ayuda, riesgos y personas beneficiadas en el mapa.</li>
+    <li>Vincular personas a los puntos de ayuda registrados.</li>
+    <li>Al finalizar la jornada, el l&iacute;der puede finalizar la ruta y descargar el informe.</li>
+    <li>Cerrar sesi&oacute;n al terminar.</li>
+  </ol>
+
+  <h2>Gu&iacute;a Integrada</h2>
+  <p>El bot&oacute;n de ayuda abre una gu&iacute;a visual interactiva. En m&oacute;vil, explica cada secci&oacute;n manteniendo el panel de navegaci&oacute;n fijo.</p>
+
+  <div class="note">Si una acci&oacute;n no corresponde al rol voluntario, la interfaz oculta el bot&oacute;n o muestra un mensaje de permisos insuficientes. Si tienes dudas sobre un mensaje de error, consulta con un administrador.</div>
 </body>
 </html>

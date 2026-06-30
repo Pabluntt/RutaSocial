@@ -21,6 +21,7 @@ export function useLogin() {
 }
 
 export function useAdminCreateUser() {
+    const queryClient = useQueryClient()
     return useMutation({
         mutationFn: (user : {
             email : string
@@ -29,7 +30,10 @@ export function useAdminCreateUser() {
             name ?: string
             phone ?: string
             role ?: string
-        }) => (UserService.CreateUserByAdmin(MapUserToAdminCreateRequest(user)))
+        }) => (UserService.CreateUserByAdmin(MapUserToAdminCreateRequest(user))),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] })
+        }
     })
 }
 
@@ -90,3 +94,8 @@ export function useDeleteUser() {
     })
 }
 
+export function useApproveUser() {
+    return useMutation({
+        mutationFn: (id: string) => (UserService.ApproveUser(id)),
+    })
+}

@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"errors"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/SebaVCH/hdcProject/internal/domain"
@@ -11,14 +13,19 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
+var ErrRouteTitleAlreadyExists = errors.New("route title already exists")
+
 // RouteRepository define la interfaz para las operaciones relacionadas con rutas.
 // Contiene métodos para obtener, crear, actualizar, eliminar y unirse a rutas.
 type RouteRepository interface {
 	FindAll(ctx context.Context) ([]domain.Route, error)
 	FindByID(ctx context.Context, routeId string) (domain.Route, error)
 	CreateRoute(ctx context.Context, route *domain.Route) error
+	CreateScheduledRoute(ctx context.Context, route *domain.Route) error
 	UpdateRoute(ctx context.Context, data map[string]interface{}) (domain.Route, error)
 	DeleteRoute(ctx context.Context, routeId string) error
+	SoftDeleteRoute(ctx context.Context, routeId string) error
+	StartRoute(ctx context.Context, routeId string, userID string) (domain.Route, error)
 	FinishRoute(ctx context.Context, id string, leaderID string, allowAny bool) error
 	JoinRoute(ctx context.Context, code string, userID string) (domain.Route, error)
 	LeaveRoute(ctx context.Context, routeId string, userID string) error
@@ -89,16 +96,41 @@ func (r *routeRepository) FindByID(ctx context.Context, routeId string) (domain.
 // CreateRoute crea una nueva ruta en la base de datos.
 // Asigna un nuevo ID, establece la fecha de creación, el estado y el código de invitación.
 func (r *routeRepository) CreateRoute(ctx context.Context, route *domain.Route) error {
+	return r.createRouteWithStatus(ctx, route, domain.RouteStatusActive)
+}
+
+func (r *routeRepository) CreateScheduledRoute(ctx context.Context, route *domain.Route) error {
+	return r.createRouteWithStatus(ctx, route, domain.RouteStatusScheduled)
+}
+
+func (r *routeRepository) createRouteWithStatus(ctx context.Context, route *domain.Route, status string) error {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
+	route.Title = strings.TrimSpace(route.Title)
+
+	var existingRoute domain.Route
+	err := r.RouteCollection.FindOne(ctx, bson.M{
+		"title": bson.M{
+			"$regex":   "^" + regexp.QuoteMeta(route.Title) + "$",
+			"$options": "i",
+		},
+	}).Decode(&existingRoute)
+	if err == nil {
+		return ErrRouteTitleAlreadyExists
+	}
+	if err != mongo.ErrNoDocuments {
+		logRepositoryError(ctx, "route", "create.find_duplicate_title", err, "collection", "routes", "title", route.Title)
+		return err
+	}
+
 	route.ID = bson.NewObjectID()
 	route.DateCreated = time.Now()
-	route.Status = "on progress"
+	route.Status = status
 	route.InviteCode = utils.NewInviteCode()
 	if route.Team == nil {
 		route.Team = []bson.ObjectID{}
 	}
-	_, err := r.RouteCollection.InsertOne(ctx, route)
+	_, err = r.RouteCollection.InsertOne(ctx, route)
 	if err != nil {
 		logRepositoryError(ctx, "route", "create.insert_one", err, "collection", "routes", "route_id", route.ID.Hex())
 		return err
@@ -120,6 +152,26 @@ func (r *routeRepository) UpdateRoute(ctx context.Context, data map[string]inter
 		return domain.Route{}, errors.New("ID de ruta inválido")
 	}
 	delete(data, "_id")
+	if title, ok := data["title"].(string); ok {
+		title = strings.TrimSpace(title)
+		data["title"] = title
+
+		var existingRoute domain.Route
+		err = r.RouteCollection.FindOne(ctx, bson.M{
+			"_id": bson.M{"$ne": objID},
+			"title": bson.M{
+				"$regex":   "^" + regexp.QuoteMeta(title) + "$",
+				"$options": "i",
+			},
+		}).Decode(&existingRoute)
+		if err == nil {
+			return domain.Route{}, ErrRouteTitleAlreadyExists
+		}
+		if err != mongo.ErrNoDocuments {
+			logRepositoryError(ctx, "route", "update.find_duplicate_title", err, "collection", "routes", "route_id", idStr, "title", title)
+			return domain.Route{}, err
+		}
+	}
 
 	allowedFields := map[string]bool{
 		"title": true, "description": true,
@@ -147,21 +199,67 @@ func (r *routeRepository) UpdateRoute(ctx context.Context, data map[string]inter
 	return updatedRoute, nil
 }
 
-// DeleteRoute elimina una ruta de la base de datos por su ID.
-// Convierte el ID de cadena a ObjectID y elimina el documento correspondiente.
-func (r *routeRepository) DeleteRoute(ctx context.Context, routeId string) error {
+// SoftDeleteRoute marca una ruta como eliminada sin borrarla de la base de datos.
+func (r *routeRepository) SoftDeleteRoute(ctx context.Context, routeId string) error {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(routeId)
 	if err != nil {
 		return errors.New("ID de ruta inválido")
 	}
-
-	_, err = r.RouteCollection.DeleteOne(ctx, bson.M{"_id": objID})
+	_, err = r.RouteCollection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": bson.M{"status": domain.RouteStatusDeleted}})
 	if err != nil {
-		logRepositoryError(ctx, "route", "delete.delete_one", err, "collection", "routes", "route_id", routeId)
+		logRepositoryError(ctx, "route", "soft_delete.update_one", err, "collection", "routes", "route_id", routeId)
 	}
 	return err
+}
+
+// DeleteRoute marca una ruta como eliminada (soft-delete) en lugar de borrarla físicamente.
+func (r *routeRepository) DeleteRoute(ctx context.Context, routeId string) error {
+	return r.SoftDeleteRoute(ctx, routeId)
+}
+
+func (r *routeRepository) StartRoute(ctx context.Context, routeId string, userID string) (domain.Route, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	objID, err := bson.ObjectIDFromHex(routeId)
+	if err != nil {
+		return domain.Route{}, errors.New("ID de ruta inválido")
+	}
+	userObjID, err := bson.ObjectIDFromHex(userID)
+	if err != nil {
+		return domain.Route{}, errors.New("ID de usuario inválido")
+	}
+
+	var route domain.Route
+	if err := r.RouteCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&route); err != nil {
+		if err != mongo.ErrNoDocuments {
+			logRepositoryError(ctx, "route", "start.find_one", err, "collection", "routes", "route_id", routeId)
+		}
+		return domain.Route{}, errors.New("Ruta no encontrada")
+	}
+
+	if route.Status == domain.RouteStatusCompleted {
+		return domain.Route{}, errors.New("No puedes iniciar una ruta finalizada")
+	}
+	if route.Status == domain.RouteStatusActive {
+		return route, nil
+	}
+
+	_, err = r.RouteCollection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{
+		"$set":      bson.M{"status": domain.RouteStatusActive},
+		"$addToSet": bson.M{"team": userObjID},
+	})
+	if err != nil {
+		logRepositoryError(ctx, "route", "start.update_one", err, "collection", "routes", "route_id", routeId)
+		return domain.Route{}, err
+	}
+
+	if err := r.RouteCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&route); err != nil {
+		logRepositoryError(ctx, "route", "start.find_updated", err, "collection", "routes", "route_id", routeId)
+		return domain.Route{}, err
+	}
+	return route, nil
 }
 
 // FinishRoute marca una ruta como finalizada.
@@ -182,7 +280,7 @@ func (r *routeRepository) FinishRoute(ctx context.Context, id string, leaderID s
 	if !allowAny {
 		filter["route_leader"] = leaderObjID
 	}
-	update := bson.M{"$set": bson.M{"status": "Finalizada", "date_finished": time.Now()}}
+	update := bson.M{"$set": bson.M{"status": domain.RouteStatusCompleted, "date_finished": time.Now()}}
 	result, err := r.RouteCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		logRepositoryError(ctx, "route", "finish.update_one", err, "collection", "routes", "route_id", id, "leader_id", leaderID)
@@ -210,7 +308,7 @@ func (r *routeRepository) JoinRoute(ctx context.Context, code string, userID str
 		return domain.Route{}, errors.New("Ruta no encontrada")
 	}
 
-	if route.Status == "Finalizada" {
+	if route.Status == domain.RouteStatusCompleted {
 		return domain.Route{}, errors.New("No puedes unirte a una ruta finalizada")
 	}
 
@@ -266,7 +364,7 @@ func (r *routeRepository) LeaveRoute(ctx context.Context, routeId string, userID
 		return errors.New("Ruta no encontrada")
 	}
 
-	if route.Status == "Finalizada" {
+	if route.Status == domain.RouteStatusCompleted {
 		return errors.New("No puedes salir de una ruta finalizada")
 	}
 

@@ -1,11 +1,17 @@
 package routes
 
 import (
+	"context"
+	"net/http"
+	"time"
+
 	"github.com/SebaVCH/hdcProject/internal/config"
+	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
+	"go.mongodb.org/mongo-driver/v2/bson"
 
 	"github.com/SebaVCH/hdcProject/docs"
 )
@@ -25,6 +31,22 @@ func SetupRouter() *gin.Engine {
 	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.CSPMiddleware())
 	r.Use(middleware.BodySizeLimit(10 << 20)) // 10 MB limit
+	r.GET("/healthz", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+	r.GET("/readyz", func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 3*time.Second)
+		defer cancel()
+		if database.Client == nil || database.Client.Ping(ctx, nil) != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"status": "unavailable"})
+			return
+		}
+		if err := database.Client.Database(config.DBName).RunCommand(ctx, bson.D{{Key: "ping", Value: 1}}).Err(); err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"status": "unavailable"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"status": "ready"})
+	})
 
 	if config.AppEnv != "production" {
 		docs.SwaggerInfo.BasePath = "/"

@@ -6,6 +6,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import { Alert, CircularProgress, TextField, Typography, useTheme, useMediaQuery } from '@mui/material';
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import useSessionStore from '../../stores/useSessionStore';
 import CloseDialogButton from '../Button/CloseDialogButton';
 import { useJoinRoute } from '../../api/hooks/RouteHooks';
@@ -32,6 +33,7 @@ export default function DialogJoinRoute({ stateOpen } : DialogJoinRouteProps) {
     const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ acept, setAcept ] = useState(false)
     const [ inviteCode, setInviteCode ] = useState('')
+    const queryClient = useQueryClient()
     const { isSuccess, isError, isIdle, isPending, data, mutate, error, reset } = useJoinRoute()
 
 
@@ -60,8 +62,10 @@ export default function DialogJoinRoute({ stateOpen } : DialogJoinRouteProps) {
             setAcept(true)
             setRouteId(data.id)
             setRouteStatus(true)
+            queryClient.invalidateQueries({ queryKey: ['routes'] })
+            queryClient.invalidateQueries({ queryKey: ['events'] })
         }
-    }, [data, isSuccess, setRouteId, setRouteStatus]) 
+    }, [data, isSuccess, setRouteId, setRouteStatus, queryClient]) 
 
     return (
         <>

@@ -21,49 +21,99 @@
   <p><strong>Perfil:</strong> usuario con rol <strong>administrador</strong>.</p>
 
   <h2>Alcance del Rol</h2>
-  <p>El administrador mantiene la operación general del sistema. Puede ver la información operativa, crear usuarios, gestionar instituciones y administrar registros críticos.</p>
+  <p>El administrador mantiene la operación general del sistema. Puede ver toda la información operativa, crear/editar/eliminar usuarios y administradores, gestionar instituciones, aprobar cuentas pendientes y administrar todos los registros críticos del sistema.</p>
+  <p>El registro público siempre crea voluntarios con cuenta pendiente de aprobaci&oacute;n. El administrador debe aprobar esas cuentas desde el panel de usuarios para que puedan iniciar sesi&oacute;n.</p>
 
   <h2>Permisos del Administrador</h2>
   <table>
-    <thead><tr><th>Módulo</th><th>Permisos</th></tr></thead>
+    <thead><tr><th>M&oacute;dulo</th><th>Permisos</th></tr></thead>
     <tbody>
-      <tr><td>Usuarios</td><td>Ver usuarios, crear voluntarios, crear administradores, editar usuarios y eliminar usuarios.</td></tr>
+      <tr><td>Usuarios</td><td>Ver listado completo (incluyendo email, tel&eacute;fono, rol, estado), crear voluntarios y administradores, editar usuarios, eliminar usuarios y aprobar cuentas pendientes.</td></tr>
       <tr><td>Instituciones</td><td>Ver, crear, editar y eliminar instituciones.</td></tr>
-      <tr><td>Rutas</td><td>Crear rutas, unirse a rutas, ver rutas, editar rutas, eliminar rutas y finalizar cualquier ruta.</td></tr>
-      <tr><td>Informes de ruta</td><td>Ver datos de rutas y descargar informes completos.</td></tr>
+      <tr><td>Rutas</td><td>Ver todas las rutas, editar cualquier ruta, eliminar cualquier ruta, finalizar cualquier ruta (incluso si no se es el l&iacute;der).</td></tr>
+      <tr><td>Informes de ruta</td><td>Ver datos de rutas y descargar informes completos en Excel.</td></tr>
       <tr><td>Mapa</td><td>Ver puntos de ayuda, riesgos, mapas de calor, rutas y alojamientos.</td></tr>
-      <tr><td>Alojamientos</td><td>Crear alojamientos desde el mapa. Este botón solo debe estar disponible para administradores.</td></tr>
-      <tr><td>Personas ayudadas</td><td>Ver, crear, editar y eliminar perfiles; gestionar antecedentes e información médica.</td></tr>
-      <tr><td>Puntos de ayuda</td><td>Crear, editar, eliminar y vincular puntos de ayuda con personas beneficiadas.</td></tr>
-      <tr><td>Avisos</td><td>Crear avisos para voluntarios y visualizar avisos fijados.</td></tr>
-      <tr><td>Calendario</td><td>Ver y gestionar eventos de calendario asociados a rutas.</td></tr>
+      <tr><td>Alojamientos</td><td>Crear alojamientos desde el mapa. Solo disponible para administradores.</td></tr>
+      <tr><td>Personas ayudadas</td><td>Ver, crear, editar y eliminar perfiles; gestionar antecedentes e informaci&oacute;n m&eacute;dica (incluyendo eliminaci&oacute;n).</td></tr>
+      <tr><td>Puntos de ayuda</td><td>Ver, crear, editar, eliminar puntos de ayuda y vincularlos con personas beneficiadas.</td></tr>
+      <tr><td>Avisos</td><td>Crear avisos para todos los voluntarios (env&iacute;o masivo), crear avisos personales, visualizar avisos fijados.</td></tr>
+      <tr><td>Calendario</td><td>Ver eventos de calendario de todos los usuarios y editar/eliminar cualquier evento.</td></tr>
+      <tr><td>Exportar datos</td><td>Exportar listado completo de personas ayudadas.</td></tr>
     </tbody>
   </table>
 
   <h2>Funciones Principales</h2>
+
+  <h3>Aprobar Usuarios Pendientes</h3>
+  <p>Cuando alguien se registra p&uacute;blicamente, su cuenta queda en estado <strong>"Pendiente"</strong> y no puede iniciar sesi&oacute;n. El administrador debe:</p>
+  <ol>
+    <li>Ir al panel de usuarios.</li>
+    <li>Identificar los usuarios con estado <strong>"Pendiente"</strong> (aparecen con un distintivo visual).</li>
+    <li>Hacer clic en el bot&oacute;n <strong>"Aprobar"</strong> del usuario correspondiente.</li>
+    <li>Una vez aprobado, el usuario recibir&aacute; la confirmaci&oacute;n y podr&aacute; iniciar sesi&oacute;n.</li>
+  </ol>
+  <p>Tambi&eacute;n se pueden eliminar cuentas pendientes que no correspondan.</p>
+
   <h3>Gestionar Usuarios</h3>
-  <p>Desde el panel de usuarios se pueden revisar cuentas, crear nuevos voluntarios o administradores, editar información y eliminar cuentas cuando corresponda.</p>
+  <p>El panel de usuarios permite revisar cuentas, crear nuevos voluntarios o administradores, editar informaci&oacute;n y eliminar cuentas. La creaci&oacute;n desde administrador genera usuarios con estado <strong>"Pendiente"</strong> de forma predeterminada. Los usuarios legacy (creados antes de esta pol&iacute;tica) sin el campo <code>is_active</code> se consideran activos autom&aacute;ticamente.</p>
 
   <h3>Gestionar Instituciones</h3>
-  <p>Permite mantener el listado de instituciones asociadas a usuarios y operación. Solo administradores pueden crear, modificar o eliminar instituciones.</p>
+  <p>Las instituciones son registros administrativos que se asocian a usuarios para ordenar la informaci&oacute;n. Solo administradores pueden crear, modificar o eliminar instituciones. Los voluntarios solo pueden consultarlas.</p>
 
-  <h3>Gestionar Rutas</h3>
-  <p>La sección de gestión de rutas permite revisar datos de rutas y descargar informes. También muestra acciones administrativas cuando corresponda.</p>
-
-  <h3>Mapa y Alojamientos</h3>
-  <p>El administrador puede crear alojamientos desde el mapa. Para voluntarios, el botón de creación no debe mostrarse.</p>
-
-  <h3>Personas Ayudadas</h3>
-  <p>El administrador puede mantener perfiles de personas beneficiadas, antecedentes, información médica y vínculos con puntos de ayuda.</p>
-
-  <h2>Buenas Prácticas</h2>
+  <h3>Ciclo de Vida de las Rutas</h3>
+  <p>Las rutas son el elemento central de la operaci&oacute;n en RutaSocial. Tienen tres estados:</p>
+  <table>
+    <thead><tr><th>Estado</th><th>Descripci&oacute;n</th></tr></thead>
+    <tbody>
+      <tr><td><strong>No iniciada</strong></td><td>La ruta ha sido creada pero a&uacute;n no se ha empezado a recorrer.</td></tr>
+      <tr><td><strong>on progress</strong></td><td>La ruta est&aacute; activa; alguien presion&oacute; "Iniciar" y se pueden registrar puntos, personas, etc.</td></tr>
+      <tr><td><strong>Finalizada</strong></td><td>La ruta ha sido completada. No se puede reiniciar ni unir gente nueva.</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Formas de crear una ruta:</strong></p>
   <ul>
-    <li>Crear administradores solo cuando sea estrictamente necesario.</li>
-    <li>Revisar que las instituciones estén correctas antes de asociarlas a usuarios.</li>
-    <li>Descargar informes de ruta para respaldo operativo cuando se finalice una actividad.</li>
-    <li>Cerrar sesión al terminar, especialmente en equipos compartidos.</li>
+    <li><strong>Desde el calendario:</strong> Al agendar un evento de calendario, si no se selecciona una ruta existente, el sistema crea autom&aacute;ticamente una nueva ruta con el mismo t&iacute;tulo del evento y estado "No iniciada". El creador del evento se convierte en l&iacute;der de la ruta.</li>
+    <li><strong>Manual:</strong> Desde la interfaz de rutas se puede crear directamente con nombre, descripci&oacute;n y ubicaci&oacute;n.</li>
+  </ul>
+  <p><strong>Cambios de estado:</strong></p>
+  <ul>
+    <li><strong>Iniciar:</strong> Cualquier usuario autenticado puede presionar "Iniciar" en una ruta con estado "No iniciada". Esto cambia el estado a "on progress" y agrega al usuario al equipo de la ruta autom&aacute;ticamente (sin necesidad de c&oacute;digo de invitaci&oacute;n).</li>
+    <li><strong>Finalizar:</strong> Solo el l&iacute;der de la ruta o un administrador pueden finalizar una ruta. Al finalizar, nadie m&aacute;s puede unirse ni cambiar su estado.</li>
+  </ul>
+  <p><strong>Datos que se registran en una ruta:</strong></p>
+  <ul>
+    <li>Nombre, descripci&oacute;n y ubicaci&oacute;n (coordenadas).</li>
+    <li>L&iacute;der de la ruta (quien la cre&oacute;).</li>
+    <li>Equipo de participantes (quienes se unen o inician la ruta).</li>
+    <li>Fechas de inicio y finalizaci&oacute;n.</li>
+    <li>Puntos de ayuda, riesgos y personas beneficiadas asociadas.</li>
+  </ul>
+  <p><strong>Nota importante:</strong> El nombre de la ruta debe ser &uacute;nico en todo el sistema (sin distinci&oacute;n de may&uacute;sculas). Si ya existe una ruta con el mismo nombre, el sistema mostrar&aacute; un mensaje de error.</p>
+
+  <h3>Calendario</h3>
+  <p>Los eventos de calendario pueden tener o no una ruta asociada. Cuando se agenda un evento sin seleccionar una ruta existente, el sistema crea autom&aacute;ticamente una ruta vinculada. Los eventos se muestran con colores seg&uacute;n el estado de la ruta asociada:</p>
+  <ul>
+    <li><span style="color:#d32f2f;">&bull; Rojo:</span> Ruta "No iniciada".</li>
+    <li><span style="color:#1976d2;">&bull; Azul:</span> Ruta "on progress".</li>
+    <li><span style="color:#388e3c;">&bull; Verde:</span> Ruta "Finalizada".</li>
   </ul>
 
-  <div class="note">El registro público siempre crea voluntarios. La creación de administradores se realiza desde funciones protegidas para administradores.</div>
+  <h3>Mapa y Alojamientos</h3>
+  <p>El administrador puede crear alojamientos desde el mapa. Para voluntarios el bot&oacute;n de creaci&oacute;n no aparece.</p>
+
+  <h3>Personas Ayudadas</h3>
+  <p>El administrador puede mantener perfiles completos de personas beneficiadas, incluyendo RUT, antecedentes e informaci&oacute;n m&eacute;dica. Solo el administrador puede eliminar personas, antecedentes o registros m&eacute;dicos. Los voluntarios pueden ver toda esta informaci&oacute;n y crear/editar, pero no eliminar.</p>
+
+  <h2>Buenas Pr&aacute;cticas</h2>
+  <ul>
+    <li>Crear administradores solo cuando sea estrictamente necesario.</li>
+    <li>Aprobar cuentas pendientes peri&oacute;dicamente para no bloquear voluntarios.</li>
+    <li>Revisar que las instituciones est&eacute;n correctas antes de asociarlas a usuarios.</li>
+    <li>Descargar informes de ruta para respaldo operativo cuando se finalice una actividad.</li>
+    <li>No eliminar rutas con datos operativos importantes; finalizarlas y mantener el registro.</li>
+    <li>Cerrar sesi&oacute;n al terminar, especialmente en equipos compartidos.</li>
+  </ul>
+
+  <div class="note">El registro p&uacute;blico siempre crea voluntarios con cuenta pendiente. La creaci&oacute;n de administradores se realiza desde funciones protegidas para administradores. Los usuarios creados por administrador tambi&eacute;n quedan pendientes de aprobaci&oacute;n.</div>
 </body>
 </html>

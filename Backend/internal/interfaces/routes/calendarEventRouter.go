@@ -14,7 +14,8 @@ import (
 // Crea el repositorio de eventos del calendario, el caso de uso y el controlador, y define las rutas para crear, obtener, actualizar y eliminar eventos.
 func SetupCalendarEventRouter(r *gin.Engine) {
 	calendarEventRepo := repository.NewCalendarEventRepository(database.Client.Database(config.DBName).Collection("calendar_events"))
-	calendarEventUseCase := usecase.NewCalendarEventUseCase(calendarEventRepo)
+	routeRepo := repository.NewRouteRepository(database.Client.Database(config.DBName).Collection("route"), database.Client.Database(config.DBName).Collection("helping_points"), database.Client.Database(config.DBName).Collection("personas"))
+	calendarEventUseCase := usecase.NewCalendarEventUseCase(calendarEventRepo, routeRepo)
 	calendarEventController := controller.NewCalendarEventController(calendarEventUseCase)
 
 	protected := r.Group("/calendar-event")

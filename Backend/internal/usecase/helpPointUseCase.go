@@ -154,17 +154,8 @@ func (h helpingPointUseCase) LinkPersonaToHelpPoint(c *gin.Context) {
 		return
 	}
 
-	userID, userRole, ok := getAuthenticatedUserIDAndRole(c)
-	if !ok {
+	if _, ok := getAuthenticatedUserID(c); !ok {
 		return
-	}
-
-	if userRole != domain.RoleAdmin {
-		if err := h.helpingPointRepository.FindByIDAndUserID(c.Request.Context(), helpPointID, userID); err != nil {
-			logUseCaseWarn(c, "help_point.link_persona.authorize", http.StatusBadRequest, err, "help_point_id", helpPointID, "persona_id", personaID)
-			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
 	}
 
 	err := h.helpingPointRepository.LinkPersonaToHelpPoint(c.Request.Context(), helpPointID, personaID)

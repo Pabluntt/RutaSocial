@@ -21,6 +21,7 @@ type UserRepository interface {
 	GetPublicInfoByID(ctx context.Context, id string) (map[string]string, error)
 	CreateUserByAdmin(ctx context.Context, user domain.Usuario) (domain.Usuario, error)
 	UpdateUserByAdmin(ctx context.Context, updateData map[string]interface{}) (domain.Usuario, error)
+	ApproveUserByID(ctx context.Context, id string) (domain.Usuario, error)
 	DeleteUserByID(ctx context.Context, id string) error
 }
 
@@ -254,7 +255,7 @@ func (u *userRepository) CreateUserByAdmin(ctx context.Context, user domain.Usua
 	user.CompletedRoutes = 0
 	user.ListRoutes = []domain.Route{}
 	user.DateRegister = time.Now()
-	user.IsActive = true
+	user.IsActive = domain.BoolPtr(false)
 
 	res, err := u.UserCollection.Database().Collection("usuarios").InsertOne(ctx, user)
 	if err != nil {
@@ -267,6 +268,31 @@ func (u *userRepository) CreateUserByAdmin(ctx context.Context, user domain.Usua
 		user.ID = insertedID
 	}
 
+	user.Sanitize()
+	return user, nil
+}
+
+func (u *userRepository) ApproveUserByID(ctx context.Context, id string) (domain.Usuario, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	objID, err := bson.ObjectIDFromHex(id)
+	if err != nil {
+		return domain.Usuario{}, errors.New("ID de usuario inválido")
+	}
+
+	filter := bson.M{"_id": objID}
+	update := bson.M{"$set": bson.M{"is_active": true}}
+	if _, err := u.UserCollection.UpdateOne(ctx, filter, update); err != nil {
+		logRepositoryError(ctx, "user", "approve.update_one", err, "collection", "usuarios", "user_id", id)
+		return domain.Usuario{}, err
+	}
+
+	var user domain.Usuario
+	if err := u.UserCollection.FindOne(ctx, filter).Decode(&user); err != nil {
+		logRepositoryError(ctx, "user", "approve.find_updated", err, "collection", "usuarios", "user_id", id)
+		return domain.Usuario{}, err
+	}
 	user.Sanitize()
 	return user, nil
 }

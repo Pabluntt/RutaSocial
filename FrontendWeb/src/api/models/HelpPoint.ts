@@ -18,5 +18,6 @@ export interface HelpPoint {
     people : HelpedPerson[]
     peopleHelped? : HelpedPerson
     personaID? : string
+    personaIDs? : string[]
     disabled : boolean
 } 

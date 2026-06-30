@@ -21,6 +21,9 @@ vi.mock('../api/hooks/CalendarEventHooks', () => ({
   useDeleteCalendarEvent: () => ({ mutate: vi.fn(), data: undefined }),
   useUpdateCalendarEvent: () => ({ isSuccess: false, isPending: false, isError: false, isIdle: true, mutate: vi.fn(), reset: vi.fn() }),
 }))
+vi.mock('../api/hooks/RouteHooks', () => ({
+  useRoutes: () => ({ data: [], refetch: vi.fn() }),
+}))
 vi.mock('react-router-dom', () => ({ useNavigate: () => vi.fn() }))
 
 describe('Calendar component', () => {

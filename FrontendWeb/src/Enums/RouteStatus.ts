@@ -1,4 +1,6 @@
 export enum RouteStatus {
+    Scheduled = 'No iniciada',
     Active = 'on progress',
-    Completed = 'Finalizada'
+    Completed = 'Finalizada',
+    Deleted = 'Eliminada'
 }

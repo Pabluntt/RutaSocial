@@ -3,6 +3,7 @@ package usecase
 import (
 	"net/http"
 
+	"github.com/SebaVCH/hdcProject/internal/domain"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -55,4 +56,16 @@ func getAuthenticatedUserIDAndRole(c *gin.Context) (string, string, bool) {
 	}
 
 	return userID, userRole, true
+}
+
+func requireSelfOrAdmin(c *gin.Context, targetUserID string) bool {
+	userID, userRole, ok := getAuthenticatedUserIDAndRole(c)
+	if !ok {
+		return false
+	}
+	if userRole == domain.RoleAdmin || userID == targetUserID {
+		return true
+	}
+	c.IndentedJSON(http.StatusForbidden, gin.H{"error": "No tienes permiso para acceder a este recurso"})
+	return false
 }

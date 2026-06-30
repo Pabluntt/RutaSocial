@@ -90,7 +90,7 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
     }
 
     const { refetch } = useCalendarEvents()
-    const { isIdle, isPending, isSuccess, isError, mutate, reset } = useCreateCalendarEvent()
+    const { isIdle, isPending, isSuccess, isError, mutate, error, reset } = useCreateCalendarEvent()
     
     const handleOnChangeTitle = (e : React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setFormCalendarEvent(prev => ({...prev, title : e.target.value}))
@@ -125,10 +125,7 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
             errors.errorTitle = 'El título contiene caracteres no permitidos'
             isValid = false
         }
-        if(!description) {
-            errors.errorDescription = 'La descripción es obligatoria'
-            isValid = false
-        } else if (!isValidCalendarText(description)) {
+        if(description && !isValidCalendarText(description)) {
             errors.errorDescription = 'La descripción contiene caracteres no permitidos'
             isValid = false
         }
@@ -182,6 +179,19 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
             }, 1000)
         }
     }, [isSuccess])
+
+    useEffect(() => {
+        if(!isError) return
+
+        const createError = error as { status?: number, error?: string, message?: string } | null
+        if(createError?.status === 409) {
+            reset()
+            setFormErrors(prev => ({...prev, errorTitle: 'El nombre de la ruta ya está ocupado'}))
+            return
+        }
+
+        showSnackbar(createError?.error || createError?.message || 'No se pudo crear el evento', 'error')
+    }, [isError, error, reset, showSnackbar])
 
 
     useEffect(() => {

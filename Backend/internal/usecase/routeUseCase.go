@@ -1,14 +1,16 @@
 package usecase
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
+
 	"github.com/SebaVCH/hdcProject/internal/domain"
 	"github.com/SebaVCH/hdcProject/internal/repository"
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/xuri/excelize/v2"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"net/http"
 )
 
 // RouteUseCase define la interfaz para las operaciones relacionadas con rutas.
@@ -19,6 +21,7 @@ type RouteUseCase interface {
 	CreateRoute(c *gin.Context)
 	UpdateRoute(c *gin.Context)
 	DeleteRoute(c *gin.Context)
+	StartRoute(c *gin.Context)
 	FinishRoute(c *gin.Context)
 	JoinRoute(c *gin.Context)
 	LeaveRoute(c *gin.Context)
@@ -98,6 +101,10 @@ func (r routeUseCase) CreateRoute(c *gin.Context) {
 
 	err = r.routeRepository.CreateRoute(c.Request.Context(), &route)
 	if err != nil {
+		if errors.Is(err, repository.ErrRouteTitleAlreadyExists) {
+			c.IndentedJSON(http.StatusConflict, gin.H{"error": "El nombre de la ruta ya está ocupado"})
+			return
+		}
 		logUseCaseError(c, "route.create", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear la ruta"})
 		return
@@ -129,6 +136,10 @@ func (r routeUseCase) UpdateRoute(c *gin.Context) {
 	updateData["_id"] = routeID
 	updatedRoute, err := r.routeRepository.UpdateRoute(c.Request.Context(), updateData)
 	if err != nil {
+		if errors.Is(err, repository.ErrRouteTitleAlreadyExists) {
+			c.IndentedJSON(http.StatusConflict, gin.H{"error": "El nombre de la ruta ya está ocupado"})
+			return
+		}
 		logUseCaseError(c, "route.update", http.StatusBadRequest, err, "route_id", routeID)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al actualizar la ruta"})
 		return
@@ -149,6 +160,28 @@ func (r routeUseCase) DeleteRoute(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusOK, gin.H{"message": "Ruta eliminada correctamente"})
+}
+
+func (r routeUseCase) StartRoute(c *gin.Context) {
+	routeID := c.Param("id")
+	if routeID == "" {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "ID de ruta no proporcionado"})
+		return
+	}
+
+	userID, ok := getAuthenticatedUserID(c)
+	if !ok {
+		return
+	}
+
+	route, err := r.routeRepository.StartRoute(c.Request.Context(), routeID, userID)
+	if err != nil {
+		logUseCaseWarn(c, "route.start", http.StatusBadRequest, err, "route_id", routeID)
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": route})
 }
 
 // FinishRoute maneja la solicitud para finalizar una ruta.
@@ -231,6 +264,9 @@ func (r routeUseCase) GetMyParticipation(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "ID de usuario no encontrado"})
 		return
 	}
+	if !requireSelfOrAdmin(c, userID) {
+		return
+	}
 
 	participation, err := r.routeRepository.GetMyParticipation(c.Request.Context(), userID)
 	if err != nil {
@@ -247,6 +283,9 @@ func (r routeUseCase) GetUserRoutes(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "ID de usuario no proporcionado"})
+		return
+	}
+	if !requireSelfOrAdmin(c, userID) {
 		return
 	}
 

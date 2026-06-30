@@ -1,4 +1,4 @@
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, List, ListItemButton, ListItemText, Paper, Chip, CircularProgress } from "@mui/material"
+import { Alert, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, List, ListItemButton, ListItemText, Paper, Chip, CircularProgress } from "@mui/material"
 import { useRef, useEffect, useState } from "react"
 import { useRoutes } from "../../api/hooks/RouteHooks"
 import { useHelpPoints, useLinkPersonaToHelpPoint } from "../../api/hooks/HelpPointHooks"
@@ -22,28 +22,39 @@ function MiniMap({ coords }: { coords: number[] }) {
         const el = mapRef.current
         if (!el || coords.length !== 2) return
 
+        const [lat, lng] = coords
+        if (!Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return
+
         if (mapInstanceRef.current) {
             mapInstanceRef.current.remove()
         }
 
         const map = L.map(el, {
-            center: [coords[1], coords[0]],
+            center: [lat, lng],
             zoom: 15,
             zoomControl: false,
             dragging: false,
             scrollWheelZoom: false,
         })
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap',
+        L.tileLayer('https://www.google.cn/maps/vt?lyrs=m@189&gl=cn&x={x}&y={y}&z={z}', {
+            attribution: 'Google Maps',
         }).addTo(map)
 
-        L.marker([coords[1], coords[0]]).addTo(map)
+        const markerIcon = L.divIcon({
+            className: '',
+            html: '<div style="width:18px;height:18px;border-radius:9999px;background:#14b8a6;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.35);"></div>',
+            iconSize: [18, 18],
+            iconAnchor: [9, 9],
+        })
 
-        setTimeout(() => map.invalidateSize(), 50)
+        L.marker([lat, lng], { icon: markerIcon }).addTo(map)
+
+        const timers = [100, 300, 600].map((delay) => setTimeout(() => map.invalidateSize(), delay))
         mapInstanceRef.current = map
 
         return () => {
+            timers.forEach(clearTimeout)
             if (mapInstanceRef.current) {
                 mapInstanceRef.current.remove()
                 mapInstanceRef.current = null
@@ -61,22 +72,30 @@ export default function LinkHelpPointDialog({ open, personaID, onClose, onLinked
 
     const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
     const [selectedHP, setSelectedHP] = useState<HelpPoint | null>(null)
+    const [errorMessage, setErrorMessage] = useState('')
 
     const filteredHelpPoints = helpPoints?.filter(hp => hp.routeID === selectedRouteId) || []
 
     const handleLink = async () => {
         if (!selectedHP) return
-        await linkMutation.mutateAsync({
-            helpPointID: selectedHP.id,
-            personaID,
-        })
-        onLinked()
-        handleClose()
+        setErrorMessage('')
+        try {
+            await linkMutation.mutateAsync({
+                helpPointID: selectedHP.id,
+                personaID,
+            })
+            onLinked()
+            handleClose()
+        } catch (error) {
+            const status = error && typeof error === 'object' && 'status' in error ? Number((error as { status?: unknown }).status) : undefined
+            setErrorMessage(status === 403 ? 'No tienes permisos para vincular este punto' : 'No se pudo vincular la persona al punto')
+        }
     }
 
     const handleClose = () => {
         setSelectedRouteId(null)
         setSelectedHP(null)
+        setErrorMessage('')
         onClose()
     }
 
@@ -85,6 +104,7 @@ export default function LinkHelpPointDialog({ open, personaID, onClose, onLinked
             <DialogTitle sx={{ fontWeight: 600 }}>Vincular a punto de ayuda</DialogTitle>
             <DialogContent>
                 <div className="flex flex-col gap-4 py-2">
+                    {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
                     {!selectedRouteId ? (
                         <div>
                             <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>1. Selecciona una ruta</Typography>
@@ -143,8 +163,12 @@ export default function LinkHelpPointDialog({ open, personaID, onClose, onLinked
                             </div>
                             <div className="flex flex-col gap-3">
                                 <Paper variant="outlined" sx={{ borderRadius: '10px', overflow: 'hidden', height: 200 }}>
-                                    {selectedHP.coords.length === 2 && (
+                                    {selectedHP.coords.length === 2 && Number.isFinite(selectedHP.coords[0]) && Number.isFinite(selectedHP.coords[1]) && Math.abs(selectedHP.coords[0]) <= 90 && Math.abs(selectedHP.coords[1]) <= 180 ? (
                                         <MiniMap coords={selectedHP.coords} />
+                                    ) : (
+                                        <div className="flex h-full items-center justify-center px-4 text-center text-sm text-gray-500">
+                                            Este punto no tiene coordenadas válidas para mostrar el mapa.
+                                        </div>
                                     )}
                                 </Paper>
                                 <Paper variant="outlined" sx={{ p: 2, borderRadius: '10px' }}>

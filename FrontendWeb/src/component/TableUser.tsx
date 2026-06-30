@@ -2,16 +2,18 @@ import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody
 import { visuallyHidden } from '@mui/utils';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import React, { useState } from "react";
 import { Order, getComparator } from "../utils/utilsSort";
 import { IUser } from "../api/models/User";
 import { useInstitution } from "../api/hooks/InstitutionHooks";
 import { Institution } from "../api/models/Institution";
-import { useDeleteUser } from "../api/hooks/UserHooks";
+import { useApproveUser, useDeleteUser } from "../api/hooks/UserHooks";
 import { useNavigate } from "react-router-dom";
 import { UserService } from "../api/services/UserService";
+import ConfirmDialog from "./Dialog/ConfirmDialog";
 
-type SortableUserKeys = keyof Omit<IUser, 'listRoutes' | 'dateRegister' | 'completedRoutes'>;
+type SortableUserKeys = keyof Omit<IUser, 'listRoutes' | 'dateRegister' | 'completedRoutes' | 'isActive'>;
 
 interface HeadCell {
   disablePadding: boolean;
@@ -107,6 +109,9 @@ function EnhancedTableHead(props: EnhancedTableProps) {
             </TableSortLabel>
           </TableCell>
         ))}
+        <TableCell align="center">
+          Estado
+        </TableCell>
         {isAdmin && (
           <TableCell align="center" sx={{ width: 120 }}>
             Acciones
@@ -182,9 +187,19 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
   const [alertMessage, setAlertMessage] = useState('');
   const [alertSeverity, setAlertSeverity] = useState<'success' | 'error'>('success');
   const [showAlert, setShowAlert] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<null | {
+    title: string
+    message: string
+    confirmText: string
+    cancelText: string
+    confirmColor?: 'primary' | 'error' | 'success' | 'warning'
+    severity?: 'info' | 'warning' | 'error' | 'success'
+    onConfirm: () => void
+  }>(null);
   const theme = useTheme();
   const computerDevice = useMediaQuery(theme.breakpoints.up('sm'));
   const { mutate: deleteUserMutate } = useDeleteUser();
+  const { mutate: approveUserMutate } = useApproveUser();
   const handleRequestSort = (
     event: React.MouseEvent<unknown>,
     property: SortableUserKeys,
@@ -236,7 +251,20 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
 
     const usersToDelete = users.filter((user) => selected.includes(user.id))
     const label = usersToDelete.length === 1 ? usersToDelete[0].name : `${usersToDelete.length} usuarios seleccionados`
-    if (!window.confirm(`¿Estás seguro de que deseas eliminar ${label}?`)) return
+
+    setConfirmAction({
+      title: 'Eliminar usuarios',
+      message: `¿Estás seguro de que deseas eliminar ${label}?`,
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      confirmColor: 'error',
+      severity: 'warning',
+      onConfirm: () => { void deleteUsers(usersToDelete) },
+    })
+  }
+
+  const deleteUsers = async (usersToDelete: IUser[]) => {
+    setConfirmAction(null)
 
     const results = await Promise.allSettled(usersToDelete.map((user) => UserService.DeleteUser(user.id)))
     const deletedIds = usersToDelete
@@ -264,24 +292,62 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
   };
 
   const handleDeleteClick = (user: IUser) => {
-    if (window.confirm(`¿Estás seguro de que deseas eliminar a ${user.name}?`)) {
-      deleteUserMutate(user.id, {
-        onSuccess: () => {
-          setUsers(users.filter((u) => u.id !== user.id));
-          setAlertMessage('Usuario eliminado exitosamente');
-          setAlertSeverity('success');
-          setShowAlert(true);
-          setTimeout(() => { setShowAlert(false); }, 3000);
-        },
-        onError: (error: any) => {
-          setAlertMessage(error?.status === 403 ? 'No tienes permisos para eliminar usuarios' : 'Error al eliminar usuario');
-          setAlertSeverity('error');
-          setShowAlert(true);
-          setTimeout(() => { setShowAlert(false); }, 3000);
-        }
-      });
-    }
+    setConfirmAction({
+      title: 'Eliminar usuario',
+      message: `¿Estás seguro de que deseas eliminar a ${user.name}?`,
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      confirmColor: 'error',
+      severity: 'warning',
+      onConfirm: () => {
+        setConfirmAction(null)
+        deleteUserMutate(user.id, {
+          onSuccess: () => {
+            setUsers(users.filter((u) => u.id !== user.id));
+            setAlertMessage('Usuario eliminado exitosamente');
+            setAlertSeverity('success');
+            setShowAlert(true);
+            setTimeout(() => { setShowAlert(false); }, 3000);
+          },
+          onError: (error: any) => {
+            setAlertMessage(error?.status === 403 ? 'No tienes permisos para eliminar usuarios' : 'Error al eliminar usuario');
+            setAlertSeverity('error');
+            setShowAlert(true);
+            setTimeout(() => { setShowAlert(false); }, 3000);
+          }
+        });
+      },
+    })
   };
+
+  const handleApproveClick = (user: IUser) => {
+    setConfirmAction({
+      title: 'Aprobar cuenta',
+      message: `¿Aprobar la cuenta de ${user.name}? Esta persona podrá iniciar sesión después de la aprobación.`,
+      confirmText: 'Aprobar',
+      cancelText: 'Cancelar',
+      confirmColor: 'success',
+      severity: 'info',
+      onConfirm: () => {
+        setConfirmAction(null)
+        approveUserMutate(user.id, {
+          onSuccess: (approvedUser) => {
+            setUsers(users.map((u) => u.id === approvedUser.id ? approvedUser : u));
+            setAlertMessage('Usuario aprobado exitosamente');
+            setAlertSeverity('success');
+            setShowAlert(true);
+            setTimeout(() => { setShowAlert(false); }, 3000);
+          },
+          onError: (error: any) => {
+            setAlertMessage(error?.status === 403 ? 'No tienes permisos para aprobar usuarios' : 'Error al aprobar usuario');
+            setAlertSeverity('error');
+            setShowAlert(true);
+            setTimeout(() => { setShowAlert(false); }, 3000);
+          }
+        })
+      },
+    })
+  }
 
   return (
     <Box sx={{ width: '100%' }}>
@@ -374,19 +440,32 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
                     </TableCell>
                     <TableCell align={'center'}>{row.role}</TableCell>
                     <TableCell align={("center")}>{row.phone}</TableCell>
+                    <TableCell align={("center")}>{row.isActive ? 'Activo' : 'Pendiente'}</TableCell>
                     {isAdmin && (
                       <TableCell align="center" onClick={(e) => { e.stopPropagation(); }}>
                         {selected.length === 0 ? (
                           <>
-                            <Tooltip title="Editar">
-                              <IconButton
-                                size="small"
-                                onClick={() => { handleEditClick(row); }}
-                                color="primary"
-                              >
-                                <EditIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
+                            {row.isActive ? (
+                              <Tooltip title="Editar">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => { handleEditClick(row); }}
+                                  color="primary"
+                                >
+                                  <EditIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            ) : (
+                              <Tooltip title="Aprobar">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => { handleApproveClick(row); }}
+                                  color="success"
+                                >
+                                  <CheckCircleIcon fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            )}
                             <Tooltip title="Eliminar">
                               <IconButton
                                 size="small"
@@ -407,6 +486,19 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
           </Table>
         </TableContainer>
       </Paper>
+      {confirmAction && (
+        <ConfirmDialog
+          open={Boolean(confirmAction)}
+          title={confirmAction.title}
+          message={confirmAction.message}
+          confirmText={confirmAction.confirmText}
+          cancelText={confirmAction.cancelText}
+          confirmColor={confirmAction.confirmColor}
+          severity={confirmAction.severity}
+          onConfirm={confirmAction.onConfirm}
+          onCancel={() => { setConfirmAction(null) }}
+        />
+      )}
 
     </Box>
   );

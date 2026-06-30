@@ -84,6 +84,7 @@ export function MapHelpPointFromBackend(data: Partial<THelpPointBackend>): HelpP
         people: mappedPeople,
         peopleHelped: mappedPeople[0],
         personaID: personaIDs[0],
+        personaIDs,
         disabled: false 
     }
 

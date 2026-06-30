@@ -383,6 +383,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                                                 onChange={(e) => { updatePerson(person.id, 'rut', e.target.value); }}
                                                 label='RUT'
                                                 placeholder='12.345.678-9'
+                                                helperText='Formato: 12345678-9'
                                                 slotProps={{ inputLabel: { shrink: true } }}
                                             />
                                             <TextField

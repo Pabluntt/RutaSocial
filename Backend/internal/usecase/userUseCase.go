@@ -26,6 +26,7 @@ type UserUseCase interface {
 	GetPublicInfoByID(c *gin.Context)
 	CreateUserByAdmin(c *gin.Context)
 	UpdateUserByAdmin(c *gin.Context)
+	ApproveUser(c *gin.Context)
 	DeleteUser(c *gin.Context)
 }
 
@@ -47,6 +48,9 @@ func NewUserUseCase(repo repository.UserRepository) UserUseCase {
 // Retorna un JSON con el usuario encontrado o un error si no se encuentra.
 func (u userUseCase) GetUserByID(c *gin.Context) {
 	id := c.Param("id")
+	if !requireSelfOrAdmin(c, id) {
+		return
+	}
 	user, err := u.userRepository.GetUserByID(c.Request.Context(), id)
 	if err != nil {
 		logUseCaseWarn(c, "user.get_by_id", http.StatusNotFound, err, "target_user_id", id)
@@ -54,6 +58,23 @@ func (u userUseCase) GetUserByID(c *gin.Context) {
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"message": dto.MapUserToPublicResponse(user)})
+}
+
+func (u userUseCase) ApproveUser(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "ID de usuario no proporcionado"})
+		return
+	}
+
+	approvedUser, err := u.userRepository.ApproveUserByID(c.Request.Context(), id)
+	if err != nil {
+		logUseCaseWarn(c, "user.approve", http.StatusBadRequest, err, "target_user_id", id)
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al aprobar usuario"})
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, gin.H{"message": dto.MapUserToResponse(approvedUser)})
 }
 
 func (u userUseCase) GetUserByIDAdmin(c *gin.Context) {

@@ -16,8 +16,16 @@ import { es } from "date-fns/locale"
 import { RouteService } from "../../../api/services/RouteService"
 import { useAuth } from "../../../context/AuthContext"
 import { Role } from "../../../Enums/Role"
+import ConfirmDialog from "../../../component/Dialog/ConfirmDialog"
 
-type FilterStatus = 'all' | 'on progress' | 'Finalizada'
+type FilterStatus = 'all' | 'No iniciada' | 'on progress' | 'Finalizada' | 'Eliminada'
+
+const statusChipConfig: Record<string, { label: string; color: 'default' | 'info' | 'success' | 'error' | 'warning' }> = {
+    [RouteStatus.Scheduled]: { label: 'No iniciada', color: 'warning' },
+    [RouteStatus.Active]: { label: 'En Progreso', color: 'info' },
+    [RouteStatus.Completed]: { label: 'Finalizada', color: 'success' },
+    [RouteStatus.Deleted]: { label: 'Eliminada', color: 'error' },
+}
 
 export default function AdminRoutes() {
     const theme = useTheme()
@@ -39,6 +47,13 @@ export default function AdminRoutes() {
     const [editDescription, setEditDescription] = useState('')
 
     const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+    const [confirmAction, setConfirmAction] = useState<null | {
+        title: string
+        message: string
+        confirmText: string
+        confirmColor: 'error' | 'success'
+        onConfirm: () => void
+    }>(null)
 
     useEffect(() => {
         if (!routes) return
@@ -85,27 +100,43 @@ export default function AdminRoutes() {
     }
 
     const handleDeleteClick = (route: Route) => {
-        if (!window.confirm(`¿Estás seguro de eliminar la ruta "${route.title}"?`)) return
-        deleteRouteMutate(route.id, {
-            onSuccess: () => {
-                showAlertMsg('success', 'Ruta eliminada exitosamente')
-                refetch()
-            },
-            onError: (err: any) => {
-                showAlertMsg('error', err?.status === 403 ? 'No tienes permisos para eliminar rutas' : 'Error al eliminar la ruta')
+        setConfirmAction({
+            title: 'Eliminar ruta',
+            message: `¿Estás seguro de eliminar la ruta "${route.title}"?`,
+            confirmText: 'Eliminar',
+            confirmColor: 'error',
+            onConfirm: () => {
+                setConfirmAction(null)
+                deleteRouteMutate(route.id, {
+                    onSuccess: () => {
+                        showAlertMsg('success', 'Ruta eliminada exitosamente')
+                        refetch()
+                    },
+                    onError: (err: any) => {
+                        showAlertMsg('error', err?.status === 403 ? 'No tienes permisos para eliminar rutas' : 'Error al eliminar la ruta')
+                    },
+                })
             },
         })
     }
 
     const handleFinishClick = (route: Route) => {
-        if (!window.confirm(`¿Finalizar la ruta "${route.title}"?`)) return
-        finishRouteMutate(route.id, {
-            onSuccess: () => {
-                showAlertMsg('success', 'Ruta finalizada exitosamente')
-                refetch()
-            },
-            onError: (err: any) => {
-                showAlertMsg('error', err?.status === 403 ? 'No tienes permisos para finalizar esta ruta' : 'Error al finalizar la ruta')
+        setConfirmAction({
+            title: 'Finalizar ruta',
+            message: `¿Finalizar la ruta "${route.title}"? Después de finalizarla, nadie podrá unirse ni reanudarla.`,
+            confirmText: 'Finalizar',
+            confirmColor: 'success',
+            onConfirm: () => {
+                setConfirmAction(null)
+                finishRouteMutate(route.id, {
+                    onSuccess: () => {
+                        showAlertMsg('success', 'Ruta finalizada exitosamente')
+                        refetch()
+                    },
+                    onError: (err: any) => {
+                        showAlertMsg('error', err?.status === 403 ? 'No tienes permisos para finalizar esta ruta' : 'Error al finalizar la ruta')
+                    },
+                })
             },
         })
     }
@@ -113,6 +144,14 @@ export default function AdminRoutes() {
     const handleDownloadReport = (route: Route) => {
         RouteService.DownloadRouteReport(route.id, route.title)
     }
+
+    const statusFilters: { value: FilterStatus; label: string }[] = [
+        { value: 'all', label: 'Todas' },
+        { value: 'No iniciada', label: 'No iniciada' },
+        { value: 'on progress', label: 'Activas' },
+        { value: 'Finalizada', label: 'Finalizadas' },
+        { value: 'Eliminada', label: 'Eliminadas' },
+    ]
 
     return (
         <div className={"flex h-screen overflow-hidden " + (computerDevice ? 'flex-row' : 'flex-col')}>
@@ -151,9 +190,11 @@ export default function AdminRoutes() {
                             size="small"
                             orientation="horizontal"
                         >
-                            <ToggleButton value="all" sx={!computerDevice ? { minWidth: 88, px: 1 } : {}}>Todas</ToggleButton>
-                            <ToggleButton value="on progress" sx={!computerDevice ? { minWidth: 92, px: 1 } : {}}>Activas</ToggleButton>
-                            <ToggleButton value="Finalizada" sx={!computerDevice ? { minWidth: 104, px: 1 } : {}}>Finalizadas</ToggleButton>
+                            {statusFilters.map((f) => (
+                                <ToggleButton key={f.value} value={f.value} sx={!computerDevice ? { minWidth: 88, px: 1 } : {}}>
+                                    {f.label}
+                                </ToggleButton>
+                            ))}
                         </ToggleButtonGroup>
                     </div>
                 </div>
@@ -186,76 +227,75 @@ export default function AdminRoutes() {
                                             </TableCell>
                                         </TableRow>
                                     ) : (
-                                        filteredRoutes.map((route) => (
-                                            <TableRow key={route.id} hover>
-                                                <TableCell>
-                                                    <Typography variant="body2" fontWeight={500}>{route.title}</Typography>
+                                        filteredRoutes.map((route) => {
+                                            const chip = statusChipConfig[route.status] ?? { label: route.status, color: 'default' as const }
+                                            return (
+                                                <TableRow key={route.id} hover>
+                                                    <TableCell>
+                                                        <Typography variant="body2" fontWeight={500}>{route.title}</Typography>
+                                                        {computerDevice && (
+                                                            <Typography variant="caption" color="text.secondary" sx={{
+                                                                maxWidth: 250,
+                                                                overflow: 'hidden',
+                                                                textOverflow: 'ellipsis',
+                                                                whiteSpace: 'nowrap',
+                                                                display: 'block',
+                                                            }}>
+                                                                {route.description}
+                                                            </Typography>
+                                                        )}
+                                                    </TableCell>
                                                     {computerDevice && (
-                                                        <Typography variant="caption" color="text.secondary" sx={{
-                                                            maxWidth: 250,
-                                                            overflow: 'hidden',
-                                                            textOverflow: 'ellipsis',
-                                                            whiteSpace: 'nowrap',
-                                                            display: 'block',
-                                                        }}>
-                                                            {route.description}
-                                                        </Typography>
+                                                        <TableCell>
+                                                            <Typography variant="body2">{route.routeLeader.slice(-6)}</Typography>
+                                                        </TableCell>
                                                     )}
-                                                </TableCell>
-                                                {computerDevice && (
-                                                    <TableCell>
-                                                        <Typography variant="body2">{route.routeLeader.slice(-6)}</Typography>
+                                                    <TableCell align="center">
+                                                        <Chip label={route.team.length} size="small" variant="outlined" />
                                                     </TableCell>
-                                                )}
-                                                <TableCell align="center">
-                                                    <Chip label={route.team.length} size="small" variant="outlined" />
-                                                </TableCell>
-                                                <TableCell align="center">
-                                                    <Chip
-                                                        label={route.status === RouteStatus.Completed ? 'Finalizada' : 'En Progreso'}
-                                                        size="small"
-                                                        color={route.status === RouteStatus.Completed ? 'success' : 'info'}
-                                                    />
-                                                </TableCell>
-                                                {computerDevice && (
-                                                    <TableCell>
-                                                        <Typography variant="body2">
-                                                            {format(new Date(route.dateCreated), 'dd/MM/yyyy', { locale: es })}
-                                                        </Typography>
+                                                    <TableCell align="center">
+                                                        <Chip label={chip.label} size="small" color={chip.color} />
                                                     </TableCell>
-                                                )}
-                                                <TableCell align="center">
-                                                    <div className={"flex " + (computerDevice ? 'gap-1 justify-center' : 'flex-row gap-0.5 justify-center whitespace-nowrap')}>
-                                                        {isAdmin && (
-                                                            <Tooltip title="Editar">
-                                                                <IconButton size="small" color="primary" onClick={() => { handleEditClick(route); }}>
-                                                                    <EditIcon fontSize="small" />
+                                                    {computerDevice && (
+                                                        <TableCell>
+                                                            <Typography variant="body2">
+                                                                {format(new Date(route.dateCreated), 'dd/MM/yyyy', { locale: es })}
+                                                            </Typography>
+                                                        </TableCell>
+                                                    )}
+                                                    <TableCell align="center">
+                                                        <div className={"flex " + (computerDevice ? 'gap-1 justify-center' : 'flex-row gap-0.5 justify-center whitespace-nowrap')}>
+                                                            {isAdmin && (
+                                                                <Tooltip title="Editar">
+                                                                    <IconButton size="small" color="primary" onClick={() => { handleEditClick(route); }}>
+                                                                        <EditIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            )}
+                                                            {isAdmin && route.status === RouteStatus.Active && (
+                                                                <Tooltip title="Finalizar">
+                                                                    <IconButton size="small" color="success" onClick={() => { handleFinishClick(route); }}>
+                                                                        <CheckCircleIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            )}
+                                                            <Tooltip title="Descargar informe">
+                                                                <IconButton size="small" color="info" onClick={() => { handleDownloadReport(route); }}>
+                                                                    <FileDownloadIcon fontSize="small" />
                                                                 </IconButton>
                                                             </Tooltip>
-                                                        )}
-                                                        {isAdmin && route.status === RouteStatus.Active && (
-                                                            <Tooltip title="Finalizar">
-                                                                <IconButton size="small" color="success" onClick={() => { handleFinishClick(route); }}>
-                                                                    <CheckCircleIcon fontSize="small" />
-                                                                </IconButton>
-                                                            </Tooltip>
-                                                        )}
-                                                        <Tooltip title="Descargar informe">
-                                                            <IconButton size="small" color="info" onClick={() => { handleDownloadReport(route); }}>
-                                                                <FileDownloadIcon fontSize="small" />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                        {isAdmin && (
-                                                            <Tooltip title="Eliminar">
-                                                                <IconButton size="small" color="error" onClick={() => { handleDeleteClick(route); }}>
-                                                                    <DeleteIcon fontSize="small" />
-                                                                </IconButton>
-                                                            </Tooltip>
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
+                                                            {isAdmin && route.status !== RouteStatus.Deleted && (
+                                                                <Tooltip title="Eliminar">
+                                                                    <IconButton size="small" color="error" onClick={() => { handleDeleteClick(route); }}>
+                                                                        <DeleteIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )
+                                        })
                                     )}
                                 </TableBody>
                             </Table>
@@ -290,6 +330,19 @@ export default function AdminRoutes() {
                     <Button onClick={handleSaveEdit} variant="contained" loading={isUpdating}>Guardar</Button>
                 </DialogActions>
             </Dialog>
+            {confirmAction && (
+                <ConfirmDialog
+                    open={Boolean(confirmAction)}
+                    title={confirmAction.title}
+                    message={confirmAction.message}
+                    confirmText={confirmAction.confirmText}
+                    cancelText="Cancelar"
+                    confirmColor={confirmAction.confirmColor}
+                    severity="warning"
+                    onConfirm={confirmAction.onConfirm}
+                    onCancel={() => { setConfirmAction(null) }}
+                />
+            )}
         </div>
     )
 }

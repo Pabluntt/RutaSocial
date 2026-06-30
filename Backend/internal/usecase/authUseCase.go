@@ -53,6 +53,10 @@ func (a authUseCase) Login(c *gin.Context) {
 	token, err := a.authRepository.Login(c.Request.Context(), body.Email, body.Password)
 	if err != nil {
 		logUseCaseWarn(c, "auth.login", http.StatusUnauthorized, err)
+		if err.Error() == "cuenta pendiente de aprobación" {
+			c.IndentedJSON(http.StatusForbidden, gin.H{"error": "Tu cuenta está pendiente de aprobación"})
+			return
+		}
 		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Credenciales inválidas"})
 		return
 	}
@@ -61,7 +65,7 @@ func (a authUseCase) Login(c *gin.Context) {
 }
 
 // Register maneja la solicitud de registro de un nuevo usuario.
-// Valida los datos de entrada y registra al usuario en la base de datos. Retorna un token JWT si el registro es exitoso.
+// Valida los datos de entrada y registra al usuario pendiente de aprobación.
 func (a authUseCase) Register(c *gin.Context) {
 	var user domain.Usuario
 
@@ -88,12 +92,12 @@ func (a authUseCase) Register(c *gin.Context) {
 
 	user.Role = domain.RoleVolunteer
 
-	token, err := a.authRepository.Register(c.Request.Context(), user)
+	_, err := a.authRepository.Register(c.Request.Context(), user)
 	if err != nil {
 		logUseCaseError(c, "auth.register", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Ocurrió un registrar el usuario"})
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, gin.H{"token": token})
+	c.IndentedJSON(http.StatusCreated, gin.H{"message": "Registro recibido. Tu cuenta está pendiente de aprobación"})
 }

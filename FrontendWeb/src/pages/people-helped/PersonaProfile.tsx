@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom"
-import { Paper, Typography, Button, IconButton, Divider, Chip, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from "@mui/material"
+import { Paper, Typography, Button, IconButton, Divider, Chip, CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Snackbar, Alert } from "@mui/material"
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import EditIcon from '@mui/icons-material/Edit'
 import LinkIcon from '@mui/icons-material/Link'
@@ -22,7 +22,7 @@ export default function PersonaProfile() {
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'))
 
     const { data: persona, isLoading } = usePersona(id!)
-    const { data: helpPoints } = useHelpPoints()
+    const { data: helpPoints, refetch: refetchHelpPoints } = useHelpPoints()
     const updateMutation = useUpdatePersona()
     const addAntMutation = useAddAntecedente()
     const delAntMutation = useDeleteAntecedente()
@@ -35,15 +35,41 @@ export default function PersonaProfile() {
     const [editEdad, setEditEdad] = useState('')
     const [editGenero, setEditGenero] = useState('')
     const [linkOpen, setLinkOpen] = useState(false)
+    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+        open: false,
+        message: '',
+        severity: 'success',
+    })
 
     const linkedHelpPoints = useMemo(() => {
         if (!helpPoints || !persona) return []
         return helpPoints.filter(hp =>
+            hp.personaIDs?.includes(persona.id) ||
             hp.people.some(p => p.personaID === persona.id) ||
             hp.people.some(p => p.rut && persona.rut && p.rut === persona.rut) ||
             hp.personaID === persona.id
         )
     }, [helpPoints, persona])
+
+    const showSnackbar = (message: string, severity: 'success' | 'error') => {
+        setSnackbar({ open: true, message, severity })
+    }
+
+    const getErrorStatus = (error: unknown) => {
+        if (error && typeof error === 'object' && 'status' in error) {
+            return Number((error as { status?: unknown }).status)
+        }
+        return undefined
+    }
+
+    const showDeletePermissionError = (error: unknown) => {
+        showSnackbar(
+            getErrorStatus(error) === 403
+                ? 'No tienes permisos para eliminar este registro'
+                : 'No se pudo eliminar el registro',
+            'error',
+        )
+    }
 
     const handleEdit = () => {
         if (!persona) return
@@ -145,14 +171,24 @@ export default function PersonaProfile() {
                         title="Antecedentes Generales"
                         entries={persona.antecedentes}
                         onAdd={(desc) => { addAntMutation.mutate({ personaID: persona.id, descripcion: desc }); }}
-                        onDelete={(entryId) => { delAntMutation.mutate({ personaID: persona.id, entryID: entryId }); }}
+                        onDelete={(entryId) => {
+                            delAntMutation.mutate(
+                                { personaID: persona.id, entryID: entryId },
+                                { onError: showDeletePermissionError },
+                            )
+                        }}
                     />
 
                     <AntecedentesBox
                         title="Información Médica / Importante"
                         entries={persona.infoMedica}
                         onAdd={(desc) => { addMedMutation.mutate({ personaID: persona.id, descripcion: desc }); }}
-                        onDelete={(entryId) => { delMedMutation.mutate({ personaID: persona.id, entryID: entryId }); }}
+                        onDelete={(entryId) => {
+                            delMedMutation.mutate(
+                                { personaID: persona.id, entryID: entryId },
+                                { onError: showDeletePermissionError },
+                            )
+                        }}
                     />
 
                     <Paper variant="outlined" sx={{ p: 2.5, borderRadius: '12px', bgcolor: '#fafafa' }}>
@@ -205,8 +241,21 @@ export default function PersonaProfile() {
                 open={linkOpen}
                 personaID={persona.id}
                 onClose={() => { setLinkOpen(false); }}
-                onLinked={() => { }}
+                onLinked={() => {
+                    refetchHelpPoints()
+                    showSnackbar('Punto vinculado correctamente', 'success')
+                }}
             />
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={3500}
+                onClose={() => { setSnackbar((current) => ({ ...current, open: false })) }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert severity={snackbar.severity} onClose={() => { setSnackbar((current) => ({ ...current, open: false })) }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </div>
     )
 }

@@ -185,3 +185,7 @@ func (u *userController) CreateUserByAdmin(c *gin.Context) {
 func (u *userController) DeleteUser(c *gin.Context) {
 	u.userUseCase.DeleteUser(c)
 }
+
+func (u *userController) ApproveUser(c *gin.Context) {
+	u.userUseCase.ApproveUser(c)
+}

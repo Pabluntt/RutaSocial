@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { HelpPointService } from "../services/HelpPointService"
 import { HelpPoint } from "../models/HelpPoint"
 import { MapHelpPointToCreateRequest, MapHelpPointToUpdateRequest } from "../adapters/HelpPoint.adapter"
@@ -24,8 +24,13 @@ export function useUpdateHelpPoint() {
 }
 
 export function useLinkPersonaToHelpPoint() {
+    const qc = useQueryClient()
     return useMutation({
         mutationFn : ({ helpPointID, personaID }: { helpPointID: string; personaID: string }) =>
-            HelpPointService.LinkPersonaToHelpPoint(helpPointID, personaID)
+            HelpPointService.LinkPersonaToHelpPoint(helpPointID, personaID),
+        onSuccess: (_data, variables) => {
+            qc.invalidateQueries({ queryKey: ['help-points'] })
+            qc.invalidateQueries({ queryKey: ['persona', variables.personaID] })
+        }
     })
 }

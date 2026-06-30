@@ -107,6 +107,10 @@ func (r *routeController) DeleteRoute(c *gin.Context) {
 	r.routeUseCase.DeleteRoute(c)
 }
 
+func (r *routeController) StartRoute(c *gin.Context) {
+	r.routeUseCase.StartRoute(c)
+}
+
 // FinishRoute maneja la solicitud para finalizar una ruta.
 // @Summary Finalizar ruta
 // @Description Marca una ruta como finalizada mediante su ID. Requiere autenticación.

@@ -21,7 +21,7 @@ export class UserService {
 
     static async Register(user : TRegisterRequest) : Promise<string> {
         const { data } = await axiosInstance.post(`/register`, user)
-        return data?.token
+        return data?.message
     }
 
     static async CreateUserByAdmin(user : TAdminCreateUserRequest) : Promise<IUser> {
@@ -106,5 +106,10 @@ export class UserService {
 
     static async DeleteUser(id : string) : Promise<void> {
         await axiosInstance.delete(`/user/${id}`)
+    }
+
+    static async ApproveUser(id : string) : Promise<IUser> {
+        const { data } = await axiosInstance.patch(`/user/${id}/approve`)
+        return MapUserFromBackend(data?.message as TUserBackend)
     }
 } 

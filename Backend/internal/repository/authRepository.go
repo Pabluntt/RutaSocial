@@ -49,6 +49,9 @@ func (a *authRepository) Login(ctx context.Context, email, password string) (str
 	if !utils.CheckPasswordHash(password, user.Password) {
 		return "", errors.New("error al iniciar sesión")
 	}
+	if !user.Active() {
+		return "", errors.New("cuenta pendiente de aprobación")
+	}
 
 	token, err := utils.GenerateToken(user.ID.Hex(), user.Role)
 	if err != nil {
@@ -80,26 +83,13 @@ func (a *authRepository) Register(ctx context.Context, user domain.Usuario) (str
 	user.CompletedRoutes = 0
 	user.ListRoutes = []domain.Route{}
 	user.DateRegister = time.Now()
-	user.IsActive = true
+	user.IsActive = domain.BoolPtr(false)
 
-	res, err := a.UserCollection.Database().Collection("usuarios").InsertOne(ctx, user)
+	_, err = a.UserCollection.Database().Collection("usuarios").InsertOne(ctx, user)
 	if err != nil {
 		logRepositoryError(ctx, "auth", "register.insert_user", err, "collection", "usuarios", "role", user.Role, "institution_id", user.InstitutionID.Hex())
 		return "", err
 	}
 
-	usuarioID := res.InsertedID.(bson.ObjectID)
-
-	token, err := utils.GenerateToken(usuarioID.Hex(), user.Role)
-	if err != nil {
-		logRepositoryError(ctx, "auth", "register.generate_token", err, "user_id", usuarioID.Hex(), "role", user.Role)
-		return "", err
-	}
-
-	err = utils.SendRegistrationMail(user)
-	if err != nil {
-		logRepositoryError(ctx, "auth", "register.send_registration_mail", err, "user_id", usuarioID.Hex())
-	}
-
-	return token, nil
+	return "", nil
 }

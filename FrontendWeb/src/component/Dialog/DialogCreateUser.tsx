@@ -51,7 +51,7 @@ interface AdminCreateUserError {
 
 
 
-export default function DialogCreateUser({ open, setOpen } : { open : boolean, setOpen: (ar : boolean) => void}) {
+export default function DialogCreateUser({ open, setOpen, onCreated } : { open : boolean, setOpen: (ar : boolean) => void, onCreated?: (user: IUser) => void}) {
 
     const theme = useTheme();
     const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
@@ -80,6 +80,9 @@ export default function DialogCreateUser({ open, setOpen } : { open : boolean, s
 
     useEffect(() => {
         if(data || isSuccess) {
+            if (data) {
+                onCreated?.(data)
+            }
             setTimeout(() => {
                 handleOnClose()
             }, 1000)

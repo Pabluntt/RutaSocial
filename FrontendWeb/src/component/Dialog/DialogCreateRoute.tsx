@@ -65,7 +65,7 @@ export default function DialogCreateRoute({ stateOpen } : DialogCreateRouteProps
     })
 
     const [ copySuccess, setCopySuccess ] = useState<boolean | undefined>()
-    const { data, mutate } = useCreateRoute()
+    const { data, mutate, error, isError } = useCreateRoute()
     const { showSnackbar } = useAppSnackbar()
 
 
@@ -93,6 +93,7 @@ export default function DialogCreateRoute({ stateOpen } : DialogCreateRouteProps
 
     const handleTitleInput = (e : React.ChangeEvent<HTMLInputElement>) => {
         setRoute({...route, title : e.target.value})
+        setRouteError((prev) => ({ ...prev, title: '' }))
     }
 
 
@@ -132,6 +133,19 @@ export default function DialogCreateRoute({ stateOpen } : DialogCreateRouteProps
             setRouteId(data.id)
         }
     }, [data])
+
+    useEffect(() => {
+        if(!isError) return
+
+        setAcept(false)
+        const routeCreationError = error as { status?: number, error?: string, message?: string } | null
+        if(routeCreationError?.status === 409) {
+            setRouteError((prev) => ({ ...prev, title: 'El nombre de la ruta ya está ocupado' }))
+            return
+        }
+
+        showSnackbar(routeCreationError?.error || routeCreationError?.message || 'Error al crear la ruta', 'error')
+    }, [isError, error, showSnackbar])
 
 
     const onClickContentCopy = async () => {
