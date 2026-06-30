@@ -252,8 +252,8 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
           setShowAlert(true);
           setTimeout(() => setShowAlert(false), 3000);
         },
-        onError: (error) => {
-          setAlertMessage('Error al eliminar usuario');
+        onError: (error: any) => {
+          setAlertMessage(error?.status === 403 ? 'No tienes permisos para eliminar usuarios' : 'Error al eliminar usuario');
           setAlertSeverity('error');
           setShowAlert(true);
           setTimeout(() => setShowAlert(false), 3000);

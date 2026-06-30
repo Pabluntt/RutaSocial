@@ -16,6 +16,7 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { RouteStatus } from "../../../Enums/RouteStatus"
 import { Role } from "../../../Enums/Role"
+import { useAuth } from "../../../context/AuthContext"
 
 export default function UserDetail() {
     const { id } = useParams<{ id: string }>()
@@ -23,6 +24,8 @@ export default function UserDetail() {
     const theme = useTheme()
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'))
 
+    const { role } = useAuth()
+    const isAdmin = role === Role.admin
     const { data: user, isLoading, isError } = useUser(id || '')
     const { data: routes, isLoading: routesLoading } = useAdminUserRoutes(id || '', !!id)
     const { data: calendarEvents, isLoading: eventsLoading } = useUserCalendarEvents(id || '', !!id)
@@ -54,7 +57,8 @@ export default function UserDetail() {
                     setTimeout(() => setAlert(null), 3000)
                 },
                 onError: (err: any) => {
-                    setAlert({ type: 'error', message: err?.error || 'Error al actualizar usuario' })
+                    const msg = err?.status === 403 ? 'No tienes permisos para editar usuarios' : (err?.error || 'Error al actualizar usuario')
+                    setAlert({ type: 'error', message: msg })
                     setTimeout(() => setAlert(null), 3000)
                 },
             }
@@ -135,11 +139,11 @@ export default function UserDetail() {
                                         Cancelar
                                     </Button>
                                 </>
-                            ) : (
+                            ) : isAdmin ? (
                                 <Button variant="outlined" startIcon={<EditIcon />} onClick={() => setEditing(true)} size={computerDevice ? "medium" : "small"} fullWidth={!computerDevice}>
                                     Editar
                                 </Button>
-                            )}
+                            ) : null}
                         </div>
                     </div>
                     <Divider sx={{ mb: 2 }} />

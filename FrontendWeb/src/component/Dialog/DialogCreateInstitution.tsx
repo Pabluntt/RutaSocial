@@ -184,7 +184,7 @@ export default function DialogCreateInstitution({ stateOpen } : DialogCreateInst
                     </div>    
                     :
                     <Alert sx={{ mt: 2, width: '100%', minHeight: '80px', display: 'flex', alignItems: 'center', fontSize: '1rem' }} severity={ isSuccess ? 'success' : isError ? 'error' : 'info'}>
-                            {isSuccess ? 'Se Creo el riesgo exitosamente' : isError ? 'Hubo un error al intentar finalizar' : 'Error desconocido'}
+                            {isSuccess ? 'Institución creada exitosamente' : 'No tienes permisos para crear instituciones'}
                     </Alert>
                 }
             </DialogContent>

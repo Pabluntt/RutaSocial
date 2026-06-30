@@ -42,6 +42,6 @@ func RoleMiddleware(allowedRoles ...string) gin.HandlerFunc {
 			}
 		}
 
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Acceso denegado"})
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Acceso denegado"})
 	}
 }

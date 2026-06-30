@@ -43,18 +43,30 @@ export default function TourOverlay() {
   const isFirst = currentStep === 0
   const isLast = currentStep === steps.length - 1
 
+  const panelBottomZone = 240
+
   let mascotTop: number | undefined
   let mascotLeft: number | undefined
 
   if (targetRect) {
     const viewW = window.innerWidth
+    const viewH = window.innerHeight
+    const mascotW = isDesktop ? 384 : viewW * 0.85
+    const estMascotH = 170
+    const gap = 12
     const isLeftSide = targetRect.left < viewW / 2
+    const maxTop = viewH - panelBottomZone - estMascotH - gap
 
-    mascotTop = Math.max(24, targetRect.top - 10)
-    if (isLeftSide) {
-      mascotLeft = targetRect.right + 20
+    const belowPos = targetRect.bottom + gap
+    if (belowPos + estMascotH + gap <= viewH - panelBottomZone) {
+      mascotTop = Math.max(24, belowPos)
     } else {
-      mascotLeft = targetRect.left - 320
+      mascotTop = Math.max(24, Math.min(targetRect.top - estMascotH - gap, maxTop))
+    }
+    if (isLeftSide) {
+      mascotLeft = Math.min(targetRect.right + gap, viewW - mascotW - 8)
+    } else {
+      mascotLeft = Math.max(16, targetRect.left - mascotW - gap)
     }
   }
 
@@ -83,7 +95,7 @@ export default function TourOverlay() {
         </div>
       )}
 
-      <div className={`fixed left-1/2 -translate-x-1/2 z-[1402] bg-white shadow-xl ${isDesktop ? 'bottom-8 flex items-center gap-4 rounded-full px-6 py-3' : 'bottom-4 flex w-[calc(100vw-24px)] max-w-sm flex-col gap-2 rounded-2xl px-4 py-3'}`}>
+      <div className={`fixed left-1/2 -translate-x-1/2 z-[1402] bg-white shadow-xl ${isDesktop ? 'bottom-8 flex items-center gap-4 rounded-full px-6 py-3' : 'bottom-20 flex w-[calc(100vw-24px)] max-w-sm flex-col gap-2 rounded-2xl px-4 py-3'}`}>
         {!isDesktop && (
           <p className="text-sm text-gray-500 text-center">
             Recorre las secciones del menú lateral.

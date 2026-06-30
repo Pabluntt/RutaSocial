@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/SebaVCH/hdcProject/internal/config"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/files"
@@ -25,8 +26,10 @@ func SetupRouter() *gin.Engine {
 	r.Use(middleware.CSPMiddleware())
 	r.Use(middleware.BodySizeLimit(10 << 20)) // 10 MB limit
 
-	docs.SwaggerInfo.BasePath = "/"
-	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	if config.AppEnv != "production" {
+		docs.SwaggerInfo.BasePath = "/"
+		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
 
 	SetupAuthRouter(r)
 	SetupUserRouter(r)

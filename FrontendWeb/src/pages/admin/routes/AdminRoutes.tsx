@@ -14,12 +14,16 @@ import { RouteStatus } from "../../../Enums/RouteStatus"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { RouteService } from "../../../api/services/RouteService"
+import { useAuth } from "../../../context/AuthContext"
+import { Role } from "../../../Enums/Role"
 
 type FilterStatus = 'all' | 'on progress' | 'Finalizada'
 
 export default function AdminRoutes() {
     const theme = useTheme()
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'))
+    const { role } = useAuth()
+    const isAdmin = role === Role.admin
     const { data: routes, isPending, isError, refetch } = useRoutes()
     const { mutate: updateRouteMutate, isPending: isUpdating } = useUpdateRoute()
     const { mutate: deleteRouteMutate } = useDeleteRoute()
@@ -73,8 +77,8 @@ export default function AdminRoutes() {
                     showAlertMsg('success', 'Ruta actualizada exitosamente')
                     refetch()
                 },
-                onError: () => {
-                    showAlertMsg('error', 'Error al actualizar la ruta')
+                onError: (err: any) => {
+                    showAlertMsg('error', err?.status === 403 ? 'No tienes permisos para editar rutas' : 'Error al actualizar la ruta')
                 },
             }
         )
@@ -87,8 +91,8 @@ export default function AdminRoutes() {
                 showAlertMsg('success', 'Ruta eliminada exitosamente')
                 refetch()
             },
-            onError: () => {
-                showAlertMsg('error', 'Error al eliminar la ruta')
+            onError: (err: any) => {
+                showAlertMsg('error', err?.status === 403 ? 'No tienes permisos para eliminar rutas' : 'Error al eliminar la ruta')
             },
         })
     }
@@ -100,8 +104,8 @@ export default function AdminRoutes() {
                 showAlertMsg('success', 'Ruta finalizada exitosamente')
                 refetch()
             },
-            onError: () => {
-                showAlertMsg('error', 'Error al finalizar la ruta')
+            onError: (err: any) => {
+                showAlertMsg('error', err?.status === 403 ? 'No tienes permisos para finalizar esta ruta' : 'Error al finalizar la ruta')
             },
         })
     }
@@ -222,12 +226,14 @@ export default function AdminRoutes() {
                                                 )}
                                                 <TableCell align="center">
                                                     <div className={"flex " + (computerDevice ? 'gap-1 justify-center' : 'flex-row gap-0.5 justify-center whitespace-nowrap')}>
-                                                        <Tooltip title="Editar">
-                                                            <IconButton size="small" color="primary" onClick={() => handleEditClick(route)}>
-                                                                <EditIcon fontSize="small" />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                        {route.status === RouteStatus.Active && (
+                                                        {isAdmin && (
+                                                            <Tooltip title="Editar">
+                                                                <IconButton size="small" color="primary" onClick={() => handleEditClick(route)}>
+                                                                    <EditIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        )}
+                                                        {isAdmin && route.status === RouteStatus.Active && (
                                                             <Tooltip title="Finalizar">
                                                                 <IconButton size="small" color="success" onClick={() => handleFinishClick(route)}>
                                                                     <CheckCircleIcon fontSize="small" />
@@ -239,11 +245,13 @@ export default function AdminRoutes() {
                                                                 <FileDownloadIcon fontSize="small" />
                                                             </IconButton>
                                                         </Tooltip>
-                                                        <Tooltip title="Eliminar">
-                                                            <IconButton size="small" color="error" onClick={() => handleDeleteClick(route)}>
-                                                                <DeleteIcon fontSize="small" />
-                                                            </IconButton>
-                                                        </Tooltip>
+                                                        {isAdmin && (
+                                                            <Tooltip title="Eliminar">
+                                                                <IconButton size="small" color="error" onClick={() => handleDeleteClick(route)}>
+                                                                    <DeleteIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        )}
                                                     </div>
                                                 </TableCell>
                                             </TableRow>

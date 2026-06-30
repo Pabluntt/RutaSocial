@@ -128,9 +128,11 @@ export default function Usuarios() {
                             </IconButton>
                         </Paper>
                         <div className={"flex gap-2 " + (computerDevice ? '' : 'flex-wrap')}>
+                            {role === Role.admin && (
                             <Button size="small" variant="contained" onClick={()=>{setOpen(true)}}>
                                 Agregar Usuario
                             </Button>
+                        )}
                             {role === Role.admin && (
                                 <Button size="small" variant="contained" onClick={() => {setOpenAddInstitution(true)}}>
                                     Agregar Institución    

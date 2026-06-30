@@ -45,14 +45,14 @@ const defaultSteps: TourStep[] = [
   {
     id: 'map',
     title: 'Mapa',
-    description: 'Crea o únete a rutas directamente en el mapa. También puedes registrar alojamientos.',
+    description: 'Crea o únete a rutas directamente en el mapa. También puedes registrar alojamientos (solo administradores).',
     selector: '[data-tour-id="map"]',
     mascotPose: 'idea',
   },
   {
     id: 'send-notice',
     title: 'Enviar Aviso',
-    description: 'Crea y envía notificaciones a todos los voluntarios. Puedes decidir si se envía por correo electrónico.',
+    description: 'Crea y envía notificaciones a todos los voluntarios.',
     selector: '[data-tour-id="send-notice"]',
     mascotPose: 'surprised',
   },
@@ -73,7 +73,7 @@ const defaultSteps: TourStep[] = [
   {
     id: 'admin-routes',
     title: 'Gestionar Rutas',
-    description: 'Supervisa todas las rutas activas, finaliza rutas y gestiona participantes.',
+    description: 'Revisa los detalles de cada ruta y descarga informes con todos sus datos.',
     selector: '[data-tour-id="admin-routes"]',
     mascotPose: 'happy',
   },

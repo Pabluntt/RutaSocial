@@ -37,8 +37,8 @@ func (m *MockRouteRepository) DeleteRoute(ctx context.Context, routeId string) e
 	return args.Error(0)
 }
 
-func (m *MockRouteRepository) FinishRoute(ctx context.Context, id string, leaderID string) error {
-	args := m.Called(ctx, id, leaderID)
+func (m *MockRouteRepository) FinishRoute(ctx context.Context, id string, leaderID string, allowAny bool) error {
+	args := m.Called(ctx, id, leaderID, allowAny)
 	return args.Error(0)
 }
 

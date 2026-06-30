@@ -24,6 +24,7 @@ import HotelIcon from '@mui/icons-material/Hotel';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
 import { Marker, Popup } from 'react-leaflet'
 import { useAuth } from "../../context/AuthContext";
+import { Role } from "../../Enums/Role";
 import Sidebar from "../../component/Sidebar";
 import DialogUpdateRisk from "../../component/Dialog/DialogUpdateRisk";
 import { LocationMethod } from "../../Enums/LocationMethod";
@@ -400,19 +401,21 @@ export default function Home() {
                                         <DialogCreateRoute stateOpen={stateOpenCreateRoute} />
                                         <DialogJoinRoute stateOpen={stateOpenJoinRoute} />
                                     </SpeedDialCreateRoute>
-                                    <Tooltip title="Crear alojamiento">
-                                        <Fab 
-                                            color="secondary" 
-                                            size="large"
-                                            onClick={() => {
-                                                setOnSelectLocationMap(true)
-                                                setSelectingAlojamiento(true)
-                                                setOpenDialogAlojamiento(false)
-                                            }}
-                                        >
-                                            <HotelIcon />
-                                        </Fab>
-                                    </Tooltip>
+                                    { role === Role.admin && (
+                                        <Tooltip title="Crear alojamiento">
+                                            <Fab 
+                                                color="secondary" 
+                                                size="large"
+                                                onClick={() => {
+                                                    setOnSelectLocationMap(true)
+                                                    setSelectingAlojamiento(true)
+                                                    setOpenDialogAlojamiento(false)
+                                                }}
+                                            >
+                                                <HotelIcon />
+                                            </Fab>
+                                        </Tooltip>
+                                    )}
                                 </>
                                 :
                                 <SpeedDialRoute 

@@ -22,7 +22,7 @@ func setJWTUser(c *gin.Context, userID, role string) {
 func TestFinishRoute_UserIsLeader_FinishesSuccessfully(t *testing.T) {
 	leaderID := "507f1f77bcf86cd799439011"
 	mockRepo := new(MockRouteRepository)
-	mockRepo.On("FinishRoute", mock.Anything, "route123", leaderID).
+	mockRepo.On("FinishRoute", mock.Anything, "route123", leaderID, false).
 		Return(nil)
 
 	uc := NewRouteUseCase(mockRepo)
@@ -42,7 +42,7 @@ func TestFinishRoute_UserIsNotLeader_ReturnsForbidden(t *testing.T) {
 	otherUserID := "507f1f77bcf86cd799439022"
 
 	mockRepo := new(MockRouteRepository)
-	mockRepo.On("FinishRoute", mock.Anything, "route123", otherUserID).
+	mockRepo.On("FinishRoute", mock.Anything, "route123", otherUserID, false).
 		Return(assert.AnError)
 
 	uc := NewRouteUseCase(mockRepo)
@@ -57,7 +57,7 @@ func TestFinishRoute_UserIsNotLeader_ReturnsForbidden(t *testing.T) {
 
 func TestFinishRoute_RouteNotFound_ReturnsBadRequest(t *testing.T) {
 	mockRepo := new(MockRouteRepository)
-	mockRepo.On("FinishRoute", mock.Anything, "route_inexistente", "507f1f77bcf86cd799439011").
+	mockRepo.On("FinishRoute", mock.Anything, "route_inexistente", "507f1f77bcf86cd799439011", false).
 		Return(assert.AnError)
 
 	uc := NewRouteUseCase(mockRepo)
