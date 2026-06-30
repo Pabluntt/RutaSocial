@@ -1,9 +1,11 @@
-import { Button, Chip, IconButton, InputBase, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography, useMediaQuery, useTheme, Alert, Dialog, DialogTitle, DialogContent, DialogActions, TextField, CircularProgress, ToggleButtonGroup, ToggleButton } from "@mui/material"
+import { Button, Chip, Collapse, IconButton, InputBase, List, ListItem, ListItemText, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography, useMediaQuery, useTheme, Alert, Dialog, DialogTitle, DialogContent, DialogActions, TextField, CircularProgress, ToggleButtonGroup, ToggleButton } from "@mui/material"
 import SearchIcon from '@mui/icons-material/Search'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import FileDownloadIcon from '@mui/icons-material/FileDownload'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import ExpandLessIcon from '@mui/icons-material/ExpandLess'
 import Sidebar from "../../../component/Sidebar"
 import CustomDrawer from "../../../component/CustomDrawer"
 import DrawerList from "../../../component/DrawerList"
@@ -38,6 +40,8 @@ export default function AdminRoutes() {
     const { mutate: finishRouteMutate } = useFinishRoute()
 
     const [filteredRoutes, setFilteredRoutes] = useState<Route[]>([])
+    const [archivedRouteIds, setArchivedRouteIds] = useState<Set<string>>(new Set())
+    const [showArchived, setShowArchived] = useState(false)
     const [search, setSearch] = useState('')
     const [statusFilter, setStatusFilter] = useState<FilterStatus>('all')
 
@@ -55,9 +59,11 @@ export default function AdminRoutes() {
         onConfirm: () => void
     }>(null)
 
+    const archivedRoutes = routes?.filter(r => archivedRouteIds.has(r.id)) ?? []
+
     useEffect(() => {
         if (!routes) return
-        let filtered = routes
+        let filtered = routes.filter(r => !archivedRouteIds.has(r.id))
         if (statusFilter !== 'all') {
             filtered = filtered.filter((r) => r.status === statusFilter)
         }
@@ -67,7 +73,7 @@ export default function AdminRoutes() {
             )
         }
         setFilteredRoutes(filtered)
-    }, [routes, statusFilter, search])
+    }, [routes, statusFilter, search, archivedRouteIds])
 
     const showAlertMsg = (type: 'success' | 'error', message: string) => {
         setAlert({ type, message })
@@ -100,22 +106,33 @@ export default function AdminRoutes() {
     }
 
     const handleDeleteClick = (route: Route) => {
+        const isAlreadyDeleted = route.status === RouteStatus.Deleted
         setConfirmAction({
-            title: 'Eliminar ruta',
-            message: `¿Estás seguro de eliminar la ruta "${route.title}"?`,
-            confirmText: 'Eliminar',
+            title: isAlreadyDeleted ? 'Archivar ruta' : 'Eliminar ruta',
+            message: isAlreadyDeleted
+                ? `¿Archivar la ruta eliminada "${route.title}"? Se moverá al listado de rutas archivadas.`
+                : `¿Estás seguro de eliminar la ruta "${route.title}"?`,
+            confirmText: isAlreadyDeleted ? 'Archivar' : 'Eliminar',
             confirmColor: 'error',
             onConfirm: () => {
                 setConfirmAction(null)
-                deleteRouteMutate(route.id, {
-                    onSuccess: () => {
-                        showAlertMsg('success', 'Ruta eliminada exitosamente')
-                        refetch()
-                    },
-                    onError: (err: any) => {
-                        showAlertMsg('error', err?.status === 403 ? 'No tienes permisos para eliminar rutas' : 'Error al eliminar la ruta')
-                    },
-                })
+                const archive = () => {
+                    setArchivedRouteIds(prev => new Set(prev).add(route.id))
+                }
+                if (isAlreadyDeleted) {
+                    archive()
+                } else {
+                    deleteRouteMutate(route.id, {
+                        onSuccess: () => {
+                            showAlertMsg('success', 'Ruta eliminada exitosamente')
+                            refetch()
+                            archive()
+                        },
+                        onError: (err: any) => {
+                            showAlertMsg('error', err?.status === 403 ? 'No tienes permisos para eliminar rutas' : 'Error al eliminar la ruta')
+                        },
+                    })
+                }
             },
         })
     }
@@ -284,8 +301,8 @@ export default function AdminRoutes() {
                                                                     <FileDownloadIcon fontSize="small" />
                                                                 </IconButton>
                                                             </Tooltip>
-                                                            {isAdmin && route.status !== RouteStatus.Deleted && (
-                                                                <Tooltip title="Eliminar">
+                                                            {isAdmin && (
+                                                                <Tooltip title={route.status === RouteStatus.Deleted ? "Archivar" : "Eliminar"}>
                                                                     <IconButton size="small" color="error" onClick={() => { handleDeleteClick(route); }}>
                                                                         <DeleteIcon fontSize="small" />
                                                                     </IconButton>
@@ -301,6 +318,36 @@ export default function AdminRoutes() {
                             </Table>
                         </TableContainer>
                     </Paper>
+                )}
+
+                {archivedRoutes.length > 0 && (
+                    <div className="flex flex-col">
+                        <Button
+                            fullWidth
+                            variant="text"
+                            onClick={() => { setShowArchived(!showArchived); }}
+                            sx={{ borderRadius: '8px', textTransform: 'none', py: 1, justifyContent: 'flex-start', color: 'text.secondary' }}
+                            startIcon={showArchived ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        >
+                            Rutas archivadas ({archivedRoutes.length})
+                        </Button>
+                        <Collapse in={showArchived}>
+                            <Paper sx={{ opacity: 0.65 }}>
+                                <List disablePadding>
+                                    {archivedRoutes.map((route) => (
+                                        <ListItem key={route.id} divider>
+                                            <ListItemText
+                                                primary={route.title}
+                                                primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
+                                                secondary={`${route.routeLeaderName || route.routeLeader.slice(-6)} · ${format(new Date(route.dateCreated), 'dd/MM/yyyy', { locale: es })}`}
+                                                secondaryTypographyProps={{ variant: 'caption' }}
+                                            />
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </Paper>
+                        </Collapse>
+                    </div>
                 )}
             </div>
 
