@@ -51,7 +51,7 @@ export default function Usuarios() {
         })
         .then((response) => response.blob())
         .then((blob) => {
-            var _url = window.URL.createObjectURL(blob)
+            const _url = window.URL.createObjectURL(blob)
             const a = document.createElement('a');
             a.href = _url;
             a.download = 'personas_ayudadas.xlsx';

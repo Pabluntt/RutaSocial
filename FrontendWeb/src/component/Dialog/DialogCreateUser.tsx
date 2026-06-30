@@ -40,7 +40,7 @@ type AdminCreateUser = Pick<IUser,
     'phone'
 >>
 
-type AdminCreateUserError = {
+interface AdminCreateUserError {
     name: string
     email: string
     password: string

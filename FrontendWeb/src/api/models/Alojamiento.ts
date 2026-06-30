@@ -1,4 +1,4 @@
-export type Alojamiento = {
+export interface Alojamiento {
     _id: string
     author_id: string
     coords: number[]
@@ -7,7 +7,7 @@ export type Alojamiento = {
     date_register: string
 }
 
-export type AlojamientoData = {
+export interface AlojamientoData {
     id: string
     coords: [number, number]
     name: string

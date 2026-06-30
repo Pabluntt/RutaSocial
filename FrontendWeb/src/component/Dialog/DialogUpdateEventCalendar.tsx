@@ -33,8 +33,8 @@ export default function DialogUpdateEventCalendar() {
 
     const { isSuccess, isPending, isError, isIdle, mutate, error, reset } = useUpdateCalendarEvent()
     const { refetch } = useCalendarEvents()
-    const [ startTime, setStartTime] = useState<string>(eventCalendar?.timeStart as string);
-    const [ endTime, setEndTime] = useState<string>(eventCalendar?.timeEnd as string);
+    const [ startTime, setStartTime] = useState<string>(eventCalendar?.timeStart!);
+    const [ endTime, setEndTime] = useState<string>(eventCalendar?.timeEnd!);
     const [ listEndTime, setListEndTime] = useState<string[]>([]);
     
     const clearStates = () => {
@@ -102,7 +102,7 @@ export default function DialogUpdateEventCalendar() {
                     <div className='flex flex-col gap-4'>
                         <TextField 
                             value={eventCalendar.title}
-                            onChange={(e) => setEventCalendar({...eventCalendar, title: e.target.value})}
+                            onChange={(e) => { setEventCalendar({...eventCalendar, title: e.target.value}); }}
                             variant='standard'
                             label='Título'
                             fullWidth
@@ -110,7 +110,7 @@ export default function DialogUpdateEventCalendar() {
                         <InputDescription 
                             maxLength={256}
                             value={eventCalendar.description} 
-                            onChange={(e) => setEventCalendar({...eventCalendar, description : e.target.value})}   
+                            onChange={(e) => { setEventCalendar({...eventCalendar, description : e.target.value}); }}   
                             fullWidth
                             variant='standard'      
                             label='Descripción'      
@@ -136,7 +136,7 @@ export default function DialogUpdateEventCalendar() {
                                 }} 
                                 disabled={startTime == undefined} 
                                 label='Termina' 
-                                options={listEndTime as string[]}/>
+                                options={listEndTime}/>
                             </div>                           
                         </div>
                     </div>

@@ -8,6 +8,7 @@ import useSessionStore from '../../stores/useSessionStore';
 import CloseDialogButton from '../Button/CloseDialogButton';
 import { useNavigate } from 'react-router-dom';
 import { Typography, useTheme, useMediaQuery } from '@mui/material';
+import { useQueryClient } from '@tanstack/react-query';
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
@@ -18,7 +19,7 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
-export type DialogLogoutProps = {
+export interface DialogLogoutProps {
     stateOpen : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
 }
 
@@ -28,6 +29,7 @@ export default function DialogLogout({ stateOpen } : DialogLogoutProps) {
     const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ open, setOpen ] = stateOpen
     const { clearSession } = useSessionStore()
+    const queryClient = useQueryClient()
 
     const navigator = useNavigate()
 
@@ -36,6 +38,7 @@ export default function DialogLogout({ stateOpen } : DialogLogoutProps) {
     }
 
     const onClickLogout = () => {
+        queryClient.clear()
         clearSession()
         navigator(`${import.meta.env.VITE_BASE_URL}/login`)
     }

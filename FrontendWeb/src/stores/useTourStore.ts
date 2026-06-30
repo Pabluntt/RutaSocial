@@ -99,7 +99,7 @@ export const useTourStore = create<TourState>((set, get) => ({
     })
     set({ isActive: true, currentStep: 0, steps: visibleSteps })
   },
-  closeTour: () => set({ isActive: false, currentStep: 0 }),
+  closeTour: () => { set({ isActive: false, currentStep: 0 }); },
   nextStep: () => {
     const { currentStep, steps } = get()
     if (currentStep < steps.length - 1) {
@@ -114,5 +114,5 @@ export const useTourStore = create<TourState>((set, get) => ({
       set({ currentStep: currentStep - 1 })
     }
   },
-  goToStep: (index: number) => set({ currentStep: index }),
+  goToStep: (index: number) => { set({ currentStep: index }); },
 }))

@@ -32,7 +32,7 @@ export default function HelpButton() {
   const handleStart = () => {
     setOpenDialog(false)
     if (isMobile) {
-      const menuButton = document.querySelector('[data-tour-id="mobile-menu"]') as HTMLElement | null
+      const menuButton = document.querySelector<HTMLElement>('[data-tour-id="mobile-menu"]')
       menuButton?.click()
       window.setTimeout(startTour, 250)
       return
@@ -90,7 +90,7 @@ export default function HelpButton() {
 
       <Dialog
         open={openDialog}
-        onClose={() => setOpenDialog(false)}
+        onClose={() => { setOpenDialog(false); }}
         fullWidth
         maxWidth="xs"
         slotProps={{ paper: { sx: isMobile ? { m: 2, borderRadius: '14px' } : undefined } }}
@@ -112,7 +112,7 @@ export default function HelpButton() {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDialog(false)} color="inherit">
+          <Button onClick={() => { setOpenDialog(false); }} color="inherit">
             No, gracias
           </Button>
           <Button onClick={handleStart} variant="contained" sx={{ bgcolor: '#009BA5' }}>

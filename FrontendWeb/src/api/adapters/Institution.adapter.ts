@@ -1,7 +1,7 @@
 import { Institution } from "../models/Institution"
 
 
-export type TInstitutionBackend = {
+export interface TInstitutionBackend {
     _id : string 
     name : string 
     color : string

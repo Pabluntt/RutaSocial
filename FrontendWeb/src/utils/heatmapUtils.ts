@@ -33,7 +33,7 @@ export function filterHelpPointsByTimeRange(
 }
 
 export function getPeopleCount(helpPoint: HelpPoint): number {
-    const people = helpPoint.people?.length || 0
+    const people = helpPoint.people.length || 0
     const extra = helpPoint.peopleHelped ? 1 : 0
     return people + extra
 }

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import useSessionStore from "../../stores/useSessionStore";
 import getCurrentLocation, { Position } from "../../utils/getCurrentLocation";
 
-type CurrentLocationProps = {
+interface CurrentLocationProps {
     stateShowLocation : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateCurrentLocation : [ Position, React.Dispatch<React.SetStateAction<Position>> ]
     stateErrorGeolocation : [GeolocationPositionError | undefined, React.Dispatch<React.SetStateAction<GeolocationPositionError | undefined>>]
@@ -40,7 +40,7 @@ export default function ButtonCurrentLocation({ stateShowLocation, stateCurrentL
             setEnableGPS(true)
         }
         setShowLocation(true);
-        setTimeout(() => setShowLocation(false), 1000) 
+        setTimeout(() => { setShowLocation(false); }, 1000) 
     }
 
     const handleRetryGPS = () => {
@@ -79,7 +79,7 @@ export default function ButtonCurrentLocation({ stateShowLocation, stateCurrentL
                                 </Typography>
                                 <IconButton
                                     size="small"
-                                    onClick={() => setOpen(false)}
+                                    onClick={() => { setOpen(false); }}
                                     sx={{ p: 0.25, mt: -0.25 }}
                                 >
                                     <CloseIcon fontSize="inherit" />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { createContext, useState, useContext } from 'react';
+import { createContext, useState, use } from 'react';
 
 
 type StateZoomContext = [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
@@ -11,14 +11,14 @@ export function ZoomProvider({ children } : { children : React.ReactNode}) {
 
     const [isZooming, setIsZooming] = useState(false);
     return (
-        <ZoomContext.Provider value={[isZooming, setIsZooming]}>
+        <ZoomContext value={[isZooming, setIsZooming]}>
         {children}
-        </ZoomContext.Provider>
+        </ZoomContext>
     )
 };
 
 export const useZoom = () => {
-    const state  = useContext(ZoomContext)
+    const state  = use(ZoomContext)
     if(!state) {
         throw new Error("useZoom has to be used within ZoomProvider");
     }

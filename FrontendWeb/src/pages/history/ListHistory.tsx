@@ -5,7 +5,7 @@ import { Route } from "../../api/models/Route";
 import { HelpPoint } from "../../api/models/HelpPoint";
 
 
-type ListHistoryProps = {
+interface ListHistoryProps {
     stateOnlyUser : [ boolean, React.Dispatch<React.SetStateAction<boolean>>]
     stateRoutes : [ Map<string, Route[]>, React.Dispatch<React.SetStateAction<Map<string, Route[]>>> ]
     stateHelpPoints : [ HelpPoint[], React.Dispatch<React.SetStateAction<HelpPoint[]>> ] 

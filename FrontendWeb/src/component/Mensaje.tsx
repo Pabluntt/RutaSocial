@@ -8,7 +8,7 @@ import { Notice } from "../api/models/Notice";
 export default function Mensaje({ value, index, onDismiss } : { value : Notice, index : number, onDismiss?: (id: string) => void }) {
 
   const MAX_LENGTH = 100
-  const [ msg, setMsg ] = useState(value.description as string)
+  const [ msg, setMsg ] = useState(value.description)
   const [ isTruncated, setIsTruncated ] = useState(msg.length > MAX_LENGTH)
   const [ toggleIsShowingMore, setIsShowingMore ] = useState(false)
 
@@ -57,7 +57,7 @@ export default function Mensaje({ value, index, onDismiss } : { value : Notice, 
                       }
                   </Typography>
                   { isTruncated ?
-                    <button className="text-green-700 underline cursor-pointer" onClick={() => setIsShowingMore(prev => !prev)} >
+                    <button className="text-green-700 underline cursor-pointer" onClick={() => { setIsShowingMore(prev => !prev); }} >
                       { toggleIsShowingMore ? 'Ver menos' : 'Ver mas' }
                     </button>
                     :

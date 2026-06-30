@@ -7,7 +7,7 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import L from 'leaflet'
 
-type LinkHelpPointDialogProps = {
+interface LinkHelpPointDialogProps {
     open: boolean
     personaID: string
     onClose: () => void
@@ -93,7 +93,7 @@ export default function LinkHelpPointDialog({ open, personaID, onClose, onLinked
                                     <ListItemButton
                                         key={route.id}
                                         selected={selectedRouteId === route.id}
-                                        onClick={() => setSelectedRouteId(route.id)}
+                                        onClick={() => { setSelectedRouteId(route.id); }}
                                         sx={{ borderRadius: '8px', mb: 0.5 }}
                                     >
                                         <ListItemText
@@ -107,7 +107,7 @@ export default function LinkHelpPointDialog({ open, personaID, onClose, onLinked
                     ) : !selectedHP ? (
                         <div>
                             <div className="flex items-center gap-2 mb-3">
-                                <Button variant="text" size="small" onClick={() => setSelectedRouteId(null)} sx={{ textTransform: 'none' }}>
+                                <Button variant="text" size="small" onClick={() => { setSelectedRouteId(null); }} sx={{ textTransform: 'none' }}>
                                     ← Volver a rutas
                                 </Button>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>2. Selecciona un punto de ayuda</Typography>
@@ -121,7 +121,7 @@ export default function LinkHelpPointDialog({ open, personaID, onClose, onLinked
                                     filteredHelpPoints.map(hp => (
                                         <ListItemButton
                                             key={hp.id}
-                                            onClick={() => setSelectedHP(hp)}
+                                            onClick={() => { setSelectedHP(hp); }}
                                             sx={{ borderRadius: '8px', mb: 0.5 }}
                                         >
                                             <ListItemText
@@ -136,7 +136,7 @@ export default function LinkHelpPointDialog({ open, personaID, onClose, onLinked
                     ) : (
                         <div>
                             <div className="flex items-center gap-2 mb-3">
-                                <Button variant="text" size="small" onClick={() => setSelectedHP(null)} sx={{ textTransform: 'none' }}>
+                                <Button variant="text" size="small" onClick={() => { setSelectedHP(null); }} sx={{ textTransform: 'none' }}>
                                     ← Volver
                                 </Button>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>3. Vista previa del punto</Typography>

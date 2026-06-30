@@ -71,7 +71,7 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
 
     const onPostNotice = () => {
         if(!validateForm()) return
-        mutate({ description, authorID: authorID as string, sendEmail: false, sendToAll: canSendToAll && sendToAll })
+        mutate({ description, authorID: authorID!, sendEmail: false, sendToAll: canSendToAll && sendToAll })
         setTimeout(() => {
             handleClose()
         }, 600)
@@ -131,7 +131,7 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
                                 control={
                                     <Switch
                                         checked={sendToAll}
-                                        onChange={(e) => setSendToAll(e.target.checked)}
+                                        onChange={(e) => { setSendToAll(e.target.checked); }}
                                         color="primary"
                                     />
                                 }

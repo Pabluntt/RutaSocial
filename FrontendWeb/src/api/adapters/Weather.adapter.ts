@@ -1,13 +1,13 @@
 import { Weather, WeatherForecastEvent } from "../models/Weather"
 
-export type TWeatherForecastEventBackend = {
+export interface TWeatherForecastEventBackend {
     hours_from_now: number
     weather_code: number
     condition: string
     description: string
 }
 
-export type TWeatherBackend = {
+export interface TWeatherBackend {
     condition: string
     description: string
     weather_code: number

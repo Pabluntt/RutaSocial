@@ -192,7 +192,7 @@ func (r routeUseCase) JoinRoute(c *gin.Context) {
 	route, err := r.routeRepository.JoinRoute(c.Request.Context(), inviteCode, userID)
 	if err != nil {
 		logUseCaseWarn(c, "route.join", http.StatusBadRequest, err)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al unirse a la ruta"})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

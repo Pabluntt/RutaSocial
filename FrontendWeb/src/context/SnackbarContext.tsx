@@ -1,9 +1,9 @@
 import { Alert, Snackbar } from '@mui/material'
-import { createContext, ReactNode, useContext, useState } from 'react'
+import { createContext, ReactNode, use, useState } from 'react'
 
 type Severity = 'success' | 'info' | 'warning' | 'error'
 
-type SnackbarContextValue = {
+interface SnackbarContextValue {
   showSnackbar: (message: string, severity?: Severity) => void
 }
 
@@ -21,19 +21,19 @@ export function SnackbarProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <SnackbarContext.Provider value={{ showSnackbar }}>
+    <SnackbarContext value={{ showSnackbar }}>
       {children}
-      <Snackbar open={state.open} autoHideDuration={5000} onClose={() => setState((current) => ({ ...current, open: false }))}>
-        <Alert severity={state.severity} variant="filled" onClose={() => setState((current) => ({ ...current, open: false }))}>
+      <Snackbar open={state.open} autoHideDuration={5000} onClose={() => { setState((current) => ({ ...current, open: false })); }}>
+        <Alert severity={state.severity} variant="filled" onClose={() => { setState((current) => ({ ...current, open: false })); }}>
           {state.message}
         </Alert>
       </Snackbar>
-    </SnackbarContext.Provider>
+    </SnackbarContext>
   )
 }
 
 export function useAppSnackbar() {
-  const context = useContext(SnackbarContext)
+  const context = use(SnackbarContext)
   if (!context) throw new Error('useAppSnackbar debe usarse dentro de SnackbarProvider')
   return context
 }

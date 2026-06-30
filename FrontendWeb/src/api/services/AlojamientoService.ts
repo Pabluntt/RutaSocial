@@ -1,13 +1,13 @@
 import { axiosInstance } from "./axiosInstance"
 
-export type CreateAlojamientoRequest = {
+export interface CreateAlojamientoRequest {
     coords: number[]
     name: string
     cupos: number
     author_id: string
 }
 
-export type UpdateAlojamientoRequest = {
+export interface UpdateAlojamientoRequest {
     _id: string
     cupos?: number
     name?: string

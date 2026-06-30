@@ -10,7 +10,7 @@ const icons = [
     {icon : <NavigationIcon />, name: 'Resumen Ruta'} 
 ]
 
-export type SpeedDialogRouteProps = {
+export interface SpeedDialogRouteProps {
     stateOpen : [ boolean, React.Dispatch<React.SetStateAction<boolean>>]
     stateOpenDialogAttended : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateOpenDialogRisk : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
@@ -26,8 +26,8 @@ export default function SpeedDialRoute({ stateOpen, stateOpenDialogAttended, sta
     const [ openDialogRisk, setOpenDialogRisk ] = stateOpenDialogRisk
     const [ openDialogRoute, setOpenDialogRoute ] = stateOpenDialogRoute
     
-    const handleOpen = () =>  setOpen(true) 
-    const handleClose = () => setOpen(false) 
+    const handleOpen = () =>  { setOpen(true); } 
+    const handleClose = () => { setOpen(false); } 
 
     const list = [{ 
         open : openDialogAttended, 

@@ -1,12 +1,12 @@
 import { AntecedenteEntry, Persona } from "../models/Persona"
 
-export type TAntecedenteEntryBackend = {
+export interface TAntecedenteEntryBackend {
     _id: string
     fecha: string
     descripcion: string
 }
 
-export type TPersonaBackend = {
+export interface TPersonaBackend {
     _id: string
     nombre: string
     rut?: string
@@ -18,7 +18,7 @@ export type TPersonaBackend = {
     fecha_actualizacion: string
 }
 
-export type TPersonaCreateRequest = {
+export interface TPersonaCreateRequest {
     nombre: string
     rut?: string
     edad: number

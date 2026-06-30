@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Manual de Administrador - RutaSocial</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #1f2937; line-height: 1.45; margin: 42px; }
+    h1 { color: #007c84; font-size: 30px; margin-bottom: 8px; }
+    h2 { color: #005f66; font-size: 20px; margin-top: 26px; border-bottom: 1px solid #d1d5db; padding-bottom: 4px; }
+    h3 { font-size: 16px; margin-top: 18px; color: #374151; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #d1d5db; padding: 8px; vertical-align: top; }
+    th { background: #e6f7f8; text-align: left; }
+    .note { background: #f3f4f6; border-left: 4px solid #009ba5; padding: 10px 12px; margin: 12px 0; }
+    li { margin: 4px 0; }
+  </style>
+</head>
+<body>
+  <h1>Manual de Administrador</h1>
+  <p><strong>Sistema:</strong> RutaSocial</p>
+  <p><strong>Perfil:</strong> usuario con rol <strong>administrador</strong>.</p>
+
+  <h2>Alcance del Rol</h2>
+  <p>El administrador mantiene la operación general del sistema. Puede ver la información operativa, crear usuarios, gestionar instituciones y administrar registros críticos.</p>
+
+  <h2>Permisos del Administrador</h2>
+  <table>
+    <thead><tr><th>Módulo</th><th>Permisos</th></tr></thead>
+    <tbody>
+      <tr><td>Usuarios</td><td>Ver usuarios, crear voluntarios, crear administradores, editar usuarios y eliminar usuarios.</td></tr>
+      <tr><td>Instituciones</td><td>Ver, crear, editar y eliminar instituciones.</td></tr>
+      <tr><td>Rutas</td><td>Crear rutas, unirse a rutas, ver rutas, editar rutas, eliminar rutas y finalizar cualquier ruta.</td></tr>
+      <tr><td>Informes de ruta</td><td>Ver datos de rutas y descargar informes completos.</td></tr>
+      <tr><td>Mapa</td><td>Ver puntos de ayuda, riesgos, mapas de calor, rutas y alojamientos.</td></tr>
+      <tr><td>Alojamientos</td><td>Crear alojamientos desde el mapa. Este botón solo debe estar disponible para administradores.</td></tr>
+      <tr><td>Personas ayudadas</td><td>Ver, crear, editar y eliminar perfiles; gestionar antecedentes e información médica.</td></tr>
+      <tr><td>Puntos de ayuda</td><td>Crear, editar, eliminar y vincular puntos de ayuda con personas beneficiadas.</td></tr>
+      <tr><td>Avisos</td><td>Crear avisos para voluntarios y visualizar avisos fijados.</td></tr>
+      <tr><td>Calendario</td><td>Ver y gestionar eventos de calendario asociados a rutas.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Funciones Principales</h2>
+  <h3>Gestionar Usuarios</h3>
+  <p>Desde el panel de usuarios se pueden revisar cuentas, crear nuevos voluntarios o administradores, editar información y eliminar cuentas cuando corresponda.</p>
+
+  <h3>Gestionar Instituciones</h3>
+  <p>Permite mantener el listado de instituciones asociadas a usuarios y operación. Solo administradores pueden crear, modificar o eliminar instituciones.</p>
+
+  <h3>Gestionar Rutas</h3>
+  <p>La sección de gestión de rutas permite revisar datos de rutas y descargar informes. También muestra acciones administrativas cuando corresponda.</p>
+
+  <h3>Mapa y Alojamientos</h3>
+  <p>El administrador puede crear alojamientos desde el mapa. Para voluntarios, el botón de creación no debe mostrarse.</p>
+
+  <h3>Personas Ayudadas</h3>
+  <p>El administrador puede mantener perfiles de personas beneficiadas, antecedentes, información médica y vínculos con puntos de ayuda.</p>
+
+  <h2>Buenas Prácticas</h2>
+  <ul>
+    <li>Crear administradores solo cuando sea estrictamente necesario.</li>
+    <li>Revisar que las instituciones estén correctas antes de asociarlas a usuarios.</li>
+    <li>Descargar informes de ruta para respaldo operativo cuando se finalice una actividad.</li>
+    <li>Cerrar sesión al terminar, especialmente en equipos compartidos.</li>
+  </ul>
+
+  <div class="note">El registro público siempre crea voluntarios. La creación de administradores se realiza desde funciones protegidas para administradores.</div>
+</body>
+</html>

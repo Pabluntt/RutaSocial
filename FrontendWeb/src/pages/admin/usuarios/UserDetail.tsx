@@ -54,12 +54,12 @@ export default function UserDetail() {
                 onSuccess: () => {
                     setEditing(false)
                     setAlert({ type: 'success', message: 'Usuario actualizado exitosamente' })
-                    setTimeout(() => setAlert(null), 3000)
+                    setTimeout(() => { setAlert(null); }, 3000)
                 },
                 onError: (err: any) => {
                     const msg = err?.status === 403 ? 'No tienes permisos para editar usuarios' : (err?.error || 'Error al actualizar usuario')
                     setAlert({ type: 'error', message: msg })
-                    setTimeout(() => setAlert(null), 3000)
+                    setTimeout(() => { setAlert(null); }, 3000)
                 },
             }
         )
@@ -122,7 +122,7 @@ export default function UserDetail() {
                     <div className={"flex mb-4 " + (computerDevice ? 'flex-row items-center justify-between' : 'flex-col gap-3')}>
                         <div className="flex items-center gap-3">
                             <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56, fontSize: 24 }}>
-                                {user.name?.charAt(0)?.toUpperCase()}
+                                {user.name.charAt(0).toUpperCase()}
                             </Avatar>
                             <div>
                                 <Typography variant="h6">{user.name}</Typography>
@@ -140,7 +140,7 @@ export default function UserDetail() {
                                     </Button>
                                 </>
                             ) : isAdmin ? (
-                                <Button variant="outlined" startIcon={<EditIcon />} onClick={() => setEditing(true)} size={computerDevice ? "medium" : "small"} fullWidth={!computerDevice}>
+                                <Button variant="outlined" startIcon={<EditIcon />} onClick={() => { setEditing(true); }} size={computerDevice ? "medium" : "small"} fullWidth={!computerDevice}>
                                     Editar
                                 </Button>
                             ) : null}
@@ -151,7 +151,7 @@ export default function UserDetail() {
                         <TextField
                             label="Nombre"
                             value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            onChange={(e) => { setFormData({ ...formData, name: e.target.value }); }}
                             disabled={!editing}
                             size="small"
                             fullWidth
@@ -159,7 +159,7 @@ export default function UserDetail() {
                         <TextField
                             label="Email"
                             value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            onChange={(e) => { setFormData({ ...formData, email: e.target.value }); }}
                             disabled={!editing}
                             size="small"
                             fullWidth
@@ -167,7 +167,7 @@ export default function UserDetail() {
                         <TextField
                             label="Teléfono"
                             value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            onChange={(e) => { setFormData({ ...formData, phone: e.target.value }); }}
                             disabled={!editing}
                             size="small"
                             fullWidth
@@ -175,7 +175,7 @@ export default function UserDetail() {
                         <TextField
                             label="Rol"
                             value={formData.role}
-                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                            onChange={(e) => { setFormData({ ...formData, role: e.target.value }); }}
                             disabled={!editing}
                             select
                             size="small"

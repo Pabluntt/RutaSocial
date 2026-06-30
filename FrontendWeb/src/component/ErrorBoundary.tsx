@@ -48,7 +48,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               <Button variant="outlined" onClick={this.handleReset}>
                 Reintentar
               </Button>
-              <Button variant="outlined" onClick={() => window.location.reload()}>
+              <Button variant="outlined" onClick={() => { window.location.reload(); }}>
                 Recargar página
               </Button>
             </div>

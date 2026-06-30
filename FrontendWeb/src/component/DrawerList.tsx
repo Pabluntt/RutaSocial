@@ -14,6 +14,7 @@ import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import RouteIcon from '@mui/icons-material/Route';
 import { Role } from "../Enums/Role";
+import { useQueryClient } from "@tanstack/react-query";
 
 
 export default function DrawerList({ onNavigate } : { onNavigate?: () => void } = {}) {
@@ -23,6 +24,7 @@ export default function DrawerList({ onNavigate } : { onNavigate?: () => void } 
     const btnSx = isMobile ? { py: 1.2, minHeight: 48 } : { py: 0.5, minHeight: 40 };
     const navigate = useNavigate()
     const { clearSession } = useSessionStore()
+    const queryClient = useQueryClient()
     const { role } = useAuth()
     const [ openDialogNotice, setOpenDialogNotice ] = useState(false)
 
@@ -42,6 +44,7 @@ export default function DrawerList({ onNavigate } : { onNavigate?: () => void } 
     }
 
     const onClickCerrarSesion = () => {
+        queryClient.clear()
         clearSession()
         navigate(`${import.meta.env.VITE_BASE_URL}/login`)
         onNavigate?.()

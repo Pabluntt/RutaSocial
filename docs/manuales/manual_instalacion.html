@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Manual de Instalación - RutaSocial</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #1f2937; line-height: 1.45; margin: 42px; }
+    h1 { color: #007c84; font-size: 30px; margin-bottom: 8px; }
+    h2 { color: #005f66; font-size: 20px; margin-top: 26px; border-bottom: 1px solid #d1d5db; padding-bottom: 4px; }
+    code { background: #f3f4f6; padding: 2px 5px; border-radius: 4px; }
+    pre { background: #111827; color: #f9fafb; padding: 12px; border-radius: 8px; white-space: pre-wrap; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #d1d5db; padding: 8px; vertical-align: top; }
+    th { background: #e6f7f8; text-align: left; }
+    .note { background: #f3f4f6; border-left: 4px solid #009ba5; padding: 10px 12px; margin: 12px 0; }
+    li { margin: 4px 0; }
+  </style>
+</head>
+<body>
+  <h1>Manual de Instalación</h1>
+  <p><strong>Sistema:</strong> RutaSocial</p>
+  <p>Este manual describe la instalación local con Docker Compose y la ejecución separada de Backend y FrontendWeb.</p>
+
+  <h2>Requisitos</h2>
+  <ul>
+    <li>Git</li>
+    <li>Docker Desktop con Docker Compose</li>
+    <li>Node.js compatible con el proyecto para desarrollo frontend</li>
+    <li>Go 1.24 para desarrollo backend</li>
+  </ul>
+
+  <h2>Variables de Entorno</h2>
+  <p>Copiar los archivos de ejemplo y ajustar valores locales:</p>
+  <pre>Backend/.env.example -> Backend/.env
+FrontendWeb/.env.example -> FrontendWeb/.env</pre>
+
+  <table>
+    <thead><tr><th>Variable</th><th>Uso</th></tr></thead>
+    <tbody>
+      <tr><td><code>MONGODB_URI</code></td><td>Conexión MongoDB usada por el backend.</td></tr>
+      <tr><td><code>JWT_SECRET</code></td><td>Clave para firmar tokens JWT. Debe ser segura en producción.</td></tr>
+      <tr><td><code>APP_ENV</code></td><td>Entorno de ejecución. En producción oculta Swagger.</td></tr>
+      <tr><td><code>VITE_URL_BACKEND</code></td><td>URL del backend consumida por FrontendWeb.</td></tr>
+      <tr><td><code>VITE_BASE_URL</code></td><td>Base path usado por navegación frontend.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Instalación con Docker Compose</h2>
+  <ol>
+    <li>Abrir terminal en la raíz del repositorio.</li>
+    <li>Construir imágenes.</li>
+    <li>Levantar servicios.</li>
+  </ol>
+  <pre>docker compose build
+docker compose up -d
+docker compose ps</pre>
+
+  <h2>Puertos Locales</h2>
+  <table>
+    <thead><tr><th>Servicio</th><th>Puerto</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td>FrontendWeb</td><td>3000</td><td>Aplicación web.</td></tr>
+      <tr><td>Backend</td><td>8080</td><td>API REST.</td></tr>
+      <tr><td>MongoDB</td><td>27017</td><td>Base de datos local si se usa el contenedor.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Desarrollo sin Docker</h2>
+  <h3>Backend</h3>
+  <pre>cd Backend
+go mod download
+go test ./...
+go run ./cmd</pre>
+
+  <h3>FrontendWeb</h3>
+  <pre>cd FrontendWeb
+npm ci
+npm run typecheck
+npm run test
+npm run dev</pre>
+
+  <h2>Verificación</h2>
+  <ul>
+    <li>Frontend disponible en <code>http://localhost:3000</code>.</li>
+    <li>Backend disponible en <code>http://localhost:8080</code>.</li>
+    <li>MongoDB debe figurar como healthy en Docker Compose.</li>
+    <li>Ejecutar pruebas antes de desplegar cambios.</li>
+  </ul>
+
+  <h2>Producción</h2>
+  <ul>
+    <li>Usar secretos reales en variables de entorno, no en código.</li>
+    <li>Configurar dominios finales para CORS y CSP.</li>
+    <li>Usar <code>APP_ENV=production</code> para ocultar Swagger.</li>
+    <li>Construir imágenes nuevas después de cada cambio.</li>
+  </ul>
+
+  <div class="note">No eliminar volúmenes Docker si se desea conservar la base de datos local.</div>
+</body>
+</html>

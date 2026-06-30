@@ -12,7 +12,7 @@ export class CalendarService {
         const { data } = await axiosInstance.get(`/${this.RESOURCE_NAME}`)
         const cache = await CalendarService.buildEventCache(data as TCalendarEventBackend[])
         return await Promise.all((data as TCalendarEventBackend[]).map(async (event, _) => (
-           await MapCalendarEventFromBackend(event as TCalendarEventBackend, cache) 
+           await MapCalendarEventFromBackend(event, cache) 
         )))
     }
 

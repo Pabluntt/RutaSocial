@@ -1,5 +1,5 @@
 import React from 'react';
-import { createContext, useState, useContext } from 'react';
+import { createContext, useState, use } from 'react';
 import { HelpPoint } from '../api/models/HelpPoint';
 
 // Si HelpPoint es undefined entonces openDialgo = false
@@ -15,14 +15,14 @@ export function HelpPointUpdateProvider({ children } : { children : React.ReactN
     const stateHelpPointUpdate = useState<HelpPoint | undefined>()
 
     return (
-        <HelpPointUpdateContext.Provider value={stateHelpPointUpdate}>
+        <HelpPointUpdateContext value={stateHelpPointUpdate}>
         {children}
-        </HelpPointUpdateContext.Provider>
+        </HelpPointUpdateContext>
     )
 };
 
 export const useHelpPointUpdateDialog = () => {
-    const state  = useContext(HelpPointUpdateContext)
+    const state  = use(HelpPointUpdateContext)
     if(!state) {
         throw new Error("useHelpPointUpdateDialog has to be used within HelpPointUpdateProvider");
     }

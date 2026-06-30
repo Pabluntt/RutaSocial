@@ -24,11 +24,11 @@ export default function ListDateItem({ date, defaultOpen = false, routes, stateH
     const [ helpPoints , setHelpPoints ] = stateHelpPoints
 
     const [ selectedIndex, setSelectedIndex ] = useState(0)
-    const handleClickSelected = (_ : React.MouseEvent<HTMLDivElement, MouseEvent>, index : number) => {
+    const handleClickSelected = (_ : React.MouseEvent<HTMLDivElement>, index : number) => {
         setSelectedIndex(index === selectedIndex ? -1 : index)
     }
 
-    const handleClick = (e :React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const handleClick = (e :React.MouseEvent<HTMLDivElement>) => {
         if(onClick) {
             onClick(e)
         }

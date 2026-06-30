@@ -15,7 +15,7 @@ import { useRoutesByUser } from "../../api/hooks/RouteHooks"
 import { TUpdateUserRequest } from "../../api/adapters/User.adapter";
 
 
-export type TResumenActividad = {
+export interface TResumenActividad {
     lastRouteDate ?: string 
     amountCompletedRoutes ?: number 
     amountCompletedRegister ?: number 

@@ -56,7 +56,7 @@ export default function AdminRoutes() {
 
     const showAlertMsg = (type: 'success' | 'error', message: string) => {
         setAlert({ type, message })
-        setTimeout(() => setAlert(null), 3000)
+        setTimeout(() => { setAlert(null); }, 3000)
     }
 
     const handleEditClick = (route: Route) => {
@@ -139,7 +139,7 @@ export default function AdminRoutes() {
                             fullWidth
                             placeholder="Buscar por título"
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => { setSearch(e.target.value); }}
                         />
                         <IconButton disabled><SearchIcon /></IconButton>
                     </Paper>
@@ -228,26 +228,26 @@ export default function AdminRoutes() {
                                                     <div className={"flex " + (computerDevice ? 'gap-1 justify-center' : 'flex-row gap-0.5 justify-center whitespace-nowrap')}>
                                                         {isAdmin && (
                                                             <Tooltip title="Editar">
-                                                                <IconButton size="small" color="primary" onClick={() => handleEditClick(route)}>
+                                                                <IconButton size="small" color="primary" onClick={() => { handleEditClick(route); }}>
                                                                     <EditIcon fontSize="small" />
                                                                 </IconButton>
                                                             </Tooltip>
                                                         )}
                                                         {isAdmin && route.status === RouteStatus.Active && (
                                                             <Tooltip title="Finalizar">
-                                                                <IconButton size="small" color="success" onClick={() => handleFinishClick(route)}>
+                                                                <IconButton size="small" color="success" onClick={() => { handleFinishClick(route); }}>
                                                                     <CheckCircleIcon fontSize="small" />
                                                                 </IconButton>
                                                             </Tooltip>
                                                         )}
                                                         <Tooltip title="Descargar informe">
-                                                            <IconButton size="small" color="info" onClick={() => handleDownloadReport(route)}>
+                                                            <IconButton size="small" color="info" onClick={() => { handleDownloadReport(route); }}>
                                                                 <FileDownloadIcon fontSize="small" />
                                                             </IconButton>
                                                         </Tooltip>
                                                         {isAdmin && (
                                                             <Tooltip title="Eliminar">
-                                                                <IconButton size="small" color="error" onClick={() => handleDeleteClick(route)}>
+                                                                <IconButton size="small" color="error" onClick={() => { handleDeleteClick(route); }}>
                                                                     <DeleteIcon fontSize="small" />
                                                                 </IconButton>
                                                             </Tooltip>
@@ -265,20 +265,20 @@ export default function AdminRoutes() {
             </div>
 
             {/* Edit Dialog */}
-            <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+            <Dialog open={editDialogOpen} onClose={() => { setEditDialogOpen(false); }} maxWidth="sm" fullWidth>
                 <DialogTitle>Editar Ruta</DialogTitle>
                 <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
                     <TextField
                         label="Título"
                         value={editTitle}
-                        onChange={(e) => setEditTitle(e.target.value)}
+                        onChange={(e) => { setEditTitle(e.target.value); }}
                         fullWidth
                         size="small"
                     />
                     <TextField
                         label="Descripción"
                         value={editDescription}
-                        onChange={(e) => setEditDescription(e.target.value)}
+                        onChange={(e) => { setEditDescription(e.target.value); }}
                         fullWidth
                         size="small"
                         multiline
@@ -286,7 +286,7 @@ export default function AdminRoutes() {
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setEditDialogOpen(false)}>Cancelar</Button>
+                    <Button onClick={() => { setEditDialogOpen(false); }}>Cancelar</Button>
                     <Button onClick={handleSaveEdit} variant="contained" loading={isUpdating}>Guardar</Button>
                 </DialogActions>
             </Dialog>

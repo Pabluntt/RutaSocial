@@ -6,7 +6,7 @@ import { useState } from "react"
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
-type AntecedentesBoxProps = {
+interface AntecedentesBoxProps {
     title: string
     entries: AntecedenteEntry[]
     onAdd: (descripcion: string) => void
@@ -32,7 +32,7 @@ export default function AntecedentesBox({ title, entries, onAdd, onDelete }: Ant
                     startIcon={<AddIcon />}
                     variant="outlined"
                     size="small"
-                    onClick={() => setAdding(!adding)}
+                    onClick={() => { setAdding(!adding); }}
                     sx={{ borderRadius: '8px', textTransform: 'none' }}
                 >
                     Añadir
@@ -48,7 +48,7 @@ export default function AntecedentesBox({ title, entries, onAdd, onDelete }: Ant
                         minRows={2}
                         placeholder="Escribe el antecedente..."
                         value={text}
-                        onChange={(e) => setText(e.target.value)}
+                        onChange={(e) => { setText(e.target.value); }}
                         slotProps={{ inputLabel: { shrink: true } }}
                     />
                     <div className="flex flex-col gap-1">
@@ -79,7 +79,7 @@ export default function AntecedentesBox({ title, entries, onAdd, onDelete }: Ant
                                         {entry.descripcion}
                                     </Typography>
                                 </div>
-                                <IconButton size="small" color="error" onClick={() => onDelete(entry.id)}>
+                                <IconButton size="small" color="error" onClick={() => { onDelete(entry.id); }}>
                                     <DeleteOutlineIcon fontSize="small" />
                                 </IconButton>
                             </div>

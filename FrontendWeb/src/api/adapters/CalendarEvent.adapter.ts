@@ -3,7 +3,7 @@ import { Institution } from "../models/Institution"
 import { InstitutionService } from "../services/InstitutionService"
 import { TPublicUserInfo, UserService } from "../services/UserService"
 
-export type TCalendarEventBackend = {
+export interface TCalendarEventBackend {
     _id: string
     title: string
     description: string
@@ -22,7 +22,7 @@ export type TCalendarEventCreateRequest = Omit<
 
 export type TCalendarEventUpdateRequest = TCalendarEventBackend
 
-export type TCalendarEventMapCache = {
+export interface TCalendarEventMapCache {
     users?: Map<string, Promise<TPublicUserInfo>>
     usersById?: Map<string, TPublicUserInfo>
     institutions?: Map<string, Promise<Institution>>
@@ -36,7 +36,7 @@ export async function MapCalendarEventFromBackend(
     let authorName = 'Usuario Eliminado'
     let colorInstitution = '#000000'
     try {
-        const authorID = data.author_id as string
+        const authorID = data.author_id!
         let user = cache?.usersById?.get(authorID)
         if (!user) {
             let userPromise = cache?.users?.get(authorID)

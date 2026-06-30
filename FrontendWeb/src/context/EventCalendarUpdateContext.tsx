@@ -1,5 +1,5 @@
 import React from 'react';
-import { createContext, useState, useContext } from 'react';
+import { createContext, useState, use } from 'react';
 import { CalendarEvent } from '../api/models/Calendar';
 
 
@@ -16,14 +16,14 @@ export function EventCalendarUpdateProvider({ children } : { children : React.Re
     const stateEventCalendarUpdate = useState<CalendarEvent | undefined>()
 
     return (
-        <EventCalendarUpdateContext.Provider value={stateEventCalendarUpdate}>
+        <EventCalendarUpdateContext value={stateEventCalendarUpdate}>
         {children}
-        </EventCalendarUpdateContext.Provider>
+        </EventCalendarUpdateContext>
     )
 };
 
 export const useEventCalendarUpdateDialog = () => {
-    const state  = useContext(EventCalendarUpdateContext)
+    const state  = use(EventCalendarUpdateContext)
     if(!state) {
         throw new Error("useEventCalendarUpdateDialog has to be used within EventCalendarUpdateProvider");
     }

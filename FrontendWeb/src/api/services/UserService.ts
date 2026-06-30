@@ -4,12 +4,12 @@ import { axiosInstance } from "./axiosInstance"
 
 
 
-export type TParticipationRespone = {
+export interface TParticipationRespone {
     total_routes : number,
     total_helpingpoints : number
 }
 
-export type TPublicUserInfo = { name: string; institutionID: string; phone: string }
+export interface TPublicUserInfo { name: string; institutionID: string; phone: string }
 
 
 export class UserService {

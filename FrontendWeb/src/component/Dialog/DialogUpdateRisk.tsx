@@ -87,7 +87,7 @@ export default function DialogUpdateRisk() {
                         <InputDescription 
                             maxLength={256}
                             value={risk.description} 
-                            onChange={(e) => setRisk({...risk, description : e.target.value})}   
+                            onChange={(e) => { setRisk({...risk, description : e.target.value}); }}   
                             fullWidth
                             variant='standard'      
                             label='Descripción'      

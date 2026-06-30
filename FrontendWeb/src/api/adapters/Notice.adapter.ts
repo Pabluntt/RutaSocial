@@ -1,7 +1,7 @@
 import { Notice } from "../models/Notice";
 import { TPublicUserInfo, UserService } from "../services/UserService";
 
-export type TNoticeBackend = {
+export interface TNoticeBackend {
     _id: string;
     author_id: string;
     description: string;
@@ -12,7 +12,7 @@ export type TNoticeBackend = {
 export type TNoticeCreateRequest = Omit<TNoticeBackend, '_id' | 'created_at'>;
 export type TNoticeUpdateRequest = TNoticeBackend;
 
-export type TNoticeMapCache = {
+export interface TNoticeMapCache {
     users?: Map<string, Promise<TPublicUserInfo>>
     usersById?: Map<string, TPublicUserInfo>
 }

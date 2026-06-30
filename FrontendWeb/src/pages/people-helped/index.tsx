@@ -10,7 +10,7 @@ import { useHelpPoints } from "../../api/hooks/HelpPointHooks"
 import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 
-type PersonaEntry = {
+interface PersonaEntry {
     id: string
     nombre: string
     rut?: string
@@ -20,7 +20,7 @@ type PersonaEntry = {
     infoMedicaCount: number
 }
 
-type LegacyEntry = {
+interface LegacyEntry {
     id: string
     nombre: string
     rut?: string
@@ -114,7 +114,7 @@ export default function PeopleHelped() {
                             size="small"
                             placeholder="Buscar por nombre, RUT o edad"
                             value={search}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => { setSearch(e.target.value); }}
                             slotProps={{
                                 input: {
                                     startAdornment: (
@@ -167,7 +167,7 @@ export default function PeopleHelped() {
                                         <Button
                                             fullWidth
                                             variant="text"
-                                            onClick={() => setShowLegacy(!showLegacy)}
+                                            onClick={() => { setShowLegacy(!showLegacy); }}
                                             sx={{ borderRadius: '8px', textTransform: 'none', py: 1, justifyContent: 'flex-start', color: 'text.secondary' }}
                                             startIcon={showLegacy ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                                         >

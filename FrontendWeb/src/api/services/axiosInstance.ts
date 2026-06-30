@@ -18,7 +18,7 @@ let isDone = false
 axiosInstance.interceptors.request.use(config => {
   const token = useSessionStore.getState().accessToken;
   if (token) {
-    config.headers['Authorization'] = `Bearer ${token}`;
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
@@ -38,7 +38,7 @@ export const interceptorResponse = (navigate : NavigateFunction,  clearSesion : 
                 navigate(`${import.meta.env.VITE_BASE_URL}/login`)
             }
 
-            if (error.response && error.response.data) {
+            if (error.response?.data) {
                 const responseData = error.response.data
                 if (responseData && typeof responseData === 'object') {
                     return Promise.reject({ ...responseData, status });

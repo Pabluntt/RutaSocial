@@ -27,7 +27,7 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
-export type DialogCreateRiskProps = { 
+export interface DialogCreateRiskProps { 
     stateOpen : [ boolean, React.Dispatch<React.SetStateAction<boolean>>]
     stateSelectInfo : [ DateSelectArg | null, React.Dispatch<React.SetStateAction<DateSelectArg | null>>]
 }
@@ -37,7 +37,8 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
 
     const theme = useTheme();
     const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
-    const authorID = useProfile().data?.id
+    const profileQuery = useProfile()
+    const authorID = profileQuery.data?.id
     const [ open, setOpen ] = stateOpen
     const [ selectInfo, setSelectInfo ] = stateSelectInfo
     const [ startTime, setStartTime] = useState<string>();
@@ -62,8 +63,11 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
     })
     const { showSnackbar } = useAppSnackbar()
 
+    const isValidCalendarText = (value: string) => /^[a-zA-Z0-9 \-_.,@:áéíóúÁÉÍÓÚñÑ()!?¿¡]+$/.test(value.trim())
+    const normalizeCalendarText = (value: string) => value.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim()
+
     // Obtener rutas del usuario actual
-    const { data: userRoutes } = useRoutesByUser(authorID, !!authorID)
+    const { data: userRoutes, isError: routesError, isLoading: routesLoading } = useRoutesByUser(authorID, open && !!authorID)
 
     const getEndTime = (indexStart : number) => (
         timeSlots.filter((_, index) => ( index > indexStart ))
@@ -111,9 +115,21 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
             errorEndTime : ''
         }
         let isValid = true
+        const title = normalizeCalendarText(formCalendarEvent.title)
+        const description = normalizeCalendarText(formCalendarEvent.description)
 
-        if(!formCalendarEvent.title.trim()) {
+        if(!title) {
             errors.errorTitle = 'El título es obligatorio'
+            isValid = false
+        } else if (!isValidCalendarText(title)) {
+            errors.errorTitle = 'El título contiene caracteres no permitidos'
+            isValid = false
+        }
+        if(!description) {
+            errors.errorDescription = 'La descripción es obligatoria'
+            isValid = false
+        } else if (!isValidCalendarText(description)) {
+            errors.errorDescription = 'La descripción contiene caracteres no permitidos'
             isValid = false
         }
         if(!formCalendarEvent.dateStart) {
@@ -128,7 +144,12 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
             errors.errorEndTime = 'Escoge una hora estimada de finalización'
             isValid = false
         }
+        if(startTime && endTime && timeSlots.indexOf(endTime) <= timeSlots.indexOf(startTime)) {
+            errors.errorEndTime = 'La hora de término debe ser posterior a la hora de inicio'
+            isValid = false
+        }
         if(!authorID) {
+            showSnackbar('No se pudo obtener tu usuario. Intenta nuevamente.', 'error')
             isValid = false
         }
         setFormErrors(errors)
@@ -141,24 +162,13 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
 
         const newEvent : Omit<CalendarEvent, 'id' | 'authorName' | 'colorInstitution'>= {
             ...formCalendarEvent,
-            title: formCalendarEvent.title,
-            authorID: authorID as string,
-            timeStart: startTime as string,
-            timeEnd: endTime as string,
+            title: normalizeCalendarText(formCalendarEvent.title),
+            description: normalizeCalendarText(formCalendarEvent.description),
+            authorID: authorID!,
+            timeStart: startTime!,
+            timeEnd: endTime!,
             routeID: selectedRouteId
         }
-        if(selectInfo) {
-            selectInfo.view.calendar.addEvent({
-                id: '123',
-                title: formCalendarEvent.title,
-                start: selectInfo.startStr,
-                end: selectInfo.endStr,
-                allDay: true,
-                color: 'red'
-            })
-            selectInfo.view.calendar.unselect();
-        }
-
         mutate(newEvent)
     }
 
@@ -166,6 +176,7 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
     useEffect(() => {
         if(isSuccess) {
             refetch()
+            selectInfo?.view.calendar.unselect()
             setTimeout(() => {
                 handleClose()
             }, 1000)
@@ -233,12 +244,14 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
                         />
                         <InputDescription 
                             maxLength={100}
-                            maxRows={6}
+                            maxRows={1}
                             variant='standard'
                             label='Descripción'
                             placeholder='Ingresa la descripción del evento'
                             value={formCalendarEvent.description}       
                             onChange={handleOnChangeDescription}        
+                            error={formErrors.errorDescription !== ''}
+                            helperText={formErrors.errorDescription}
                         />
                         <div className="flex flex-col  gap-2">
                             <label htmlFor="horario" className="text-sm font-medium text-gray-700">
@@ -247,14 +260,26 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
                             <div className='flex flex-row gap-4 justify-center items-center'>
                                 <ComboBox size='small'  onChange={(e, value, reason) => {
                                     if(reason === 'clear') {
+                                        setStartTime(undefined)
                                         setEndTime(undefined)
+                                        setListEndTime([])
+                                        return
                                     }
                                     setStartTime(value as string)
+                                    setEndTime(undefined)
+                                    setFormErrors(prev => ({...prev, errorStartTime: '', errorEndTime: ''}))
                                 }} 
                                 label='Empieza' 
                                 options={timeSlots} />
                                 <p>-</p> 
-                                <ComboBox size='small' onChange={(e, value) => {setEndTime(value as string)}} disabled={startTime == undefined} label='Termina' options={listEndTime as string[]}/>
+                                <ComboBox size='small' value={endTime ?? null} onChange={(e, value, reason) => {
+                                    if(reason === 'clear') {
+                                        setEndTime(undefined)
+                                        return
+                                    }
+                                    setEndTime(value as string)
+                                    setFormErrors(prev => ({...prev, errorEndTime: ''}))
+                                }} disabled={startTime == undefined} label='Termina' options={listEndTime}/>
                             </div>                           
                             <Typography variant='caption' color='error'>
                                 {formErrors.errorStartTime ? formErrors.errorStartTime : formErrors.errorEndTime}
@@ -266,8 +291,9 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
                             </label>
                             <Autocomplete
                                 size='small'
-                                options={userRoutes?.map(r => ({ id: r.id, title: r.title })) || []}
-                                getOptionLabel={(option) => typeof option === 'string' ? option : (option?.title || '')}
+                                disabled={routesLoading || routesError}
+                                options={userRoutes?.map(r => ({ id: r.id, title: r.title })) ?? []}
+                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.title || '')}
                                 isOptionEqualToValue={(option, value) => value ? option.id === value.id : false}
                                 value={selectedRouteId ? userRoutes?.find(r => r.id === selectedRouteId) ? { id: selectedRouteId, title: userRoutes.find(r => r.id === selectedRouteId)?.title || '' } : null : null}
                                 onChange={(e, value) => {
@@ -284,7 +310,7 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
                                 }
                             />
                             <Typography variant='caption' sx={{ color: 'text.secondary' }}>
-                                Selecciona una ruta para poder iniciarla desde el calendario
+                                {routesError ? 'No se pudieron cargar tus rutas. Puedes crear el evento sin vincular una ruta.' : routesLoading ? 'Cargando rutas...' : 'Selecciona una ruta para poder iniciarla desde el calendario'}
                             </Typography>
                         </div>
                     </div>
@@ -295,7 +321,7 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
                     </div>    
                     :
                     <Alert sx={{ mt: 2, width: '100%', minHeight: '80px', display: 'flex', alignItems: 'center', fontSize: '1rem' }} severity={ isSuccess ? 'success' : isError ? 'error' : 'info'}>
-                            {isSuccess ? 'Se Creo el riesgo exitosamente' : isError ? 'Hubo un error al intentar finalizar' : 'Error desconocido'}
+                            {isSuccess ? 'Evento creado correctamente' : isError ? 'No se pudo crear el evento. Revisa título, descripción, horario y ruta seleccionada.' : 'Error desconocido'}
                     </Alert>
                 }
             </DialogContent>

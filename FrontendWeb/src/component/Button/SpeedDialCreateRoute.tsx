@@ -9,7 +9,7 @@ const icons = [
     {icon : <GroupsIcon /> , name : 'Unirse a una ruta'},
 ]
 
-export type SpeedDialogRouteProps = {
+export interface SpeedDialogRouteProps {
     stateOpen : [ boolean, React.Dispatch<React.SetStateAction<boolean>>]
     stateOpenCreateRoute : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateOpenJoinRoute : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
@@ -23,8 +23,8 @@ export default function SpeedDialCreateRoute({ stateOpen, stateOpenCreateRoute, 
     const [ openCreateRoute, setOpenCreateRoute ] = stateOpenCreateRoute
     const [ openJoinRoute, setOpenJoinRoute ] = stateOpenJoinRoute
     
-    const handleOpen = () =>  setOpen(true) 
-    const handleClose = () => setOpen(false) 
+    const handleOpen = () =>  { setOpen(true); } 
+    const handleClose = () => { setOpen(false); } 
 
     const list = [{ 
         open : openCreateRoute, 

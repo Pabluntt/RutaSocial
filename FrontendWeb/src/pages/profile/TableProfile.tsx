@@ -15,7 +15,7 @@ import { useRoutesByUser } from "../../api/hooks/RouteHooks";
 import compareSort from "../../utils/compareDate";
 import { es } from "date-fns/locale";
 
-type TableProfileProps = {
+interface TableProfileProps {
      stateResumenActividad : [ TResumenActividad, React.Dispatch<React.SetStateAction<TResumenActividad>> ]
      stateUser : [IUser , React.Dispatch<React.SetStateAction<IUser | undefined>> ]
      stateHasChanges : [ boolean, React.Dispatch<React.SetStateAction<boolean>>]
@@ -84,8 +84,8 @@ export default function TableProfile({ stateUser, stateHasChanges, stateResumenA
                               color={user.phone == '' ? 'warning' : 'primary'}
                               value={user.phone}
                               size="small"
-                              onChange={((event) => (onChangePhone(event.target.value)))}
-                              onFocus={(e) => (e.target.select())}
+                              onChange={((event) => { onChangePhone(event.target.value); })}
+                              onFocus={(e) => { e.target.select(); }}
                               focused={user.phone == ''}
                          />
                          <TextField 

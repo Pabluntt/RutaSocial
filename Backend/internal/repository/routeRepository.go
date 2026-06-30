@@ -216,7 +216,7 @@ func (r *routeRepository) JoinRoute(ctx context.Context, code string, userID str
 
 	for _, member := range route.Team {
 		if member.Hex() == userID {
-			return domain.Route{}, errors.New("Ya eres parte de esta ruta")
+			return route, nil
 		}
 	}
 

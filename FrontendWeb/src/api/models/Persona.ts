@@ -1,10 +1,10 @@
-export type AntecedenteEntry = {
+export interface AntecedenteEntry {
     id: string
     fecha: Date
     descripcion: string
 }
 
-export type Persona = {
+export interface Persona {
     id: string
     nombre: string
     rut?: string

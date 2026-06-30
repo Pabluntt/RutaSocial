@@ -85,7 +85,7 @@ export default function Login() {
                         fullWidth
                         variant="outlined"
                         sx={sxInput}
-                        onChange={(e) => setEmail(e.currentTarget.value)}                      
+                        onChange={(e) => { setEmail(e.currentTarget.value); }}                      
                       />
                     </FormControl>
                     <FormControl fullWidth>
@@ -110,7 +110,7 @@ export default function Login() {
                             }
                           }
                         }}
-                        onChange={(e) => setPassword(e.currentTarget.value)}
+                        onChange={(e) => { setPassword(e.currentTarget.value); }}
                       />
                     </FormControl>
                     <Button type="submit" fullWidth variant="contained" disabled={isPending}

@@ -19,7 +19,7 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
-export type DialogCreateInstitutionProps = { 
+export interface DialogCreateInstitutionProps { 
     stateOpen : [ boolean, React.Dispatch<React.SetStateAction<boolean>>]
 }
 
@@ -173,7 +173,7 @@ export default function DialogCreateInstitution({ stateOpen } : DialogCreateInst
                             >
                             <HexColorPicker
                                 color={color}
-                                onChange={(newColor) => setColor(newColor)}
+                                onChange={(newColor) => { setColor(newColor); }}
                             />
                             </Popover>
                     </div>

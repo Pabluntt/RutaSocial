@@ -37,7 +37,7 @@ export function useUpdateRoute() {
 export function useRoutesByUser(userId ?: string, enabled ?: boolean) {
     return useQuery({
         queryKey : ['routeByUserID', userId],
-        queryFn : () => (RouteService.GetRoutesByUserId(userId as string)),
+        queryFn : () => (RouteService.GetRoutesByUserId(userId!)),
         enabled  
     })
 }

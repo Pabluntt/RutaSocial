@@ -37,7 +37,7 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
-type DialogCreateRouteProps = {
+interface DialogCreateRouteProps {
     stateOpen : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
 }
 
@@ -120,7 +120,7 @@ export default function DialogCreateRoute({ stateOpen } : DialogCreateRouteProps
         
         setAcept(true)
         setTimeout(() => {
-            mutate({...route, routeLeader: leaderID as string})
+            mutate({...route, routeLeader: leaderID!})
         }, 300)
     }
 

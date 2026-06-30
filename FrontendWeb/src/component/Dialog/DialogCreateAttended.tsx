@@ -38,16 +38,16 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
-type PersonDraft = {
+interface PersonDraft {
     id: string
     name: string
     rut: string
     age: string
     gender: string
     personaID?: string
-};
+}
 
-export type DialogCreateAttendedProps = { 
+export interface DialogCreateAttendedProps { 
     stateOpen : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateOnSelectLocationMap : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateLocationMethod : [ LocationMethod, React.Dispatch<React.SetStateAction<LocationMethod>> ]
@@ -277,7 +277,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
         }
 
         mutate({
-            routeID: routeId as string,
+            routeID: routeId!,
             coords,
             comment,
             people: validPeople.map(person => ({
@@ -296,7 +296,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                     personaID: validPeople[0].personaID,
                 }
                 : undefined,
-            authorID: authorID as string,
+            authorID: authorID,
             disabled: false,
         })
     }
@@ -358,7 +358,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                                         <div className='flex items-center justify-between mb-2'>
                                             <Chip label={`Persona ${index + 1}`} size="small" variant="outlined" sx={{ fontWeight: 500 }} />
                                             {people.length > 1 ? (
-                                                <IconButton color='error' size="small" onClick={() => removePerson(person.id)}>
+                                                <IconButton color='error' size="small" onClick={() => { removePerson(person.id); }}>
                                                     <DeleteOutlineIcon fontSize='small' />
                                                 </IconButton>
                                             ) : null}
@@ -370,7 +370,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                                                 variant='outlined'
                                                 size="small"
                                                 value={person.name}
-                                                onChange={(e) => updatePerson(person.id, 'name', e.target.value)}
+                                                onChange={(e) => { updatePerson(person.id, 'name', e.target.value); }}
                                                 label='Nombre *'
                                                 slotProps={{ inputLabel: { shrink: true } }}
                                             />
@@ -380,7 +380,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                                                 variant='outlined'
                                                 size="small"
                                                 value={person.rut}
-                                                onChange={(e) => updatePerson(person.id, 'rut', e.target.value)}
+                                                onChange={(e) => { updatePerson(person.id, 'rut', e.target.value); }}
                                                 label='RUT'
                                                 placeholder='12.345.678-9'
                                                 slotProps={{ inputLabel: { shrink: true } }}
@@ -390,7 +390,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                                                 id={`age-${person.id}`}
                                                 variant='outlined'
                                                 size="small"
-                                                onChange={(e) => updatePerson(person.id, 'age', e.target.value)}
+                                                onChange={(e) => { updatePerson(person.id, 'age', e.target.value); }}
                                                 label='Edad'
                                                 type='number'
                                                 value={person.age}
@@ -403,7 +403,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                                                 variant='outlined'
                                                 size="small"
                                                 value={person.gender}
-                                                onChange={(e) => updatePerson(person.id, 'gender', e.target.value)}
+                                                onChange={(e) => { updatePerson(person.id, 'gender', e.target.value); }}
                                                 label='Género'
                                                 slotProps={{ inputLabel: { shrink: true } }}
                                             >
@@ -417,7 +417,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                                                 size="small"
                                                 variant="text"
                                                 startIcon={<SearchIcon />}
-                                                onClick={() => handleOpenSearch(person.id)}
+                                                onClick={() => { handleOpenSearch(person.id); }}
                                                 sx={{ borderRadius: '8px', textTransform: 'none', fontSize: 12 }}
                                             >
                                                 {person.personaID ? 'Cambiar persona existente' : 'Buscar persona existente'}
@@ -442,7 +442,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                             id='comment'
                             variant='outlined'
                             value={comment}
-                            onChange={(e) => setComment(e.target.value)}
+                            onChange={(e) => { setComment(e.target.value); }}
                             label='Comentario del punto'
                             multiline
                             minRows={3}
@@ -522,7 +522,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
             </DialogActions>
         </BootstrapDialog>
 
-            <Dialog open={searchOpen} onClose={() => setSearchOpen(false)} fullWidth maxWidth="sm">
+            <Dialog open={searchOpen} onClose={() => { setSearchOpen(false); }} fullWidth maxWidth="sm">
                 <DialogTitle sx={{ fontWeight: 600, fontSize: '1rem' }}>Buscar persona existente</DialogTitle>
                 <DialogContent>
                     <TextField
@@ -531,7 +531,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                         autoFocus
                         placeholder="Escribe nombre o RUT..."
                         value={searchQuery}
-                        onChange={(e) => handleSearchInput(e.target.value)}
+                        onChange={(e) => { handleSearchInput(e.target.value); }}
                         slotProps={{
                             input: {
                                 startAdornment: (
@@ -546,7 +546,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                             {searchResults.map(persona => (
                                 <ListItemButton
                                     key={persona.id}
-                                    onClick={() => handleSelectPersona(persona)}
+                                    onClick={() => { handleSelectPersona(persona); }}
                                     sx={{ borderRadius: '8px' }}
                                 >
                                     <ListItemAvatar>
@@ -566,7 +566,7 @@ export default function DialogCreateAttended({ stateAttended, stateOpen, stateOn
                     )}
                 </DialogContent>
                 <DialogActions>
-                    <Button variant="outlined" onClick={() => setSearchOpen(false)} sx={{ borderRadius: '8px', textTransform: 'none' }}>Cancelar</Button>
+                    <Button variant="outlined" onClick={() => { setSearchOpen(false); }} sx={{ borderRadius: '8px', textTransform: 'none' }}>Cancelar</Button>
                 </DialogActions>
             </Dialog>
         </>
