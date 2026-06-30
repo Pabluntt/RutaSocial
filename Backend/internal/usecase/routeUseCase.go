@@ -41,19 +41,33 @@ func NewRouteUseCase(routeRepo repository.RouteRepository, userRepo repository.U
 	return &routeUseCase{routeRepository: routeRepo, userRepository: userRepo}
 }
 
-// enrichRoutesWithLeaderName consulta los nombres de los líderes de ruta y los asigna.
+// enrichRoutesWithLeaderName consulta los nombres de los líderes de ruta y los asigna en batch.
 func (r routeUseCase) enrichRoutesWithLeaderName(ctx *gin.Context, routes []domain.Route) {
+	leaderIDs := make([]string, 0, len(routes))
+	seen := make(map[string]bool)
 	for i := range routes {
-		userID := routes[i].RouteLeader.Hex()
-		if userID == "000000000000000000000000" {
+		id := routes[i].RouteLeader.Hex()
+		if id == "000000000000000000000000" || seen[id] {
 			continue
 		}
-		user, err := r.userRepository.GetUserByID(ctx.Request.Context(), userID)
-		if err != nil {
-			logUseCaseError(ctx, "route.enrich_leader_name", http.StatusInternalServerError, err, "leader_id", userID)
-			continue
+		seen[id] = true
+		leaderIDs = append(leaderIDs, id)
+	}
+	if len(leaderIDs) == 0 {
+		return
+	}
+	users, err := r.userRepository.GetUsersByIDs(ctx.Request.Context(), leaderIDs)
+	if err != nil {
+		return
+	}
+	nameByID := make(map[string]string, len(users))
+	for _, u := range users {
+		nameByID[u.ID.Hex()] = u.Name
+	}
+	for i := range routes {
+		if name, ok := nameByID[routes[i].RouteLeader.Hex()]; ok {
+			routes[i].RouteLeaderName = name
 		}
-		routes[i].RouteLeaderName = user.Name
 	}
 }
 
