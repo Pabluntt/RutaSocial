@@ -126,7 +126,7 @@ function App() {
                     />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/admin/usuarios`} element={<ProtectedRoute><Usuarios /></ProtectedRoute>} />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/admin/usuarios/:id`} element={<ProtectedRoute><UserDetail /></ProtectedRoute>} />
-                    <Route path={`${import.meta.env.VITE_BASE_URL}/admin/rutas`} element={<AdminRoute><AdminRoutes /></AdminRoute>} />
+                    <Route path={`${import.meta.env.VITE_BASE_URL}/admin/rutas`} element={<ProtectedRoute><AdminRoutes /></ProtectedRoute>} />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/historial`} element={
                       <ProtectedRoute>
                         <HelpPointUpdateProvider>
