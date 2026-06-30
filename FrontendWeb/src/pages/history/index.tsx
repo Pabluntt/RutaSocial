@@ -101,7 +101,7 @@ export default function RouteHistory() {
             if(!acc.has(format)) {
                 acc.set(format, [])
             }
-            acc.set(format, [...(acc.get(format) as Route[]), route])
+            acc.set(format, [...(acc.get(format)!), route])
             return acc
         }, new Map<string, Route[]>())
         setMapRoutes(map)
@@ -112,19 +112,19 @@ export default function RouteHistory() {
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'))
     
     return (
-        <div className="flex h-screen overflow-hidden">
-            <div className="sticky top-0 self-start flex-shrink-0">
-                { computerDevice ?
+        <div className={"flex h-[100dvh] max-w-full overflow-hidden " + (computerDevice ? '' : 'relative flex-col')}>
+            { computerDevice ?
+                <div className="sticky top-0 z-20 self-start flex-shrink-0">
                     <Sidebar />
-                    :
-                    <div className="absolute top-4 z-20 left-2">
-                        <CustomDrawer DrawerList={DrawerList} />
-                    </div>
-                }
-            </div>
+                </div>
+                :
+                <div className="fixed left-3 top-3 z-[1200]">
+                    <CustomDrawer DrawerList={DrawerList} />
+                </div>
+            }
 
-            <div className={`flex grow justify-between ${(computerDevice ? 'flex-row-reverse' : 'flex-col')}`}>
-                <div className={"flex " + (computerDevice ? 'grow' : 'h-64 min-h-64 order-1')}>
+            <div className={`flex min-h-0 grow justify-between ${(computerDevice ? 'flex-row-reverse' : 'flex-col')}`}>
+                <div className={"relative flex min-h-0 " + (computerDevice ? 'grow' : 'h-[58dvh] min-h-[360px] flex-none')}>
                     <Mapa
                         stateCurrentLocation={[currentLocation, setCurrentLocation]}
                         helpPoints={helpPoints}
@@ -134,7 +134,7 @@ export default function RouteHistory() {
                         <HandlerLocationHistory stateShowLocation={[showLocation, setShowLocation]} stateLocation={[HPLocation, setHPLocation]} />
                     </Mapa>
                 </div>
-                <Paper variant="outlined" square className={"z-10 overflow-y-auto " + (computerDevice ? 'w-100 shadow-[4px_0_6px_-1px_rgba(0,0,0,0.1)]' : 'w-full max-h-80')}>
+                <Paper variant="outlined" square className={"z-10 min-h-0 overflow-y-auto " + (computerDevice ? 'w-100 shadow-[4px_0_6px_-1px_rgba(0,0,0,0.1)]' : 'w-full flex-1')}>
                     <ListHistory 
                         stateOnlyUser={[onlyUser, setOnlyUser]}
                         stateOPFecha={[opFecha, setOPFecha]}

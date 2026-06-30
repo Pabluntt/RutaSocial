@@ -12,6 +12,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { format, isToday } from 'date-fns'
 import { Alert, CircularProgress } from '@mui/material'
 import { es } from 'date-fns/locale'
@@ -47,6 +48,8 @@ export default function Calendar() {
     const mutate = deleteQuery.mutate
     const [ eventClicked, setEventClicked ] = useState<CalendarEvent | undefined>(undefined)
     const [ anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
+    const [routeInviteCode, setRouteInviteCode] = useState<string | undefined>(undefined)
+    const [routeInviteCodeLoading, setRouteInviteCodeLoading] = useState(false)
     const theme = useTheme()
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'))
     const openPopover = Boolean(anchorEl)
@@ -77,6 +80,34 @@ export default function Calendar() {
         }
     }, [deleteQuery.data])
 
+    useEffect(() => {
+        let ignore = false
+
+        if (!eventClicked?.routeID) {
+            setRouteInviteCode(undefined)
+            setRouteInviteCodeLoading(false)
+            return
+        }
+
+        setRouteInviteCode(undefined)
+        setRouteInviteCodeLoading(true)
+
+        RouteService.FindRouteByID(eventClicked.routeID)
+            .then((route) => {
+                if (!ignore) setRouteInviteCode(route.inviteCode)
+            })
+            .catch(() => {
+                if (!ignore) setRouteInviteCode(undefined)
+            })
+            .finally(() => {
+                if (!ignore) setRouteInviteCodeLoading(false)
+            })
+
+        return () => {
+            ignore = true
+        }
+    }, [eventClicked?.routeID])
+
     const handleEventClick = (clickInfo : EventClickArg) => {
         setAnchorEl(clickInfo.el)
         if(isSuccess) {
@@ -84,6 +115,16 @@ export default function Calendar() {
             if(index_event !== -1) {
                 setEventClicked(data[index_event])
             }
+        }
+    }
+
+    const handleCopyInviteCode = async () => {
+        if (!routeInviteCode) return
+        try {
+            await navigator.clipboard.writeText(routeInviteCode)
+            showSnackbar('Código de ruta copiado', 'success')
+        } catch {
+            showSnackbar('No se pudo copiar automáticamente. Puedes copiarlo manualmente.', 'warning')
         }
     }
 
@@ -182,7 +223,7 @@ export default function Calendar() {
                     dayMaxEvents={(computerDevice ? true : 2)}
                     unselectAuto
                     locale={esLocale}
-                    events={data?.map((event) => ({
+                    events={data.map((event) => ({
                         id : event.id,
                         start : event.dateStart.toISOString().slice(0, 10),
                         title : event.title,
@@ -297,8 +338,31 @@ export default function Calendar() {
                             </Typography>
                             <div className='px-2 py-4'>
                                 <Typography variant='body1' textAlign={'justify'}>
-                                    {eventClicked?.description}
+                                    {eventClicked.description}
                                 </Typography>
+                            </div>
+                            <div className='w-full rounded-lg bg-white/80 border border-gray-200 px-3 py-2 mb-3'>
+                                <Typography variant='caption' sx={{ color: 'text.secondary', display: 'block' }}>
+                                    Código de ruta
+                                </Typography>
+                                {eventClicked.routeID ? (
+                                    <div className='flex items-center justify-between gap-2'>
+                                        <Typography variant='body2' sx={{ fontFamily: 'monospace', fontWeight: 700, wordBreak: 'break-all' }}>
+                                            {routeInviteCodeLoading ? 'Cargando...' : routeInviteCode ?? 'No disponible'}
+                                        </Typography>
+                                        <Tooltip title='Copiar código'>
+                                            <span>
+                                                <IconButton size='small' disabled={!routeInviteCode} onClick={handleCopyInviteCode}>
+                                                    <ContentCopyIcon fontSize='small' />
+                                                </IconButton>
+                                            </span>
+                                        </Tooltip>
+                                    </div>
+                                ) : (
+                                    <Typography variant='body2' sx={{ color: 'text.secondary' }}>
+                                        Esta actividad aún no tiene una ruta vinculada.
+                                    </Typography>
+                                )}
                             </div>
                             <Typography 
                             variant="caption" 

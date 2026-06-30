@@ -110,15 +110,17 @@ func (h helpingPointUseCase) UpdateHelpingPoint(c *gin.Context) {
 		return
 	}
 
-	userID, ok := getAuthenticatedUserID(c)
+	userID, userRole, ok := getAuthenticatedUserIDAndRole(c)
 	if !ok {
 		return
 	}
 
-	if err := h.helpingPointRepository.FindByIDAndUserID(c.Request.Context(), helpingPointID, userID); err != nil {
-		logUseCaseWarn(c, "help_point.update.authorize", http.StatusBadRequest, err, "help_point_id", helpingPointID)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if userRole != domain.RoleAdmin {
+		if err := h.helpingPointRepository.FindByIDAndUserID(c.Request.Context(), helpingPointID, userID); err != nil {
+			logUseCaseWarn(c, "help_point.update.authorize", http.StatusBadRequest, err, "help_point_id", helpingPointID)
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	var updateData map[string]interface{}
@@ -152,15 +154,17 @@ func (h helpingPointUseCase) LinkPersonaToHelpPoint(c *gin.Context) {
 		return
 	}
 
-	userID, ok := getAuthenticatedUserID(c)
+	userID, userRole, ok := getAuthenticatedUserIDAndRole(c)
 	if !ok {
 		return
 	}
 
-	if err := h.helpingPointRepository.FindByIDAndUserID(c.Request.Context(), helpPointID, userID); err != nil {
-		logUseCaseWarn(c, "help_point.link_persona.authorize", http.StatusBadRequest, err, "help_point_id", helpPointID, "persona_id", personaID)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if userRole != domain.RoleAdmin {
+		if err := h.helpingPointRepository.FindByIDAndUserID(c.Request.Context(), helpPointID, userID); err != nil {
+			logUseCaseWarn(c, "help_point.link_persona.authorize", http.StatusBadRequest, err, "help_point_id", helpPointID, "persona_id", personaID)
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	err := h.helpingPointRepository.LinkPersonaToHelpPoint(c.Request.Context(), helpPointID, personaID)
@@ -182,15 +186,17 @@ func (h helpingPointUseCase) DeleteHelpingPoint(c *gin.Context) {
 		return
 	}
 
-	userID, ok := getAuthenticatedUserID(c)
+	userID, userRole, ok := getAuthenticatedUserIDAndRole(c)
 	if !ok {
 		return
 	}
 
-	if err := h.helpingPointRepository.FindByIDAndUserID(c.Request.Context(), helpingPointID, userID); err != nil {
-		logUseCaseWarn(c, "help_point.delete.authorize", http.StatusNotFound, err, "help_point_id", helpingPointID)
-		c.IndentedJSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
+	if userRole != domain.RoleAdmin {
+		if err := h.helpingPointRepository.FindByIDAndUserID(c.Request.Context(), helpingPointID, userID); err != nil {
+			logUseCaseWarn(c, "help_point.delete.authorize", http.StatusNotFound, err, "help_point_id", helpingPointID)
+			c.IndentedJSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	err := h.helpingPointRepository.DeleteHelpingPoint(c.Request.Context(), helpingPointID)

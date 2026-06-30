@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { UserService } from "../services/UserService";
 import useSessionStore from "../../stores/useSessionStore";
 import { MapUserToAdminCreateRequest, MapUserToLoginRequest, MapUserToUpdateRequest } from "../adapters/User.adapter";
@@ -9,10 +9,13 @@ const setToken = useSessionStore.getState().setAccessToken
 
 
 export function useLogin() {
+    const queryClient = useQueryClient()
+
     return useMutation({
         mutationFn: ({ email, password } : { email : string, password : string}) => UserService.Login(MapUserToLoginRequest({ email, password })),
         onSuccess(data) {
-            setToken(data as string)
+            queryClient.clear()
+            setToken(data)
         },
     })
 }

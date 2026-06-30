@@ -3,7 +3,7 @@ import { NoticeService } from "../services/NoticeService";
 import { Notice } from "../models/Notice";
 import { MapNoticeToCreateRequest } from "../adapters/Notice.adapter";
 
-export type NoticesReadUnread = {
+export interface NoticesReadUnread {
     read : Notice[]
     unread : Notice[]
 }

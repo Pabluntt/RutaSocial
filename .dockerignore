@@ -1,0 +1,13 @@
+.env
+.env.*
+node_modules
+.expo
+dist
+coverage
+logs
+reports
+playwright-report
+Manual_*.pdf
+.git
+.gitignore
+*.md

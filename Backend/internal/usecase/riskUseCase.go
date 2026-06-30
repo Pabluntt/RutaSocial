@@ -5,6 +5,7 @@ import (
 	"github.com/SebaVCH/hdcProject/internal/repository"
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"net/http"
 )
 
@@ -51,6 +52,15 @@ func (r riskUseCase) GetAllRisks(c *gin.Context) {
 // Valida los datos de entrada y verifica que la descripción no contenga caracteres inválidos.
 func (r riskUseCase) CreateRisk(c *gin.Context) {
 	var risk domain.Riesgo
+	userID, ok := getAuthenticatedUserID(c)
+	if !ok {
+		return
+	}
+	userObjID, err := bson.ObjectIDFromHex(userID)
+	if err != nil {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Token inválido"})
+		return
+	}
 	if err := c.ShouldBindJSON(&risk); err != nil {
 		logUseCaseWarn(c, "risk.create.bind_json", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
@@ -61,8 +71,9 @@ func (r riskUseCase) CreateRisk(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Descripción con caracteres inválidos"})
 		return
 	}
+	risk.AuthorID = userObjID
 
-	err := r.riskRepository.CreateRisk(c.Request.Context(), risk)
+	err = r.riskRepository.CreateRisk(c.Request.Context(), risk)
 	if err != nil {
 		logUseCaseError(c, "risk.create", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear el riesgo"})

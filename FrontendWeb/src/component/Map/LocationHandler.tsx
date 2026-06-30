@@ -1,3 +1,4 @@
+import L from "leaflet"
 import { useEffect } from "react"
 import { Circle, LayerGroup, Marker, useMap } from "react-leaflet"
 import { Position } from "../../utils/getCurrentLocation"
@@ -6,11 +7,18 @@ import useSessionStore from "../../stores/useSessionStore"
 
 
 
-type LocationHandlerProps = {
+interface LocationHandlerProps {
     stateShowLocation : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateCurrentLocation : [ Position, React.Dispatch<React.SetStateAction<Position>> ]
     stateErrorGeolocation : [GeolocationPositionError | undefined, React.Dispatch<React.SetStateAction<GeolocationPositionError | undefined>>]
 }
+
+const currentLocationIcon = L.divIcon({
+    className: '',
+    html: '<div style="width:22px;height:22px;border-radius:9999px;background:#2563eb;border:3px solid white;box-shadow:0 0 0 2px rgba(37,99,235,.25),0 2px 8px rgba(0,0,0,.35);"></div>',
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+})
 
 export default function LocationHandler({ stateShowLocation, stateCurrentLocation, stateErrorGeolocation } : LocationHandlerProps)  {
 
@@ -57,7 +65,7 @@ export default function LocationHandler({ stateShowLocation, stateCurrentLocatio
         <>
             { enableGPS && !errorGeolocation ? 
                 <LayerGroup>
-                    <Marker position={[currentLocation.latitude, currentLocation.longitude]} zIndexOffset={100} />
+                    <Marker icon={currentLocationIcon} position={[currentLocation.latitude, currentLocation.longitude]} zIndexOffset={100} />
                     { isZooming ? <></> : <Circle center={[currentLocation.latitude, currentLocation.longitude]} radius={30} /> }
                 </LayerGroup>
                 : 

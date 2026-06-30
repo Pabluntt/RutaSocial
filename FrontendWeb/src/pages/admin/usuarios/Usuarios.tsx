@@ -51,7 +51,7 @@ export default function Usuarios() {
         })
         .then((response) => response.blob())
         .then((blob) => {
-            var _url = window.URL.createObjectURL(blob)
+            const _url = window.URL.createObjectURL(blob)
             const a = document.createElement('a');
             a.href = _url;
             a.download = 'personas_ayudadas.xlsx';
@@ -128,9 +128,11 @@ export default function Usuarios() {
                             </IconButton>
                         </Paper>
                         <div className={"flex gap-2 " + (computerDevice ? '' : 'flex-wrap')}>
+                            {role === Role.admin && (
                             <Button size="small" variant="contained" onClick={()=>{setOpen(true)}}>
                                 Agregar Usuario
                             </Button>
+                        )}
                             {role === Role.admin && (
                                 <Button size="small" variant="contained" onClick={() => {setOpenAddInstitution(true)}}>
                                     Agregar Institución    

@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { createJSONStorage, devtools, persist } from "zustand/middleware"
 
-type TSessionState = {
+interface TSessionState {
     countRetryGPS : number
     accessToken?: string 
     enableGPS : boolean
@@ -30,15 +30,14 @@ const useSessionStore = create<TSessionState>()(
                 role: undefined,
                 routeStatus: false,
                 routeId : undefined,
-                setCountRetryGPS : (countRetryGPS : number) => set(() => ({ countRetryGPS })),
-                setEnableGPS : ( enableGPS : boolean) => set(() => ({ enableGPS })),
-                setRouteStatus : (routeStatus : boolean) => set(() => ({ routeStatus })),
-                setUsername: (username : string) => set(() => ({ username })),
-                setAccessToken: (accessToken : string) => set(() => ({ accessToken })),
-                setRole: (role : string) => set(() => ({ role })),
-                setRouteId : (routeId ?: string) => set(() => ({ routeId })),
-                clearSession: () => (
-                    set(() => ({
+                setCountRetryGPS : (countRetryGPS : number) => { set(() => ({ countRetryGPS })); },
+                setEnableGPS : ( enableGPS : boolean) => { set(() => ({ enableGPS })); },
+                setRouteStatus : (routeStatus : boolean) => { set(() => ({ routeStatus })); },
+                setUsername: (username : string) => { set(() => ({ username })); },
+                setAccessToken: (accessToken : string) => { set(() => ({ accessToken })); },
+                setRole: (role : string) => { set(() => ({ role })); },
+                setRouteId : (routeId ?: string) => { set(() => ({ routeId })); },
+                clearSession: () => { set(() => ({
                         accessToken: undefined,
                         role: undefined,
                         username: undefined,
@@ -46,8 +45,7 @@ const useSessionStore = create<TSessionState>()(
                         routeId: undefined,
                         enableGPS: false,
                         countRetryGPS: 0
-                    }))
-                )                
+                    })); }                
             }),
             {
                 name: 'sessionStore',

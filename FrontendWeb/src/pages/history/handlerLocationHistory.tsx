@@ -5,7 +5,7 @@ import { useMap } from "react-leaflet"
 
 
 
-type LocationHandlerHistoryProps = {
+interface LocationHandlerHistoryProps {
     stateShowLocation : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateLocation : [ number[], React.Dispatch<React.SetStateAction<number[]>> ]
 }

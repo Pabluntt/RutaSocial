@@ -6,7 +6,7 @@ export default function HydrationGate({ children }: { children: ReactNode }) {
   const [hydrated, setHydrated] = useState(() => useSessionStore.persist.hasHydrated())
 
   useEffect(() => {
-    const unsub = useSessionStore.persist.onFinishHydration(() => setHydrated(true))
+    const unsub = useSessionStore.persist.onFinishHydration(() => { setHydrated(true); })
     return unsub
   }, [])
 

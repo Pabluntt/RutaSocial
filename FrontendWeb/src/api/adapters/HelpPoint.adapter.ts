@@ -1,6 +1,6 @@
 import { HelpPoint, HelpedPerson } from "../models/HelpPoint"
 
-export type TPeopleHelpedBackend = {
+export interface TPeopleHelpedBackend {
     age: number
     gender: string
     name: string
@@ -9,7 +9,7 @@ export type TPeopleHelpedBackend = {
     persona_id?: string
 }
 
-export type THelpPointBackend = {
+export interface THelpPointBackend {
     _id: string
     route_id: string
     coords: number[]
@@ -23,6 +23,28 @@ export type THelpPointBackend = {
 
 export type THelpPointCreateRequest = Omit<THelpPointBackend, '_id' | 'date_register'>
 export type THelpPointUpdateRequest = THelpPointCreateRequest & Pick<THelpPointBackend, '_id'>
+
+function getPeoplePayload(data: Omit<HelpPoint, 'id' | 'dateRegister'>) {
+    const people = data.people.length > 0
+        ? data.people
+        : data.peopleHelped
+            ? [data.peopleHelped]
+            : []
+
+    const personaIDs = people
+        .map(p => p.personaID)
+        .filter((id): id is string => !!id)
+
+    const mappedPeople = people.map((person) => ({
+        age: person.age,
+        gender: person.gender,
+        name: person.name,
+        rut: person.rut,
+        persona_id: person.personaID,
+    }))
+
+    return { people, personaIDs, mappedPeople }
+}
 
 export function MapHelpedPersonFromBackend(data: Partial<TPeopleHelpedBackend>): HelpedPerson {
     const requiredFields = ['age', 'gender', 'name'] as const;
@@ -78,27 +100,13 @@ export function MapHelpPointFromBackend(data: Partial<THelpPointBackend>): HelpP
 export function MapHelpPointToCreateRequest(
     data: Omit<HelpPoint, 'id' | 'dateRegister'>
 ): THelpPointCreateRequest {
-    const people = data.people.length > 0
-        ? data.people
-        : data.peopleHelped
-            ? [data.peopleHelped]
-            : []
-
-    const personaIDs = people
-        .map(p => p.personaID)
-        .filter((id): id is string => !!id)
+    const { people, personaIDs, mappedPeople } = getPeoplePayload(data)
 
     return {
         route_id: data.routeID,
         coords: data.coords,
         comment: data.comment,
-        people: people.map((person) => ({
-            age: person.age,
-            gender: person.gender,
-            name: person.name,
-            rut: person.rut,
-            persona_id: person.personaID,
-        })),
+        people: mappedPeople,
         people_helped: people[0] ? {
             age: people[0].age,
             gender: people[0].gender,
@@ -114,28 +122,14 @@ export function MapHelpPointToCreateRequest(
 export function MapHelpPointToUpdateRequest(
     data: HelpPoint
 ): THelpPointUpdateRequest {
-    const people = data.people.length > 0
-        ? data.people
-        : data.peopleHelped
-            ? [data.peopleHelped]
-            : []
-
-    const personaIDs = people
-        .map(p => p.personaID)
-        .filter((id): id is string => !!id)
+    const { people, personaIDs, mappedPeople } = getPeoplePayload(data)
 
     return {
         _id: data.id,
         route_id: data.routeID,
         coords: data.coords,
         comment: data.comment,
-        people: people.map((person) => ({
-            age: person.age,
-            gender: person.gender,
-            name: person.name,
-            rut: person.rut,
-            persona_id: person.personaID,
-        })),
+        people: mappedPeople,
         people_helped: people[0] ? {
             age: people[0].age,
             gender: people[0].gender,

@@ -1,6 +1,6 @@
 
 
-type ResumeItemProps = {
+interface ResumeItemProps {
     icon : React.ReactNode
     activityDescription : React.ReactNode
     activityValue : React.ReactNode

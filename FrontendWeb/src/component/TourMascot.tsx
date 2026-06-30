@@ -7,7 +7,7 @@ export default function TourMascot() {
   if (!step) return null
 
   return (
-    <div className="flex items-start gap-5 max-w-sm">
+    <div className="flex items-start gap-5 max-w-[85vw] sm:max-w-sm">
       <img
         src={mascotAssets[step.mascotPose]}
         alt="Mascota guía"

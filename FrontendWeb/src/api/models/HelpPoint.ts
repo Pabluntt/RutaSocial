@@ -1,5 +1,5 @@
 
-export type HelpedPerson = {
+export interface HelpedPerson {
     age : number
     gender : string 
     name : string 

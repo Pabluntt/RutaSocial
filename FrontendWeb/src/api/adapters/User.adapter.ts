@@ -2,7 +2,7 @@ import { IUser } from "../models/User"
 
 
 
-export type TUserBackend = {
+export interface TUserBackend {
     _id : string 
     name : string 
     email : string 
@@ -129,8 +129,8 @@ export function MapUserToUpdateRequest( data :
 }) : TUpdateUserRequest {
     return {
         ...data,
-        name : data?.name,
-        phone : data?.phone,
+        name : data.name,
+        phone : data.phone,
         institutionID : data.institutionID,
     }
 }

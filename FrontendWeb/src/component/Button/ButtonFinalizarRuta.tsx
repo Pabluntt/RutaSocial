@@ -1,23 +1,41 @@
 import { Button, Typography } from "@mui/material";
 import DialogFinishRoute from "../Dialog/DialogFinishRoute";
 import DialogLeaveRoute from "../Dialog/DialogLeaveRoute";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useSessionStore from "../../stores/useSessionStore";
 import { useRoute } from "../../api/hooks/RouteHooks";
 import { useProfile } from "../../api/hooks/UserHooks";
+import { RouteStatus } from "../../Enums/RouteStatus";
 
 export default function ButtonFinalizarRuta() {
 
-    const { routeId } = useSessionStore()
-    const { data: route, isLoading: routeLoading, isError: routeError } = useRoute(routeId as string)
+    const { routeId, setRouteId, setRouteStatus } = useSessionStore()
+    const { data: route, isLoading: routeLoading, isError: routeError } = useRoute(routeId ?? '', !!routeId)
     const { data: profile, isLoading: profileLoading } = useProfile()
 
     const [ openFinish, setOpenFinish ] = useState(false)
     const [ openLeave, setOpenLeave ] = useState(false)
 
-    if (routeLoading || profileLoading) return null
+    useEffect(() => {
+        if (!routeId) {
+            setRouteStatus(false)
+            setRouteId(undefined)
+            return
+        }
 
-    const isLeader = route && profile && route?.routeLeader === profile?.id
+        if (!route || !profile) return
+
+        const userInRoute = route.routeLeader === profile.id || route.team.includes(profile.id)
+        if (route.status === RouteStatus.Completed || !userInRoute) {
+            setRouteStatus(false)
+            setRouteId(undefined)
+        }
+    }, [profile, route, routeError, routeId, setRouteId, setRouteStatus])
+
+    if (routeLoading || profileLoading) return null
+    if (!route || !profile || routeError) return null
+
+    const isLeader = route && profile && route.routeLeader === profile.id
 
     if (isLeader) {
         return (

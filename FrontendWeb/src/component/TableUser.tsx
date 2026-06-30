@@ -250,13 +250,13 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
           setAlertMessage('Usuario eliminado exitosamente');
           setAlertSeverity('success');
           setShowAlert(true);
-          setTimeout(() => setShowAlert(false), 3000);
+          setTimeout(() => { setShowAlert(false); }, 3000);
         },
-        onError: (error) => {
-          setAlertMessage('Error al eliminar usuario');
+        onError: (error: any) => {
+          setAlertMessage(error?.status === 403 ? 'No tienes permisos para eliminar usuarios' : 'Error al eliminar usuario');
           setAlertSeverity('error');
           setShowAlert(true);
-          setTimeout(() => setShowAlert(false), 3000);
+          setTimeout(() => { setShowAlert(false); }, 3000);
         }
       });
     }
@@ -296,7 +296,7 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
                 return (
                   <TableRow
                     hover
-                    onClick={(event) => handleClick(event, row.email)}
+                    onClick={(event) => { handleClick(event, row.email); }}
                     role="checkbox"
                     aria-checked={isItemSelected}
                     tabIndex={-1}
@@ -354,11 +354,11 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
                     <TableCell align={'center'}>{row.role}</TableCell>
                     <TableCell align={("center")}>{row.phone}</TableCell>
                     {isAdmin && (
-                      <TableCell align="center" onClick={(e) => e.stopPropagation()}>
+                      <TableCell align="center" onClick={(e) => { e.stopPropagation(); }}>
                         <Tooltip title="Editar">
                           <IconButton
                             size="small"
-                            onClick={() => handleEditClick(row)}
+                            onClick={() => { handleEditClick(row); }}
                             color="primary"
                           >
                             <EditIcon fontSize="small" />
@@ -367,7 +367,7 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
                         <Tooltip title="Eliminar">
                           <IconButton
                             size="small"
-                            onClick={() => handleDeleteClick(row)}
+                            onClick={() => { handleDeleteClick(row); }}
                             color="error"
                           >
                             <DeleteIcon fontSize="small" />

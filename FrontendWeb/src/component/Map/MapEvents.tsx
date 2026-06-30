@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Position } from "../../utils/getCurrentLocation";
 
 
-type MapEventsProps = {
+interface MapEventsProps {
     setLocation : (coords : Position) => void, 
     stateOnSelectLocationMap : [ boolean, (value: boolean) => void ]
     stateDialogAttended : [ boolean, (value: boolean) => void ],

@@ -14,7 +14,7 @@ import { RiskStatus } from "../../Enums/RiskStatus";
 import { getPeopleCount } from "../../utils/heatmapUtils";
 import 'leaflet.heat'
 
-var redIcon = new L.Icon({
+const redIcon = new L.Icon({
     iconUrl: 'marker-icon-red.png',
     shadowUrl: markerShadowUrl,
     iconSize: [25, 41],
@@ -97,7 +97,7 @@ function getPointPeople(helpPoint: HelpPoint) {
             : []
 }
 
-type MapaProps = {
+interface MapaProps {
     stateCurrentLocation : [ Position, React.Dispatch<React.SetStateAction<Position>> ]
     helpPoints : HelpPoint[]
     risks : Risk[]
@@ -121,7 +121,7 @@ export default function Mapa({ stateCurrentLocation, risks, helpPoints, children
                 if(!acc.has(hp.routeID)) {
                     acc.set(hp.routeID, [])
                 }
-                acc.set(hp.routeID, [...(acc.get(hp.routeID) as LatLngExpression[]), [hp.coords[0], hp.coords[1]] ])
+                acc.set(hp.routeID, [...(acc.get(hp.routeID)!), [hp.coords[0], hp.coords[1]] ])
                 return acc
             }, new Map<string, LatLngExpression[]>())
             setMapTracedLineRoute(map)
@@ -149,7 +149,7 @@ export default function Mapa({ stateCurrentLocation, risks, helpPoints, children
                 />
                 
                 <ZoomHandler />
-                <HeatmapLayer helpPoints={helpPoints} showHeatmap={showHeatmap as boolean} />
+                <HeatmapLayer helpPoints={helpPoints} showHeatmap={showHeatmap!} />
 
                 {!showHeatmap && helpPoints.map((helpPoint, index) => (
                     helpPoint.disabled ? null : 
@@ -164,7 +164,7 @@ export default function Mapa({ stateCurrentLocation, risks, helpPoints, children
                                     <div className="flex flex-col gap-1.5 text-sm">
                                         <div className="flex items-start gap-1">
                                             <span className="font-semibold text-gray-600 min-w-20">Comentario:</span>
-                                            <span>{helpPoint.comment?.trim() || 'Sin comentario'}</span>
+                                            <span>{helpPoint.comment.trim() || 'Sin comentario'}</span>
                                         </div>
                                         <div className="flex items-start gap-1">
                                             <span className="font-semibold text-gray-600 min-w-20">Fecha:</span>
@@ -245,7 +245,7 @@ export default function Mapa({ stateCurrentLocation, risks, helpPoints, children
                                         variant="contained" 
                                         size="small"
                                         sx={{ alignSelf: 'flex-start', textTransform: 'none' }}
-                                        onClick={() => setRiskUpdate(risk)}
+                                        onClick={() => { setRiskUpdate(risk); }}
                                     >
                                         Editar
                                     </Button>

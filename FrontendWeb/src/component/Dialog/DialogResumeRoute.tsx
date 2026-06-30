@@ -24,7 +24,7 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
 }));
 
 
-export type DialogResumeRiskProps = { 
+export interface DialogResumeRiskProps { 
     stateOpen : [ boolean, React.Dispatch<React.SetStateAction<boolean>>]
 }
 
@@ -39,7 +39,7 @@ export default function DialogResumeRoute({ stateOpen } : DialogResumeRiskProps)
     const [ copySuccess, setCopySuccess ] = useState<undefined | boolean>()
     const { showSnackbar } = useAppSnackbar()
 
-    const { isSuccess, isError, isPending, data } = useRoute( routeId as string, true)
+    const { isSuccess, isError, isPending, data } = useRoute( routeId!, true)
 
     const handleClose = () => {
         setCopySuccess(false)

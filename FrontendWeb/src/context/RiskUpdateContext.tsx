@@ -1,5 +1,5 @@
 import React from 'react';
-import { createContext, useState, useContext } from 'react';
+import { createContext, useState, use } from 'react';
 import { Risk } from '../api/models/Risk';
 
 // Si Alert es undefined entonces openDialog = false
@@ -15,14 +15,14 @@ export function RiskUpdateProvider({ children } : { children : React.ReactNode})
     const stateRiskUpdate = useState<Risk | undefined>()
 
     return (
-        <RiskUpdateContext.Provider value={stateRiskUpdate}>
+        <RiskUpdateContext value={stateRiskUpdate}>
         {children}
-        </RiskUpdateContext.Provider>
+        </RiskUpdateContext>
     )
 };
 
 export const useRiskUpdateDialog = () => {
-    const state  = useContext(RiskUpdateContext)
+    const state  = use(RiskUpdateContext)
     if(!state) {
         throw new Error("useRiskUpdateDialog has to be used within RiskUpdateProvider");
     }

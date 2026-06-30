@@ -9,6 +9,6 @@ export interface Route {
     team : string[]
     status : string
     dateCreated : Date
-    dateFinished : Date
+    dateFinished?: Date
 }
 

@@ -2,7 +2,7 @@ import { Route } from "../models/Route"
 
 
 
-export type TRouteBackend = {
+export interface TRouteBackend {
     _id : string 
     title : string 
     description : string 
@@ -39,9 +39,9 @@ export function MapRouteFromBackend( data : Partial<TRouteBackend> ) : Route {
         dateCreated : (data.date_created === undefined ? undefined : new Date(data.date_created)),
         dateFinished : (data.date_finished === undefined ? undefined : new Date(data.date_finished))
     }
-    Object.entries(route).forEach(( entry ) => {
-        const [ key, value ]  =  entry
-        if(value === undefined) {
+    const requiredKeys: (keyof Route)[] = ['id', 'title', 'description', 'routeLeader', 'inviteCode', 'team', 'status', 'dateCreated']
+    requiredKeys.forEach((key) => {
+        if(route[key] === undefined) {
             throw Error(`Missing required field: ${key}`)
         }
     })

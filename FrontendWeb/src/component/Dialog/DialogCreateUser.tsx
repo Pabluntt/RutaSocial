@@ -40,7 +40,7 @@ type AdminCreateUser = Pick<IUser,
     'phone'
 >>
 
-type AdminCreateUserError = {
+interface AdminCreateUserError {
     name: string
     email: string
     password: string
@@ -242,7 +242,7 @@ export default function DialogCreateUser({ open, setOpen } : { open : boolean, s
 
                         </div>
                         <div className='px-2'>
-                            {error && <Alert severity="error">{(error as any)?.error || 'Error al crear el usuario'}</Alert>}
+                            {error && <Alert severity="error">{(error as any)?.status === 403 ? 'No tienes permisos para crear usuarios' : ((error as any)?.error || 'Error al crear el usuario')}</Alert>}
                             {isSuccess && <Alert severity="success">Usuario creado correctamente</Alert>}
                         </div>
                     </div>

@@ -38,7 +38,7 @@ export class RouteService {
     static async GetRoutesByUserId( userId : string) : Promise<Route[]>{
         const routes = await RouteService.FindAllRoute()
         return routes.reduce<Route[]>((call : Route[], route) => {
-            if(route.routeLeader === userId || (route.team as string[]).includes(userId) ) {
+            if(route.routeLeader === userId || (route.team).includes(userId) ) {
                 call.push(route)
             }
             return call

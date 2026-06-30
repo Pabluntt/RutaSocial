@@ -19,7 +19,7 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
-export type DialogCreateInstitutionProps = { 
+export interface DialogCreateInstitutionProps { 
     stateOpen : [ boolean, React.Dispatch<React.SetStateAction<boolean>>]
 }
 
@@ -173,7 +173,7 @@ export default function DialogCreateInstitution({ stateOpen } : DialogCreateInst
                             >
                             <HexColorPicker
                                 color={color}
-                                onChange={(newColor) => setColor(newColor)}
+                                onChange={(newColor) => { setColor(newColor); }}
                             />
                             </Popover>
                     </div>
@@ -184,7 +184,7 @@ export default function DialogCreateInstitution({ stateOpen } : DialogCreateInst
                     </div>    
                     :
                     <Alert sx={{ mt: 2, width: '100%', minHeight: '80px', display: 'flex', alignItems: 'center', fontSize: '1rem' }} severity={ isSuccess ? 'success' : isError ? 'error' : 'info'}>
-                            {isSuccess ? 'Se Creo el riesgo exitosamente' : isError ? 'Hubo un error al intentar finalizar' : 'Error desconocido'}
+                            {isSuccess ? 'Institución creada exitosamente' : 'No tienes permisos para crear instituciones'}
                     </Alert>
                 }
             </DialogContent>

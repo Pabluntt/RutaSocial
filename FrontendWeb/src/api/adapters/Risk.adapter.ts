@@ -2,7 +2,7 @@ import { RiskStatus } from "../../Enums/RiskStatus"
 import { Risk } from "../models/Risk"
 
 
-export type TRiskBackend = {
+export interface TRiskBackend {
     _id : string 
     author_id : string 
     coords : number[]

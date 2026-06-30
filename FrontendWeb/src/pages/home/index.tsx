@@ -24,6 +24,7 @@ import HotelIcon from '@mui/icons-material/Hotel';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
 import { Marker, Popup } from 'react-leaflet'
 import { useAuth } from "../../context/AuthContext";
+import { Role } from "../../Enums/Role";
 import Sidebar from "../../component/Sidebar";
 import DialogUpdateRisk from "../../component/Dialog/DialogUpdateRisk";
 import { LocationMethod } from "../../Enums/LocationMethod";
@@ -85,7 +86,7 @@ const churchIcon = L.divIcon({
 
 
 
-export type TUserRegister = {
+export interface TUserRegister {
     name : string
     age : number 
     gender: string
@@ -248,7 +249,7 @@ export default function Home() {
                                             type="number"
                                             min={0}
                                             value={a.cupos}
-                                            onChange={(event: { target: { value: string } }) => handleUpdateAlojamientoCupos(a.id, Number(event.target.value) || 0)}
+                                            onChange={(event: { target: { value: string } }) => { handleUpdateAlojamientoCupos(a.id, Number(event.target.value) || 0); }}
                                         />
                                     </div>
                                 </div>
@@ -318,14 +319,14 @@ export default function Home() {
                                         type="date"
                                         className="w-full rounded border border-gray-300 px-1.5 py-1 text-xs"
                                         value={heatmapCustomStart ? format(heatmapCustomStart, 'yyyy-MM-dd') : ''}
-                                        onChange={(e) => setHeatmapCustomStart(e.target.value ? new Date(e.target.value + 'T00:00:00') : null)}
+                                        onChange={(e) => { setHeatmapCustomStart(e.target.value ? new Date(e.target.value + 'T00:00:00') : null); }}
                                     />
                                     <Typography variant="caption" sx={{ fontSize: 10 }}>a</Typography>
                                     <input
                                         type="date"
                                         className="w-full rounded border border-gray-300 px-1.5 py-1 text-xs"
                                         value={heatmapCustomEnd ? format(heatmapCustomEnd, 'yyyy-MM-dd') : ''}
-                                        onChange={(e) => setHeatmapCustomEnd(e.target.value ? new Date(e.target.value + 'T00:00:00') : null)}
+                                        onChange={(e) => { setHeatmapCustomEnd(e.target.value ? new Date(e.target.value + 'T00:00:00') : null); }}
                                     />
                                 </div>
                             )}
@@ -364,14 +365,14 @@ export default function Home() {
                                         type="date"
                                         className="w-full rounded border border-gray-300 px-1.5 py-1 text-xs"
                                         value={savedPointsCustomStart ? format(savedPointsCustomStart, 'yyyy-MM-dd') : ''}
-                                        onChange={(e) => setSavedPointsCustomStart(e.target.value ? new Date(e.target.value + 'T00:00:00') : null)}
+                                        onChange={(e) => { setSavedPointsCustomStart(e.target.value ? new Date(e.target.value + 'T00:00:00') : null); }}
                                     />
                                     <Typography variant="caption" sx={{ fontSize: 10 }}>a</Typography>
                                     <input
                                         type="date"
                                         className="w-full rounded border border-gray-300 px-1.5 py-1 text-xs"
                                         value={savedPointsCustomEnd ? format(savedPointsCustomEnd, 'yyyy-MM-dd') : ''}
-                                        onChange={(e) => setSavedPointsCustomEnd(e.target.value ? new Date(e.target.value + 'T00:00:00') : null)}
+                                        onChange={(e) => { setSavedPointsCustomEnd(e.target.value ? new Date(e.target.value + 'T00:00:00') : null); }}
                                     />
                                 </div>
                             )}
@@ -400,19 +401,21 @@ export default function Home() {
                                         <DialogCreateRoute stateOpen={stateOpenCreateRoute} />
                                         <DialogJoinRoute stateOpen={stateOpenJoinRoute} />
                                     </SpeedDialCreateRoute>
-                                    <Tooltip title="Crear alojamiento">
-                                        <Fab 
-                                            color="secondary" 
-                                            size="large"
-                                            onClick={() => {
-                                                setOnSelectLocationMap(true)
-                                                setSelectingAlojamiento(true)
-                                                setOpenDialogAlojamiento(false)
-                                            }}
-                                        >
-                                            <HotelIcon />
-                                        </Fab>
-                                    </Tooltip>
+                                    { role === Role.admin && (
+                                        <Tooltip title="Crear alojamiento">
+                                            <Fab 
+                                                color="secondary" 
+                                                size="large"
+                                                onClick={() => {
+                                                    setOnSelectLocationMap(true)
+                                                    setSelectingAlojamiento(true)
+                                                    setOpenDialogAlojamiento(false)
+                                                }}
+                                            >
+                                                <HotelIcon />
+                                            </Fab>
+                                        </Tooltip>
+                                    )}
                                 </>
                                 :
                                 <SpeedDialRoute 

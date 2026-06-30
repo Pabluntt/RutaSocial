@@ -4,7 +4,7 @@ export interface Position {
     longitude : number
 }
 
-export default function getCurrentLocation(timeout: number = 15000): Promise<Position> {
+export default function getCurrentLocation(timeout = 15000): Promise<Position> {
     return new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
             reject(new Error('Geolocation no es soportada en el navegador'))
@@ -21,7 +21,7 @@ export default function getCurrentLocation(timeout: number = 15000): Promise<Pos
         const onError = () => {
             navigator.geolocation.getCurrentPosition(
                 onSuccess,
-                (error) => reject(error),
+                (error) => { reject(error); },
                 { enableHighAccuracy: false, timeout, maximumAge: 60000 },
             )
         }

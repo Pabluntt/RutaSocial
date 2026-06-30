@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Manual de Voluntario - RutaSocial</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #1f2937; line-height: 1.45; margin: 42px; }
+    h1 { color: #007c84; font-size: 30px; margin-bottom: 8px; }
+    h2 { color: #005f66; font-size: 20px; margin-top: 26px; border-bottom: 1px solid #d1d5db; padding-bottom: 4px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #d1d5db; padding: 8px; vertical-align: top; }
+    th { background: #e6f7f8; text-align: left; }
+    .note { background: #f3f4f6; border-left: 4px solid #009ba5; padding: 10px 12px; margin: 12px 0; }
+    li { margin: 4px 0; }
+  </style>
+</head>
+<body>
+  <h1>Manual de Voluntario</h1>
+  <p><strong>Sistema:</strong> RutaSocial</p>
+  <p><strong>Perfil:</strong> usuario con rol <strong>voluntario</strong>.</p>
+
+  <h2>Alcance del Rol</h2>
+  <p>El voluntario usa RutaSocial para participar en rutas, registrar atenciones, revisar datos operativos y descargar informes disponibles.</p>
+
+  <h2>Permisos del Voluntario</h2>
+  <table>
+    <thead><tr><th>Módulo</th><th>Permitido</th><th>No permitido</th></tr></thead>
+    <tbody>
+      <tr><td>Usuarios</td><td>Ver usuarios y detalles necesarios para operación.</td><td>Crear, editar o eliminar usuarios.</td></tr>
+      <tr><td>Instituciones</td><td>Ver instituciones.</td><td>Crear, editar o eliminar instituciones.</td></tr>
+      <tr><td>Rutas</td><td>Crear rutas, unirse a rutas, ver datos de rutas y descargar informes.</td><td>Editar rutas, eliminar rutas o finalizar rutas ajenas.</td></tr>
+      <tr><td>Finalizar ruta</td><td>Finalizar una ruta propia cuando es líder de esa ruta.</td><td>Finalizar rutas de otros líderes.</td></tr>
+      <tr><td>Mapa</td><td>Ver mapa, rutas, puntos de ayuda, riesgos, alojamientos y mapas de calor.</td><td>Crear alojamientos.</td></tr>
+      <tr><td>Alojamientos</td><td>Ver alojamientos disponibles en el mapa.</td><td>El botón para crear alojamiento no aparece para voluntarios.</td></tr>
+      <tr><td>Personas ayudadas</td><td>Ver, crear y editar perfiles de personas beneficiadas.</td><td>Eliminar personas beneficiadas.</td></tr>
+      <tr><td>Antecedentes e información médica</td><td>Agregar y editar información operativa/social y médica.</td><td>Eliminar registros de antecedentes o información médica.</td></tr>
+      <tr><td>Puntos de ayuda</td><td>Crear puntos de ayuda y vincularlos con personas beneficiadas.</td><td>Eliminar registros protegidos cuando la acción esté reservada al administrador.</td></tr>
+      <tr><td>Avisos</td><td>Crear avisos para voluntarios y revisar avisos fijados.</td><td>Elegir envío por correo electrónico desde la interfaz.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Uso Diario</h2>
+  <ol>
+    <li>Iniciar sesión con correo y contraseña.</li>
+    <li>Revisar calendario, mapa o historial según la actividad.</li>
+    <li>Crear una ruta o unirse a una ruta existente.</li>
+    <li>Registrar puntos de ayuda, riesgos y personas beneficiadas durante la salida.</li>
+    <li>Revisar datos de la ruta y descargar informe cuando sea necesario.</li>
+    <li>Cerrar sesión al finalizar.</li>
+  </ol>
+
+  <h2>Guía Integrada</h2>
+  <p>El botón de ayuda abre una guía visual. En móvil, la guía abre el menú y explica cada sección manteniendo el panel de navegación fijo.</p>
+
+  <div class="note">Si una acción no corresponde al rol voluntario, la interfaz debe ocultar el botón o mostrar un mensaje de permisos insuficientes.</div>
+</body>
+</html>

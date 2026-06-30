@@ -134,7 +134,7 @@ export default function PersonaProfile() {
                                 <Button startIcon={<EditIcon />} variant="outlined" size="small" onClick={handleEdit} sx={{ borderRadius: '8px', textTransform: 'none' }}>
                                     Editar
                                 </Button>
-                                <Button startIcon={<LinkIcon />} variant="outlined" size="small" onClick={() => setLinkOpen(true)} sx={{ borderRadius: '8px', textTransform: 'none' }}>
+                                <Button startIcon={<LinkIcon />} variant="outlined" size="small" onClick={() => { setLinkOpen(true); }} sx={{ borderRadius: '8px', textTransform: 'none' }}>
                                     Vincular
                                 </Button>
                             </div>
@@ -144,15 +144,15 @@ export default function PersonaProfile() {
                     <AntecedentesBox
                         title="Antecedentes Generales"
                         entries={persona.antecedentes}
-                        onAdd={(desc) => addAntMutation.mutate({ personaID: persona.id, descripcion: desc })}
-                        onDelete={(entryId) => delAntMutation.mutate({ personaID: persona.id, entryID: entryId })}
+                        onAdd={(desc) => { addAntMutation.mutate({ personaID: persona.id, descripcion: desc }); }}
+                        onDelete={(entryId) => { delAntMutation.mutate({ personaID: persona.id, entryID: entryId }); }}
                     />
 
                     <AntecedentesBox
                         title="Información Médica / Importante"
                         entries={persona.infoMedica}
-                        onAdd={(desc) => addMedMutation.mutate({ personaID: persona.id, descripcion: desc })}
-                        onDelete={(entryId) => delMedMutation.mutate({ personaID: persona.id, entryID: entryId })}
+                        onAdd={(desc) => { addMedMutation.mutate({ personaID: persona.id, descripcion: desc }); }}
+                        onDelete={(entryId) => { delMedMutation.mutate({ personaID: persona.id, entryID: entryId }); }}
                     />
 
                     <Paper variant="outlined" sx={{ p: 2.5, borderRadius: '12px', bgcolor: '#fafafa' }}>
@@ -183,18 +183,18 @@ export default function PersonaProfile() {
                 </div>
             </div>
 
-            <Dialog open={editOpen} onClose={() => setEditOpen(false)} fullWidth maxWidth="sm">
+            <Dialog open={editOpen} onClose={() => { setEditOpen(false); }} fullWidth maxWidth="sm">
                 <DialogTitle sx={{ fontWeight: 600 }}>Editar persona</DialogTitle>
                 <DialogContent>
                     <div className="flex flex-col gap-3 pt-2">
-                        <TextField label="Nombre" fullWidth size="small" value={editNombre} onChange={(e) => setEditNombre(e.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
-                        <TextField label="RUT" fullWidth size="small" value={editRut} onChange={(e) => setEditRut(e.target.value)} placeholder="12.345.678-9" slotProps={{ inputLabel: { shrink: true } }} />
-                        <TextField label="Edad" fullWidth size="small" type="number" value={editEdad} onChange={(e) => setEditEdad(e.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
-                        <TextField label="Género" fullWidth size="small" value={editGenero} onChange={(e) => setEditGenero(e.target.value)} slotProps={{ inputLabel: { shrink: true } }} />
+                        <TextField label="Nombre" fullWidth size="small" value={editNombre} onChange={(e) => { setEditNombre(e.target.value); }} slotProps={{ inputLabel: { shrink: true } }} />
+                        <TextField label="RUT" fullWidth size="small" value={editRut} onChange={(e) => { setEditRut(e.target.value); }} placeholder="12.345.678-9" slotProps={{ inputLabel: { shrink: true } }} />
+                        <TextField label="Edad" fullWidth size="small" type="number" value={editEdad} onChange={(e) => { setEditEdad(e.target.value); }} slotProps={{ inputLabel: { shrink: true } }} />
+                        <TextField label="Género" fullWidth size="small" value={editGenero} onChange={(e) => { setEditGenero(e.target.value); }} slotProps={{ inputLabel: { shrink: true } }} />
                     </div>
                 </DialogContent>
                 <DialogActions>
-                    <Button variant="outlined" onClick={() => setEditOpen(false)} sx={{ borderRadius: '8px', textTransform: 'none' }}>Cancelar</Button>
+                    <Button variant="outlined" onClick={() => { setEditOpen(false); }} sx={{ borderRadius: '8px', textTransform: 'none' }}>Cancelar</Button>
                     <Button variant="contained" onClick={handleSaveEdit} disabled={updateMutation.isPending} sx={{ borderRadius: '8px', textTransform: 'none' }}>
                         Guardar
                     </Button>
@@ -204,7 +204,7 @@ export default function PersonaProfile() {
             <LinkHelpPointDialog
                 open={linkOpen}
                 personaID={persona.id}
-                onClose={() => setLinkOpen(false)}
+                onClose={() => { setLinkOpen(false); }}
                 onLinked={() => { }}
             />
         </div>

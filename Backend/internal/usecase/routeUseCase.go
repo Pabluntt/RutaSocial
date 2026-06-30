@@ -7,6 +7,7 @@ import (
 	"github.com/SebaVCH/hdcProject/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/xuri/excelize/v2"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"net/http"
 )
 
@@ -83,7 +84,19 @@ func (r routeUseCase) CreateRoute(c *gin.Context) {
 		return
 	}
 
-	err := r.routeRepository.CreateRoute(c.Request.Context(), &route)
+	userID, ok := getAuthenticatedUserID(c)
+	if !ok {
+		return
+	}
+	userObjID, err := bson.ObjectIDFromHex(userID)
+	if err != nil {
+		c.IndentedJSON(http.StatusUnauthorized, gin.H{"error": "Token inválido"})
+		return
+	}
+	route.RouteLeader = userObjID
+	route.Team = []bson.ObjectID{userObjID}
+
+	err = r.routeRepository.CreateRoute(c.Request.Context(), &route)
 	if err != nil {
 		logUseCaseError(c, "route.create", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear la ruta"})
@@ -147,12 +160,12 @@ func (r routeUseCase) FinishRoute(c *gin.Context) {
 		return
 	}
 
-	userID, ok := getAuthenticatedUserID(c)
+	userID, userRole, ok := getAuthenticatedUserIDAndRole(c)
 	if !ok {
 		return
 	}
 
-	err := r.routeRepository.FinishRoute(c.Request.Context(), routeID, userID)
+	err := r.routeRepository.FinishRoute(c.Request.Context(), routeID, userID, userRole == domain.RoleAdmin)
 	if err != nil {
 		logUseCaseWarn(c, "route.finish", http.StatusForbidden, err, "route_id", routeID)
 		c.IndentedJSON(http.StatusForbidden, gin.H{"error": "No tienes permiso para finalizar esta ruta"})
@@ -179,7 +192,7 @@ func (r routeUseCase) JoinRoute(c *gin.Context) {
 	route, err := r.routeRepository.JoinRoute(c.Request.Context(), inviteCode, userID)
 	if err != nil {
 		logUseCaseWarn(c, "route.join", http.StatusBadRequest, err)
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al unirse a la ruta"})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

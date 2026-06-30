@@ -16,6 +16,7 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { RouteStatus } from "../../../Enums/RouteStatus"
 import { Role } from "../../../Enums/Role"
+import { useAuth } from "../../../context/AuthContext"
 
 export default function UserDetail() {
     const { id } = useParams<{ id: string }>()
@@ -23,6 +24,8 @@ export default function UserDetail() {
     const theme = useTheme()
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'))
 
+    const { role } = useAuth()
+    const isAdmin = role === Role.admin
     const { data: user, isLoading, isError } = useUser(id || '')
     const { data: routes, isLoading: routesLoading } = useAdminUserRoutes(id || '', !!id)
     const { data: calendarEvents, isLoading: eventsLoading } = useUserCalendarEvents(id || '', !!id)
@@ -51,11 +54,12 @@ export default function UserDetail() {
                 onSuccess: () => {
                     setEditing(false)
                     setAlert({ type: 'success', message: 'Usuario actualizado exitosamente' })
-                    setTimeout(() => setAlert(null), 3000)
+                    setTimeout(() => { setAlert(null); }, 3000)
                 },
                 onError: (err: any) => {
-                    setAlert({ type: 'error', message: err?.error || 'Error al actualizar usuario' })
-                    setTimeout(() => setAlert(null), 3000)
+                    const msg = err?.status === 403 ? 'No tienes permisos para editar usuarios' : (err?.error || 'Error al actualizar usuario')
+                    setAlert({ type: 'error', message: msg })
+                    setTimeout(() => { setAlert(null); }, 3000)
                 },
             }
         )
@@ -118,7 +122,7 @@ export default function UserDetail() {
                     <div className={"flex mb-4 " + (computerDevice ? 'flex-row items-center justify-between' : 'flex-col gap-3')}>
                         <div className="flex items-center gap-3">
                             <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56, fontSize: 24 }}>
-                                {user.name?.charAt(0)?.toUpperCase()}
+                                {user.name.charAt(0).toUpperCase()}
                             </Avatar>
                             <div>
                                 <Typography variant="h6">{user.name}</Typography>
@@ -135,11 +139,11 @@ export default function UserDetail() {
                                         Cancelar
                                     </Button>
                                 </>
-                            ) : (
-                                <Button variant="outlined" startIcon={<EditIcon />} onClick={() => setEditing(true)} size={computerDevice ? "medium" : "small"} fullWidth={!computerDevice}>
+                            ) : isAdmin ? (
+                                <Button variant="outlined" startIcon={<EditIcon />} onClick={() => { setEditing(true); }} size={computerDevice ? "medium" : "small"} fullWidth={!computerDevice}>
                                     Editar
                                 </Button>
-                            )}
+                            ) : null}
                         </div>
                     </div>
                     <Divider sx={{ mb: 2 }} />
@@ -147,7 +151,7 @@ export default function UserDetail() {
                         <TextField
                             label="Nombre"
                             value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            onChange={(e) => { setFormData({ ...formData, name: e.target.value }); }}
                             disabled={!editing}
                             size="small"
                             fullWidth
@@ -155,7 +159,7 @@ export default function UserDetail() {
                         <TextField
                             label="Email"
                             value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            onChange={(e) => { setFormData({ ...formData, email: e.target.value }); }}
                             disabled={!editing}
                             size="small"
                             fullWidth
@@ -163,7 +167,7 @@ export default function UserDetail() {
                         <TextField
                             label="Teléfono"
                             value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            onChange={(e) => { setFormData({ ...formData, phone: e.target.value }); }}
                             disabled={!editing}
                             size="small"
                             fullWidth
@@ -171,7 +175,7 @@ export default function UserDetail() {
                         <TextField
                             label="Rol"
                             value={formData.role}
-                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                            onChange={(e) => { setFormData({ ...formData, role: e.target.value }); }}
                             disabled={!editing}
                             select
                             size="small"

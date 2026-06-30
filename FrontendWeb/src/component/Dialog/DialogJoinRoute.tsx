@@ -4,7 +4,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Alert, TextField, Typography, useTheme, useMediaQuery } from '@mui/material';
+import { Alert, CircularProgress, TextField, Typography, useTheme, useMediaQuery } from '@mui/material';
 import { useEffect, useState } from 'react';
 import useSessionStore from '../../stores/useSessionStore';
 import CloseDialogButton from '../Button/CloseDialogButton';
@@ -20,32 +20,33 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
 }));
 
 
-type DialogJoinRouteProps = {
+interface DialogJoinRouteProps {
     stateOpen : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
 }
 
 export default function DialogJoinRoute({ stateOpen } : DialogJoinRouteProps) {
 
     const [ open, setOpen ] = stateOpen
-    const { accessToken, routeStatus, setRouteStatus, routeId, setRouteId } = useSessionStore()
+    const { setRouteStatus, setRouteId } = useSessionStore()
     const theme = useTheme();
     const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ acept, setAcept ] = useState(false)
     const [ inviteCode, setInviteCode ] = useState('')
-    const { isSuccess, isError, isIdle, data, mutate, error } = useJoinRoute()
+    const { isSuccess, isError, isIdle, isPending, data, mutate, error, reset } = useJoinRoute()
 
 
     const handleClose = () => {
-        if(isSuccess) {
-            setRouteStatus(true)
-        } 
         setOpen(false)
         setInviteCode('')
+        setAcept(false)
+        reset()
     }
 
     const handleAcept = () => {
+        const code = inviteCode.trim()
+        if(!code || isPending) return
         setTimeout(() => {
-            mutate(inviteCode)
+            mutate(code)
         }, 300)
     }
 
@@ -55,11 +56,12 @@ export default function DialogJoinRoute({ stateOpen } : DialogJoinRouteProps) {
     } 
 
     useEffect(() => {
-        if(isSuccess) {
+        if(isSuccess && data) {
             setAcept(true)
             setRouteId(data.id)
+            setRouteStatus(true)
         }
-    }, [isSuccess]) 
+    }, [data, isSuccess, setRouteId, setRouteStatus]) 
 
     return (
         <>
@@ -85,20 +87,23 @@ export default function DialogJoinRoute({ stateOpen } : DialogJoinRouteProps) {
                         required 
                         label='Código de invitación'
                         placeholder='Ingresa el código'
-                        value={inviteCode}
-                        onChange={handleInviteCode}
-                    />
+                            value={inviteCode}
+                            onChange={handleInviteCode}
+                            disabled={isPending}
+                        />
                     { 
                         isIdle ? null :
                         <Alert 
                             severity={
                                 isError ? 'error' : 
+                                isPending ? 'info' :
                                 isSuccess ? 'success' :
                                 'error'
                             }
                         >  
                             {
-                                isError ? `Ocurrio un error : ${(error as any).error}` :
+                                isPending ? <span className="inline-flex items-center gap-2"><CircularProgress size={16} /> Uniéndote a la ruta...</span> :
+                                isError ? `Ocurrió un error: ${(error as { error?: string })?.error ?? 'No se pudo unir a la ruta'}` :
                                 isSuccess ? `Ahora eres parte de la Ruta! todas los registros se vincularán con esta ruta` :
                                 'Ocurrio un error desconocido, intente más tarde'
                             }
@@ -106,7 +111,7 @@ export default function DialogJoinRoute({ stateOpen } : DialogJoinRouteProps) {
                     }
                 </DialogContent>
                     <DialogActions>
-                        <Button variant='contained' onClick={!acept ? handleAcept : handleClose}>
+                        <Button variant='contained' disabled={isPending || (!acept && !inviteCode.trim())} onClick={!acept ? handleAcept : handleClose}>
                             {!acept ? 'Unirse' : 'Aceptar'}
                         </Button>
                         { !acept ? 

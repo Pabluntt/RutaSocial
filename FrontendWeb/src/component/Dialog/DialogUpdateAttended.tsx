@@ -41,7 +41,7 @@ export default function DialogUpdateAtended() {
 
 
     useEffect(() => {
-        const primaryPerson = helpPoint?.people?.[0] ?? helpPoint?.peopleHelped
+        const primaryPerson = helpPoint?.people[0] ?? helpPoint?.peopleHelped
         if(primaryPerson) {
             setName(primaryPerson.name ?? '')
             setAge(primaryPerson.age ?? 0)
@@ -66,13 +66,13 @@ export default function DialogUpdateAtended() {
             name,
             age,
             gender,
-            rut: helpPoint.people?.[0]?.rut ?? helpPoint.peopleHelped?.rut
+            rut: helpPoint.people[0]?.rut ?? helpPoint.peopleHelped?.rut
         }
 
         mutate({
             ...helpPoint,
             comment,
-            people: [updatedPerson, ...(helpPoint.people?.slice(1) ?? [])],
+            people: [updatedPerson, ...(helpPoint.people.slice(1) ?? [])],
             peopleHelped: updatedPerson
         })
     }
@@ -109,7 +109,7 @@ export default function DialogUpdateAtended() {
             <CloseDialogButton handleClose={handleClose} />
 
             <DialogContent>
-                {   helpPoint?.peopleHelped === undefined && (helpPoint?.people?.length ?? 0) === 0 ?
+                {   helpPoint?.peopleHelped === undefined && (helpPoint?.people.length ?? 0) === 0 ?
                     <CircularProgress />
                     :
                     isIdle ?
@@ -166,7 +166,7 @@ export default function DialogUpdateAtended() {
                             variant='standard'
                             label='Comentario del punto'
                             value={comment}
-                            onChange={(e) => setComment(e.target.value)}
+                            onChange={(e) => { setComment(e.target.value); }}
                             slotProps={{
                                 inputLabel: {
                                     shrink: true,

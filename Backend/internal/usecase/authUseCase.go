@@ -86,6 +86,8 @@ func (a authUseCase) Register(c *gin.Context) {
 		return
 	}
 
+	user.Role = domain.RoleVolunteer
+
 	token, err := a.authRepository.Register(c.Request.Context(), user)
 	if err != nil {
 		logUseCaseError(c, "auth.register", http.StatusBadRequest, err)

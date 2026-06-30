@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
-import { createContext, useState, useContext } from 'react';
+import { createContext, useState, use } from 'react';
 import useSessionStore from '../stores/useSessionStore';
 import { useProfile } from '../api/hooks/UserHooks';
 
 
-type AuthContextProps = {
+interface AuthContextProps {
     role : string 
     loading : boolean
 }
@@ -26,7 +26,7 @@ export function AuthProvider({ children } : { children : React.ReactNode}) {
         }
 
         if(isSuccess) {
-            setRole(data.role as string)
+            setRole(data.role)
         }
 
         // Evita pantalla en blanco por throw global cuando el perfil falla.
@@ -36,14 +36,14 @@ export function AuthProvider({ children } : { children : React.ReactNode}) {
     }, [accessToken, isSuccess, isError, data])
 
     return (
-        <AuthContext.Provider value={{role, loading : isLoading}}>
+        <AuthContext value={{role, loading : isLoading}}>
         {children}
-        </AuthContext.Provider>
+        </AuthContext>
     )
 };
 
 export const useAuth = () => {
-    const state  = useContext(AuthContext)
+    const state  = use(AuthContext)
     if(!state) {
         throw new Error("useAuth has to be used within AuthProvider");
     }

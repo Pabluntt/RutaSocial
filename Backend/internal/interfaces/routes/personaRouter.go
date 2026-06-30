@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/SebaVCH/hdcProject/internal/config"
+	"github.com/SebaVCH/hdcProject/internal/domain"
 	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
 	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
@@ -24,9 +25,9 @@ func SetupPersonaRouter(r *gin.Engine) {
 	protected.GET("/:id", personaController.GetByID)
 	protected.POST("", personaController.Create)
 	protected.PUT("/:id", personaController.Update)
-	protected.DELETE("/:id", personaController.Delete)
+	protected.DELETE("/:id", middleware.RoleMiddleware(domain.RoleAdmin), personaController.Delete)
 	protected.POST("/:id/antecedentes", personaController.AddAntecedente)
-	protected.DELETE("/:id/antecedentes/:entryId", personaController.DeleteAntecedente)
+	protected.DELETE("/:id/antecedentes/:entryId", middleware.RoleMiddleware(domain.RoleAdmin), personaController.DeleteAntecedente)
 	protected.POST("/:id/info-medica", personaController.AddInfoMedica)
-	protected.DELETE("/:id/info-medica/:entryId", personaController.DeleteInfoMedica)
+	protected.DELETE("/:id/info-medica/:entryId", middleware.RoleMiddleware(domain.RoleAdmin), personaController.DeleteInfoMedica)
 }

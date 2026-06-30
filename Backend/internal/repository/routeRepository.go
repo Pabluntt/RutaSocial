@@ -19,7 +19,7 @@ type RouteRepository interface {
 	CreateRoute(ctx context.Context, route *domain.Route) error
 	UpdateRoute(ctx context.Context, data map[string]interface{}) (domain.Route, error)
 	DeleteRoute(ctx context.Context, routeId string) error
-	FinishRoute(ctx context.Context, id string, leaderID string) error
+	FinishRoute(ctx context.Context, id string, leaderID string, allowAny bool) error
 	JoinRoute(ctx context.Context, code string, userID string) (domain.Route, error)
 	LeaveRoute(ctx context.Context, routeId string, userID string) error
 	GetMyParticipation(ctx context.Context, userID string) (map[string]int, error)
@@ -166,7 +166,7 @@ func (r *routeRepository) DeleteRoute(ctx context.Context, routeId string) error
 
 // FinishRoute marca una ruta como finalizada.
 // Recibe el ID de la ruta, lo convierte a ObjectID y actualiza su estado y fecha de finalización.
-func (r *routeRepository) FinishRoute(ctx context.Context, id string, leaderID string) error {
+func (r *routeRepository) FinishRoute(ctx context.Context, id string, leaderID string, allowAny bool) error {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
@@ -178,8 +178,12 @@ func (r *routeRepository) FinishRoute(ctx context.Context, id string, leaderID s
 		return errors.New("ID de líder inválido")
 	}
 
+	filter := bson.M{"_id": objID}
+	if !allowAny {
+		filter["route_leader"] = leaderObjID
+	}
 	update := bson.M{"$set": bson.M{"status": "Finalizada", "date_finished": time.Now()}}
-	result, err := r.RouteCollection.UpdateOne(ctx, bson.M{"_id": objID, "route_leader": leaderObjID}, update)
+	result, err := r.RouteCollection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		logRepositoryError(ctx, "route", "finish.update_one", err, "collection", "routes", "route_id", id, "leader_id", leaderID)
 		return err
@@ -212,7 +216,7 @@ func (r *routeRepository) JoinRoute(ctx context.Context, code string, userID str
 
 	for _, member := range route.Team {
 		if member.Hex() == userID {
-			return domain.Route{}, errors.New("Ya eres parte de esta ruta")
+			return route, nil
 		}
 	}
 

@@ -29,7 +29,7 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   },
 }));
 
-export type DialogCreateRiskProps = { 
+export interface DialogCreateRiskProps { 
     stateOpen : [ boolean, React.Dispatch<React.SetStateAction<boolean>>]
     stateOnSelectLocationMap : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateLocationMethod : [ LocationMethod, React.Dispatch<React.SetStateAction<LocationMethod>> ]

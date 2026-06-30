@@ -30,8 +30,8 @@ export default function MensajesFijados() {
 
     useEffect(() => {
         getCurrentLocation()
-            .then((pos) => setCoords(pos))
-            .catch((error) => console.error('No se pudo obtener ubicación actual', error))
+            .then((pos) => { setCoords(pos); })
+            .catch((error) => { console.error('No se pudo obtener ubicación actual', error); })
     }, [])
 
     const profile = useProfile(!!accessToken)
@@ -46,7 +46,7 @@ export default function MensajesFijados() {
     }
 
     const onClearNotices = () => {
-        if(!data?.unread || data?.unread.length === 0) return 
+        if(!data?.unread || data.unread.length === 0) return 
         mutationMarkNotice.mutate(data.unread)
     }
 

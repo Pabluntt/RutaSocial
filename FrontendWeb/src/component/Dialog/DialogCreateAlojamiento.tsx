@@ -2,14 +2,14 @@ import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, u
 import { Position } from "../../utils/getCurrentLocation";
 import { useState, useEffect } from "react";
 
-export type AlojamientoData = {
+export interface AlojamientoData {
     id: string
     coords: [number, number]
     name: string
     cupos: number
 }
 
-type Props = {
+interface Props {
     stateOpen: [boolean, (value: boolean) => void]
     location: Position
     onCreate: (data: AlojamientoData) => void
@@ -49,7 +49,7 @@ export default function DialogCreateAlojamiento({ stateOpen, location, onCreate 
                     label="Nombre"
                     fullWidth
                     value={name}
-                    onChange={(e: { target: { value: string } }) => setName(e.target.value)}
+                    onChange={(e: { target: { value: string } }) => { setName(e.target.value); }}
                 />
                 <TextField
                     margin="dense"
@@ -57,7 +57,7 @@ export default function DialogCreateAlojamiento({ stateOpen, location, onCreate 
                     type="number"
                     fullWidth
                     value={cupos}
-                    onChange={(e: { target: { value: string } }) => setCupos(Math.max(0, Number(e.target.value) || 0))}
+                    onChange={(e: { target: { value: string } }) => { setCupos(Math.max(0, Number(e.target.value) || 0)); }}
                 />
             </DialogContent>
             <DialogActions>

@@ -77,8 +77,11 @@ function App() {
   }, [])
 
   useEffect(()=> {
-    interceptorResponse(navigate, clearSession)
-  }, [navigate])
+    interceptorResponse(navigate, () => {
+      queryClient.clear()
+      clearSession()
+    })
+  }, [navigate, clearSession])
  
   return (
   <QueryClientProvider client={queryClient}>    
