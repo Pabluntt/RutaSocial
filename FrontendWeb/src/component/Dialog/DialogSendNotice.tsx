@@ -125,24 +125,23 @@ export default function DialogSendAviso({ open, setOpen } : { open : boolean, se
                     <Typography color='error'>
                         {noticeError.authorID}
                     </Typography>
-                    {canSendToAll && (
-                        <Tooltip title="Activado: el aviso llega a todos los usuarios. Desactivado: solo llega a usuarios activos de tu institución">
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={sendToAll}
-                                        onChange={(e) => { setSendToAll(e.target.checked); }}
-                                        color="primary"
-                                    />
-                                }
-                                label={
-                                    <Typography variant="body2">
-                                        {sendToAll ? 'Enviar a todos' : 'Solo a mi institución'}
-                                    </Typography>
-                                }
-                            />
-                        </Tooltip>
-                    )}
+                    <Tooltip title={canSendToAll ? 'Activado: el aviso llega a todos los usuarios. Desactivado: solo llega a usuarios activos de tu institución' : 'Los voluntarios solo pueden enviar avisos a los usuarios de su institución'}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={sendToAll}
+                                    onChange={(e) => { setSendToAll(e.target.checked); }}
+                                    disabled={!canSendToAll}
+                                    color="primary"
+                                />
+                            }
+                            label={
+                                <Typography variant="body2">
+                                    {sendToAll ? 'Enviar a todos' : 'Solo a mi institución'}
+                                </Typography>
+                            }
+                        />
+                    </Tooltip>
                 </DialogContent>
                 <DialogActions>
                     <Button variant='contained' onClick={onPostNotice}>
