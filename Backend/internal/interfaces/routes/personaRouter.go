@@ -1,13 +1,13 @@
 package routes
 
 import (
-	"github.com/SebaVCH/hdcProject/internal/config"
-	"github.com/SebaVCH/hdcProject/internal/domain"
-	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
-	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
-	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
-	"github.com/SebaVCH/hdcProject/internal/repository"
-	"github.com/SebaVCH/hdcProject/internal/usecase"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/config"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/domain"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/infrastructure/database"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/interfaces/controller"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/interfaces/middleware"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/repository"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/usecase"
 	"github.com/gin-gonic/gin"
 )
 

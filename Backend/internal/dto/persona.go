@@ -1,6 +1,6 @@
 package dto
 
-import "github.com/SebaVCH/hdcProject/internal/domain"
+import "github.com/Pabluntt/RutaSocial/Backend/internal/domain"
 
 type PersonaSummaryResponse struct {
 	ID                 string `json:"_id"`

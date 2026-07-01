@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/SebaVCH/hdcProject/internal/domain"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/domain"
 	"github.com/gin-gonic/gin"
 )
 

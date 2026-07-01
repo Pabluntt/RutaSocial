@@ -1,4 +1,4 @@
-module github.com/SebaVCH/hdcProject
+module github.com/Pabluntt/RutaSocial/Backend
 
 go 1.24.0
 

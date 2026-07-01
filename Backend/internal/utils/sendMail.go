@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/SebaVCH/hdcProject/internal/domain"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/domain"
 	"gopkg.in/gomail.v2"
 )
 

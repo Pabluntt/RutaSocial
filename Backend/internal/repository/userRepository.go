@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 	"errors"
-	"github.com/SebaVCH/hdcProject/internal/domain"
-	"github.com/SebaVCH/hdcProject/internal/utils"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/domain"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/utils"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"time"

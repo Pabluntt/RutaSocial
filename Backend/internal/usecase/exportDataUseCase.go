@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"fmt"
-	"github.com/SebaVCH/hdcProject/internal/repository"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/xuri/excelize/v2"
 	"net/http"

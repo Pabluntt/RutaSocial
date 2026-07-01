@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/SebaVCH/hdcProject/internal/domain"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/domain"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )

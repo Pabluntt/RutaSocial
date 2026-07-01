@@ -3,9 +3,9 @@ package routes
 import (
 	"time"
 
-	"github.com/SebaVCH/hdcProject/internal/interfaces/controller"
-	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
-	"github.com/SebaVCH/hdcProject/internal/usecase"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/interfaces/controller"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/interfaces/middleware"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/usecase"
 	"github.com/gin-gonic/gin"
 )
 

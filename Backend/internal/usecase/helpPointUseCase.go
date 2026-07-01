@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/SebaVCH/hdcProject/internal/domain"
-	"github.com/SebaVCH/hdcProject/internal/repository"
-	"github.com/SebaVCH/hdcProject/internal/utils"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/domain"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/repository"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 

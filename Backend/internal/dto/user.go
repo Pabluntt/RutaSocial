@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"github.com/SebaVCH/hdcProject/internal/domain"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/domain"
 )
 
 // UserResponse es el DTO de respuesta para Usuario.

@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"github.com/SebaVCH/hdcProject/internal/domain"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/domain"
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )

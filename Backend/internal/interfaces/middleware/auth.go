@@ -4,7 +4,7 @@ package middleware
 
 import (
 	"errors"
-	"github.com/SebaVCH/hdcProject/internal/config"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/config"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"

@@ -3,10 +3,10 @@ package usecase
 import (
 	"strings"
 
-	"github.com/SebaVCH/hdcProject/internal/domain"
-	"github.com/SebaVCH/hdcProject/internal/dto"
-	"github.com/SebaVCH/hdcProject/internal/repository"
-	"github.com/SebaVCH/hdcProject/internal/utils"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/domain"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/dto"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/repository"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/v2/bson"

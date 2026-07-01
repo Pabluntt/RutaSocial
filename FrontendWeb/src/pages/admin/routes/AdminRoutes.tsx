@@ -26,7 +26,7 @@ const statusChipConfig: Record<string, { label: string; color: 'default' | 'info
     [RouteStatus.Scheduled]: { label: 'No iniciada', color: 'warning' },
     [RouteStatus.Active]: { label: 'En Progreso', color: 'info' },
     [RouteStatus.Completed]: { label: 'Finalizada', color: 'success' },
-    [RouteStatus.Deleted]: { label: 'Eliminada', color: 'error' },
+    [RouteStatus.Deleted]: { label: 'Cancelada', color: 'error' },
 }
 
 export default function AdminRoutes() {
@@ -167,7 +167,7 @@ export default function AdminRoutes() {
         { value: 'No iniciada', label: 'No iniciada' },
         { value: 'on progress', label: 'Activas' },
         { value: 'Finalizada', label: 'Finalizadas' },
-        { value: 'Eliminada', label: 'Eliminadas' },
+        { value: 'Eliminada', label: 'Canceladas' },
     ]
 
     return (

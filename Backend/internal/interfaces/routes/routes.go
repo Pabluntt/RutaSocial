@@ -5,15 +5,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/SebaVCH/hdcProject/internal/config"
-	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
-	"github.com/SebaVCH/hdcProject/internal/interfaces/middleware"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/config"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/infrastructure/database"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/interfaces/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/swaggo/files"
 	"github.com/swaggo/gin-swagger"
 	"go.mongodb.org/mongo-driver/v2/bson"
 
-	"github.com/SebaVCH/hdcProject/docs"
+	"github.com/Pabluntt/RutaSocial/Backend/docs"
 )
 
 // SetupRouter permite incorporar todas las rutas a utilizar en la aplicación.

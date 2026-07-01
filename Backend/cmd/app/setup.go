@@ -11,10 +11,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/SebaVCH/hdcProject/internal/config"
-	"github.com/SebaVCH/hdcProject/internal/infrastructure/database"
-	"github.com/SebaVCH/hdcProject/internal/interfaces/routes"
-	"github.com/SebaVCH/hdcProject/internal/utils"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/config"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/infrastructure/database"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/interfaces/routes"
+	"github.com/Pabluntt/RutaSocial/Backend/internal/utils"
 )
 
 // StartBackend inicia el backend de la aplicación.

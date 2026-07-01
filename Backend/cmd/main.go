@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/SebaVCH/hdcProject/cmd/app"
+	"github.com/Pabluntt/RutaSocial/Backend/cmd/app"
 )
 
 // main es la función principal que inicia el backend de la aplicación.
