@@ -15,7 +15,8 @@ import (
 // Crea el repositorio de instituciones, el caso de uso y el controlador, y define las rutas para obtener, crear, actualizar y eliminar instituciones.
 // Las rutas están protegidas por middleware de autenticación y autorización, permitiendo solo a los usuarios con rol de "admin" acceder a ellas.
 func SetupInstitutionRouter(r *gin.Engine) {
-	institutionRepo := repository.NewInstitutionRepository(database.Client.Database(config.DBName).Collection("institutions"))
+	db := database.Client.Database(config.DBName)
+	institutionRepo := repository.NewInstitutionRepository(db.Collection("institutions"), db.Collection("usuarios"))
 	institutionUseCase := usecase.NewInstitutionUseCase(institutionRepo)
 	institutionController := controller.NewInstitutionController(institutionUseCase)
 

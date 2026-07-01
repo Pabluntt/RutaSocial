@@ -23,13 +23,17 @@ export class InstitutionService {
         return MapInstitutionFromBackend(data?.message as TInstitutionBackend)
     } 
 
-    static async CreateInstitution( institution : TRegisterInstitution ) : Promise<Institution> {
+    static async CreateInstitution( institution : TRegisterInstitution ) : Promise<string> {
         const { data } = await axiosInstance.post(`/${this.RESOURCE_NAME}/`, institution)
         return data?.message
     }
 
-    static async UpdateInstitution( updateInstitution : TUpdateInstitution) : Promise<Institution> {
+    static async UpdateInstitution( updateInstitution : TUpdateInstitution) : Promise<string> {
         const { data } = await axiosInstance.put(`/${this.RESOURCE_NAME}/${updateInstitution._id}`, updateInstitution)
-        return MapInstitutionFromBackend(data?.message as TInstitutionBackend)
+        return data?.message
+    }
+
+    static async DeleteInstitution( id : string) : Promise<void> {
+        await axiosInstance.delete(`/${this.RESOURCE_NAME}/${id}`)
     }
 }

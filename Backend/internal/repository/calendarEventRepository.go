@@ -52,7 +52,7 @@ func (c calendarEventRepository) GetCalendarEventsByUserID(ctx context.Context, 
 	}
 	defer cursor.Close(ctx)
 
-	var events []domain.EventoCalendario
+	events := make([]domain.EventoCalendario, 0)
 	if err := cursor.All(ctx, &events); err != nil {
 		logRepositoryError(ctx, "calendar_event", "get_by_user.cursor_all", err, "collection", "calendar_events", "user_id", userID)
 		return nil, err
@@ -65,7 +65,7 @@ func (c calendarEventRepository) GetCalendarEventsByUserID(ctx context.Context, 
 func (c calendarEventRepository) GetAllCalendarEvents(ctx context.Context) ([]domain.EventoCalendario, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
-	var events []domain.EventoCalendario
+	events := make([]domain.EventoCalendario, 0)
 	cursor, err := c.CalendarEventCollection.Find(ctx, bson.M{})
 	if err != nil {
 		logRepositoryError(ctx, "calendar_event", "get_all.find", err, "collection", "calendar_events")

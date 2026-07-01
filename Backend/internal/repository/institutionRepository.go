@@ -23,13 +23,15 @@ type InstitutionRepository interface {
 // Contiene una colección de instituciones para interactuar con la base de datos.
 type institutionRepository struct {
 	InstitutionCollection *mongo.Collection
+	UserCollection        *mongo.Collection
 }
 
 // NewInstitutionRepository crea una nueva instancia de institutionRepository.
 // Recibe una colección de instituciones y retorna una instancia de InstitutionRepository.
-func NewInstitutionRepository(InstitutionCollection *mongo.Collection) InstitutionRepository {
+func NewInstitutionRepository(InstitutionCollection *mongo.Collection, UserCollection *mongo.Collection) InstitutionRepository {
 	return &institutionRepository{
 		InstitutionCollection: InstitutionCollection,
+		UserCollection:        UserCollection,
 	}
 }
 
@@ -127,6 +129,15 @@ func (i *institutionRepository) DeleteInstitution(ctx context.Context, id string
 	defer cancel()
 	objectID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
+		return err
+	}
+
+	_, err = i.UserCollection.UpdateMany(ctx,
+		bson.M{"institutionID": objectID},
+		bson.M{"$set": bson.M{"institutionID": bson.NilObjectID}},
+	)
+	if err != nil {
+		logRepositoryError(ctx, "institution", "delete.update_users", err, "collection", "usuarios", "institution_id", id)
 		return err
 	}
 

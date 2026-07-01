@@ -1,16 +1,14 @@
-import { Button, IconButton, InputBase, Paper, Tooltip, Typography, useMediaQuery, useTheme, Alert } from "@mui/material";
+import { Button, IconButton, InputBase, Paper, Typography, useMediaQuery, useTheme, Alert } from "@mui/material";
 import CustomDrawer from "../../../component/CustomDrawer";
 import TableUser from "../../../component/TableUser";
 import SearchIcon from '@mui/icons-material/Search';
 import DrawerList from "../../../component/DrawerList";
 import { useEffect, useState } from "react";
-import useSessionStore from "../../../stores/useSessionStore";
 import DialogCreateUser from "../../../component/Dialog/DialogCreateUser";
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import Sidebar from "../../../component/Sidebar";
 import { IUser } from "../../../api/models/User";
 import { useUsers } from "../../../api/hooks/UserHooks";
-import DialogCreateInstitution from "../../../component/Dialog/DialogCreateInstitution";
+import DialogManageInstitutions from "../../../component/Dialog/DialogManageInstitutions";
 import { useInstitutions } from "../../../api/hooks/InstitutionHooks";
 import { Institution } from "../../../api/models/Institution";
 import { useAuth } from "../../../context/AuthContext";
@@ -22,9 +20,8 @@ export default function Usuarios() {
     const { role } = useAuth()
     const [ users, setUsers ] = useState<IUser[]>([])
     const [ institutions, setInstitutions ] = useState<Institution[]>([])
-    const { accessToken } = useSessionStore()
-    const { isError, isSuccess, data, isPending } = useUsers()
-    const { isSuccess: isInstitutionSuccess, data: institutionData, isPending: isInstitutionPending } = useInstitutions()
+    const { isError, data, isPending } = useUsers()
+    const { data: institutionData, isPending: isInstitutionPending } = useInstitutions()
 
     useEffect(() => {
         if(data) {
@@ -41,27 +38,7 @@ export default function Usuarios() {
 
     const [ prefix, setPrefix ] = useState<string>('')   
     const [ open, setOpen ] = useState(false) 
-    const [ openAddInstitution, setOpenAddInstitution ] = useState(false)
-
-    const handleExport = async () => {
-        fetch(`${import.meta.env.VITE_URL_BACKEND}/export-data/people-helped`, {
-            headers: {
-                'Authorization' : `Bearer ${accessToken}`
-            }
-        })
-        .then((response) => response.blob())
-        .then((blob) => {
-            const _url = window.URL.createObjectURL(blob)
-            const a = document.createElement('a');
-            a.href = _url;
-            a.download = 'personas_ayudadas.xlsx';
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(_url);
-        }).catch(() => {
-        })
-    }
+    const [ openManageInstitutions, setOpenManageInstitutions ] = useState(false)
     const theme = useTheme();
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'));
 
@@ -134,15 +111,10 @@ export default function Usuarios() {
                             </Button>
                         )}
                             {role === Role.admin && (
-                                <Button size="small" variant="contained" onClick={() => {setOpenAddInstitution(true)}}>
-                                    Agregar Institución    
-                                </Button> 
+                                <Button size="small" variant="contained" onClick={() => {setOpenManageInstitutions(true)}}>
+                                    Editar instituciones
+                                </Button>
                             )}
-                            <Tooltip title={'exportar datos'}>
-                                <Button color='info' variant="contained" onClick={handleExport}>
-                                    <FileDownloadIcon fontSize="large" />
-                                </Button>    
-                            </Tooltip>
                         </div>
                     </div>
                     { isPending || isInstitutionPending ? 
@@ -173,7 +145,14 @@ export default function Usuarios() {
                     setUsers((current) => current.some((user) => user.id === createdUser.id) ? current : [...current, createdUser])
                 }}
             />
-            <DialogCreateInstitution stateOpen={[openAddInstitution, setOpenAddInstitution]} />
+            <DialogManageInstitutions
+                open={openManageInstitutions}
+                setOpen={setOpenManageInstitutions}
+                institutions={institutions}
+                setInstitutions={setInstitutions}
+                users={users}
+                setUsers={setUsers}
+            />
         </div>
     )
 };

@@ -1,4 +1,4 @@
-import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, Divider, Checkbox, alpha, Box, IconButton, TableSortLabel, Toolbar, Tooltip, Typography, useMediaQuery, useTheme, Alert } from "@mui/material";
+import { TableContainer, Paper, Table, TableHead, TableRow, TableCell, TableBody, Divider, Checkbox, alpha, Box, IconButton, TableSortLabel, Toolbar, Tooltip, Typography, useMediaQuery, useTheme, Alert, Select, MenuItem, SelectChangeEvent } from "@mui/material";
 import { visuallyHidden } from '@mui/utils';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -14,6 +14,8 @@ import { UserService } from "../api/services/UserService";
 import ConfirmDialog from "./Dialog/ConfirmDialog";
 
 type SortableUserKeys = keyof Omit<IUser, 'listRoutes' | 'dateRegister' | 'completedRoutes' | 'isActive'>;
+
+const NIL_INSTITUTION_ID = '000000000000000000000000'
 
 interface HeadCell {
   disablePadding: boolean;
@@ -349,6 +351,24 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
     })
   }
 
+  const handleInstitutionChange = (user: IUser, institutionID: string) => {
+    if (!isAdmin) return
+    UserService.AdminUpdateUser(user.id, { institutionID })
+      .then((updatedUser) => {
+        setUsers(users.map((u) => u.id === user.id ? updatedUser : u))
+        setAlertMessage('Institución del usuario actualizada')
+        setAlertSeverity('success')
+        setShowAlert(true)
+        setTimeout(() => { setShowAlert(false); }, 3000)
+      })
+      .catch((error: any) => {
+        setAlertMessage(error?.status === 403 ? 'No tienes permisos para editar usuarios' : 'Error al actualizar la institución')
+        setAlertSeverity('error')
+        setShowAlert(true)
+        setTimeout(() => { setShowAlert(false); }, 3000)
+      })
+  }
+
   return (
     <Box sx={{ width: '100%' }}>
       {showAlert && (
@@ -378,7 +398,7 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
               {visibleRows.map((row, index) => {
                 const isItemSelected = selected.includes(row.id);
                 const labelId = `enhanced-table-checkbox-${index}`;
-                const institution = institutions.find(v => v.id === row.institutionID) ??   { name : 'Institución eliminada', color: '#000000'}
+                const institution = institutions.find(v => v.id === row.institutionID) ?? { id: NIL_INSTITUTION_ID, name : 'N/A', color: '#9ca3af'}
             
                 return (
                   <TableRow
@@ -419,26 +439,54 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
                     <TableCell align={'justify'} onClick={(e) => {
                       e.stopPropagation()
                     }}>
-                      <div className="flex flex-row items-center gap-2">
-                        <Box  
-                          sx={{
-                          width: 24,
-                          height: 24,
-                          bgcolor: institution.color || '#ccc',
-                          border: '1px solid #ddd',
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                          transition: 'transform 0.2s, box-shadow 0.2s',
-                          '&:hover': {
-                              transform: 'scale(1.05)',
-                              boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-                          },
+                      {isAdmin ? (
+                        <Select
+                          size="small"
+                          value={row.institutionID || NIL_INSTITUTION_ID}
+                          onChange={(event: SelectChangeEvent) => { handleInstitutionChange(row, event.target.value); }}
+                          onClick={(e) => { e.stopPropagation(); }}
+                          sx={{ minWidth: 180, maxWidth: 240 }}
+                          renderValue={(selected) => {
+                            const selectedInstitution = institutions.find((inst) => inst.id === selected) ?? { name: 'N/A', color: '#9ca3af' }
+                            return (
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box sx={{ width: 18, height: 18, bgcolor: selectedInstitution.color, border: '1px solid #ddd', borderRadius: '6px' }} />
+                                <Typography variant="body2" noWrap>{selectedInstitution.name}</Typography>
+                              </Box>
+                            )
                           }}
-                        />
-                        {institution.name}
-                      </div>
+                        >
+                          <MenuItem value={NIL_INSTITUTION_ID}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Box sx={{ width: 18, height: 18, bgcolor: '#9ca3af', border: '1px solid #ddd', borderRadius: '6px' }} />
+                              N/A
+                            </Box>
+                          </MenuItem>
+                          {institutions.map((inst) => (
+                            <MenuItem key={inst.id} value={inst.id}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box sx={{ width: 18, height: 18, bgcolor: inst.color, border: '1px solid #ddd', borderRadius: '6px' }} />
+                                {inst.name}
+                              </Box>
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      ) : (
+                        <div className="flex flex-row items-center gap-2">
+                          <Box
+                            sx={{
+                            width: 24,
+                            height: 24,
+                            bgcolor: institution.color || '#ccc',
+                            border: '1px solid #ddd',
+                            borderRadius: '8px',
+                            }}
+                          />
+                          {institution.name}
+                        </div>
+                      )}
                     </TableCell>
-                    <TableCell align={'center'}>{row.role}</TableCell>
+                    <TableCell align={'center'}>{row.role === 'admin' ? 'Administrador' : 'Voluntario'}</TableCell>
                     <TableCell align={("center")}>{row.phone}</TableCell>
                     <TableCell align={("center")}>{row.isActive ? 'Activo' : 'Pendiente'}</TableCell>
                     {isAdmin && (

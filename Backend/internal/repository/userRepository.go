@@ -337,7 +337,15 @@ func (u *userRepository) UpdateUserByAdmin(ctx context.Context, updateData map[s
 	for k, v := range updateData {
 		if allowedFields[k] {
 			if strVal, ok := v.(string); ok && strVal != "" {
-				filtered[k] = strVal
+				if k == "institutionID" {
+					institutionID, err := bson.ObjectIDFromHex(strVal)
+					if err != nil {
+						return domain.Usuario{}, errors.New("ID de institución inválido")
+					}
+					filtered[k] = institutionID
+				} else {
+					filtered[k] = strVal
+				}
 			}
 		}
 	}

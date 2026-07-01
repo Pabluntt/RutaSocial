@@ -10,8 +10,9 @@ export class CalendarService {
 
     static async GetEvents() : Promise<CalendarEvent[]> {
         const { data } = await axiosInstance.get(`/${this.RESOURCE_NAME}`)
-        const cache = await CalendarService.buildEventCache(data as TCalendarEventBackend[])
-        return await Promise.all((data as TCalendarEventBackend[]).map(async (event, _) => (
+        const events = Array.isArray(data) ? data as TCalendarEventBackend[] : []
+        const cache = await CalendarService.buildEventCache(events)
+        return await Promise.all(events.map(async (event, _) => (
            await MapCalendarEventFromBackend(event, cache) 
         )))
     }
@@ -33,9 +34,9 @@ export class CalendarService {
 
     static async GetUserCalendarEvents(userId: string): Promise<CalendarEvent[]> {
         const { data } = await axiosInstance.get(`/${this.RESOURCE_NAME}/user/${userId}`)
-        if (data?.message === null) return []
-        const cache = await CalendarService.buildEventCache(data?.message as TCalendarEventBackend[])
-        return await Promise.all((data?.message as TCalendarEventBackend[]).map(async (event) =>
+        const events = Array.isArray(data?.message) ? data.message as TCalendarEventBackend[] : []
+        const cache = await CalendarService.buildEventCache(events)
+        return await Promise.all(events.map(async (event) =>
             await MapCalendarEventFromBackend(event, cache)
         ))
     }
