@@ -28,9 +28,10 @@ export default function CustomDrawer({ DrawerList } : {DrawerList: DrawerListCom
                 sx={{
                     mr: 0,
                     ml: 0,
-                    p: computerDevice ? 2 : 0.75,
+                    p: computerDevice ? 2 : 0.5,
                     bgcolor: computerDevice ? 'transparent' : 'rgba(255,255,255,0.95)',
                     border: computerDevice ? 'none' : '1px solid rgba(0,0,0,0.12)',
+                    borderRadius: computerDevice ? undefined : '10px',
                     boxShadow: computerDevice ? 'none' : 3,
                     '&:hover': {
                         bgcolor: computerDevice ? 'transparent' : 'rgba(255,255,255,1)',
@@ -38,7 +39,7 @@ export default function CustomDrawer({ DrawerList } : {DrawerList: DrawerListCom
                 }}
                 onClick={toggleDrawer(true)}
             >
-                <MenuIcon sx={{ fontSize: computerDevice ? 40 : 32 }} />
+                <MenuIcon sx={{ fontSize: computerDevice ? 40 : 28, color: computerDevice ? 'inherit' : '#4b5563' }} />
             </IconButton>          
             <Drawer
                 open={openDrawer}

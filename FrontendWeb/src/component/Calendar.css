@@ -162,6 +162,25 @@
 }
 
 @media (max-width: 599px) {
+  .fc .fc-toolbar.fc-header-toolbar {
+    margin-bottom: 0.5rem;
+  }
+
+  .fc .fc-toolbar-chunk {
+    align-items: center;
+    display: flex;
+  }
+
+  .fc .fc-toolbar-title {
+    font-size: 1rem !important;
+    line-height: 1.2;
+    margin: 0 8px !important;
+  }
+
+  .fc .fc-button {
+    padding: 2px 8px !important;
+  }
+
   .fc .fc-daygrid-day-frame {
     min-height: 88px;
   }

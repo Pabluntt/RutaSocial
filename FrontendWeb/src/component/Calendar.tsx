@@ -237,19 +237,19 @@ export default function Calendar() {
               </Alert>
             )}
             {!isPending && !isError && (
-            <div className='px-2 sm:px-10 w-full'>
-                <div className='mb-3 flex flex-wrap items-center gap-3 rounded-lg bg-white/80 px-3 py-2 text-xs text-gray-700 shadow-sm'>
+            <div className='px-2 pt-2 sm:px-10 sm:pt-0 w-full'>
+                <div className='mb-2 ml-12 sm:ml-0 flex min-h-9 flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-white/80 px-2 py-1.5 text-[0.68rem] sm:text-xs text-gray-700 shadow-sm'>
                     <span className='font-semibold'>Leyenda:</span>
-                    <span className='inline-flex items-center gap-1'><span className='inline-block h-2.5 w-2.5 rounded-full' style={{ backgroundColor: ROUTE_STATUS_COLORS[RouteStatus.Scheduled] }} /> Ruta no iniciada</span>
-                    <span className='inline-flex items-center gap-1'><span className='inline-block h-2.5 w-2.5 rounded-full' style={{ backgroundColor: ROUTE_STATUS_COLORS[RouteStatus.Active] }} /> Ruta en curso</span>
-                    <span className='inline-flex items-center gap-1'><span className='inline-block h-2.5 w-2.5 rounded-full' style={{ backgroundColor: ROUTE_STATUS_COLORS[RouteStatus.Completed] }} /> Ruta finalizada</span>
+                    <span className='inline-flex items-center gap-1'><span className='inline-block h-2.5 w-2.5 rounded-full' style={{ backgroundColor: ROUTE_STATUS_COLORS[RouteStatus.Scheduled] }} /><span className='sm:hidden'>No iniciada</span><span className='hidden sm:inline'>Ruta no iniciada</span></span>
+                    <span className='inline-flex items-center gap-1'><span className='inline-block h-2.5 w-2.5 rounded-full' style={{ backgroundColor: ROUTE_STATUS_COLORS[RouteStatus.Active] }} /><span className='sm:hidden'>En curso</span><span className='hidden sm:inline'>Ruta en curso</span></span>
+                    <span className='inline-flex items-center gap-1'><span className='inline-block h-2.5 w-2.5 rounded-full' style={{ backgroundColor: ROUTE_STATUS_COLORS[RouteStatus.Completed] }} /><span className='sm:hidden'>Finalizada</span><span className='hidden sm:inline'>Ruta finalizada</span></span>
                 </div>
                 <FullCalendar 
                     longPressDelay={100}
                     plugins={[ dayGridPlugin, timeGridPlugin, interactionPlugin ]}
                     headerToolbar={{
-                        left: ( computerDevice ? 'prev,next today' : 'prev,next'),
-                        center: 'title',
+                        left: ( computerDevice ? 'prev,next today' : ''),
+                        center: ( computerDevice ? 'title' : 'prev title next'),
                         right: ( computerDevice ? 'dayGridMonth' : '')
                     }}
                     initialView="dayGridMonth"
