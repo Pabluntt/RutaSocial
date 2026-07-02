@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, type Dispatch, type SetStateAction } from "react";
 import { format } from 'date-fns';
 import L from "leaflet";
 import DrawerList from "../../component/DrawerList";
@@ -122,6 +122,7 @@ export default function Home() {
     // Estado para coordenadas del diálogo de punto de atención
     const [ attendedCoords, setAttendedCoords ] = useState<number[]>([])
     const [ attendedComment, setAttendedComment ] = useState('')
+    const [ riskResetSignal, setRiskResetSignal ] = useState(0)
 
     const [ risks, setRisks ] = useState<Risk[]>([])
     const [ helpPoints, setHelpPoints ] = useState<HelpPoint[]>([])
@@ -156,6 +157,34 @@ export default function Home() {
     const [ savedPointsTimeRange, setSavedPointsTimeRange ] = useState<HeatmapTimeRange>('none')
     const [ savedPointsCustomStart, setSavedPointsCustomStart ] = useState<Date | null>(null)
     const [ savedPointsCustomEnd, setSavedPointsCustomEnd ] = useState<Date | null>(null)
+
+    const resetLocationSelection = () => {
+        setLocation({latitude : 0, longitude : 0})
+        setLocationMethod(LocationMethod.None)
+        setOnSelectLocationMap(false)
+    }
+
+    const openAttendedFromSpeedDial: Dispatch<SetStateAction<boolean>> = (value) => {
+        const nextOpen = typeof value === 'function' ? value(openDialogAttended) : value
+        if(nextOpen) {
+            resetLocationSelection()
+            setAttendedP({ name: 'No especificado', age: -1, gender: 'No especificado' })
+            setAttendedPeople([{ id: `${Date.now()}-${Math.random()}`, name: '', rut: '', age: '', gender: 'No especificado' }])
+            setAttendedCoords([])
+            setAttendedComment('')
+        }
+        setOpenDialogAttended(nextOpen)
+    }
+
+    const openRiskFromSpeedDial: Dispatch<SetStateAction<boolean>> = (value) => {
+        const nextOpen = typeof value === 'function' ? value(openDialogRisk) : value
+        if(nextOpen) {
+            resetLocationSelection()
+            stateDescriptionRisk[1]('')
+            setRiskResetSignal((current) => current + 1)
+        }
+        setOpenDialogRisk(nextOpen)
+    }
 
     const heatmapFilteredPoints = useMemo(() =>
         filterHelpPointsByTimeRange(helpPoints, heatmapTimeRange, heatmapCustomStart, heatmapCustomEnd),
@@ -420,31 +449,10 @@ export default function Home() {
                                 :
                                 <SpeedDialRoute 
                                     stateOpen={[ openDialRoute, setOpenDialRoute ]}
-                                    stateOpenDialogAttended={[ openDialogAttended, setOpenDialogAttended ]}
-                                    stateOpenDialogRisk={[ openDialogRisk, setOpenDialogRisk ]}
+                                    stateOpenDialogAttended={[ openDialogAttended, openAttendedFromSpeedDial ]}
+                                    stateOpenDialogRisk={[ openDialogRisk, openRiskFromSpeedDial ]}
                                     stateOpenDialogRoute={[ openDialogResumeRoute, setOpenDialogResumeRoute ]}
-                                >
-                                    <DialogCreateAttended 
-                                        stateAttended={[attendedP, setAttendedP]}
-                                        stateOpen={[openDialogAttended, setOpenDialogAttended]} 
-                                        stateOnSelectLocationMap={[ onSelectLocationMap, setOnSelectLocationMap]} 
-                                        stateLocationMethod={[locationMethod, setLocationMethod]}
-                                        statePeople={[attendedPeople, setAttendedPeople]}
-                                        stateCoords={[attendedCoords, setAttendedCoords]}
-                                        stateComment={[attendedComment, setAttendedComment]}
-                                        location={location}
-                                    />
-                                    <DialogCreateRisk 
-                                        stateOpen={[openDialogRisk, setOpenDialogRisk]} 
-                                        stateOnSelectLocationMap={[ onSelectLocationMap, setOnSelectLocationMap]}
-                                        stateLocationMethod={[ locationMethod, setLocationMethod ]}
-                                        location={location}
-                                        stateDescription={stateDescriptionRisk}
-                                    />
-                                    <DialogResumeRoute 
-                                        stateOpen={[ openDialogResumeRoute, setOpenDialogResumeRoute ]} 
-                                    />
-                                </SpeedDialRoute>
+                                />
                             }
                         </div>
                     </>
@@ -476,6 +484,27 @@ export default function Home() {
                     </Paper>
                 }
             </div>
+            <DialogCreateAttended 
+                stateAttended={[attendedP, setAttendedP]}
+                stateOpen={[openDialogAttended, setOpenDialogAttended]} 
+                stateOnSelectLocationMap={[ onSelectLocationMap, setOnSelectLocationMap]} 
+                stateLocationMethod={[locationMethod, setLocationMethod]}
+                statePeople={[attendedPeople, setAttendedPeople]}
+                stateCoords={[attendedCoords, setAttendedCoords]}
+                stateComment={[attendedComment, setAttendedComment]}
+                location={location}
+            />
+            <DialogCreateRisk 
+                stateOpen={[openDialogRisk, setOpenDialogRisk]} 
+                stateOnSelectLocationMap={[ onSelectLocationMap, setOnSelectLocationMap]}
+                stateLocationMethod={[ locationMethod, setLocationMethod ]}
+                location={location}
+                stateDescription={stateDescriptionRisk}
+                resetSignal={riskResetSignal}
+            />
+            <DialogResumeRoute 
+                stateOpen={[ openDialogResumeRoute, setOpenDialogResumeRoute ]} 
+            />
             <DialogCreateAlojamiento stateOpen={[openDialogAlojamiento, setOpenDialogAlojamiento]} location={location} onCreate={handleCreateAlojamiento} />
             <DialogUpdateRisk />
         </div>

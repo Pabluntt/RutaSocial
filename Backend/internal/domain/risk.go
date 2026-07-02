@@ -14,4 +14,5 @@ type Riesgo struct {
 	Status       string        `bson:"Status" json:"Status"`
 	DateRegister time.Time     `bson:"date_register" json:"date_register"`
 	Description  string        `bson:"description" json:"description"`
+	Icon         string        `bson:"icon,omitempty" json:"icon,omitempty"`
 }

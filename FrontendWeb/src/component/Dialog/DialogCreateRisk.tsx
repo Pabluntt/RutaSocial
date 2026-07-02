@@ -4,8 +4,8 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Alert, CircularProgress, Typography, Zoom, Chip, Paper, useTheme, useMediaQuery } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { Alert, CircularProgress, Typography, Zoom, Chip, Paper, useTheme, useMediaQuery, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
 import getCurrentLocation, { Position } from '../../utils/getCurrentLocation';
 import InputDescription from '../Input/InputDescription';
 import CloseDialogButton from '../Button/CloseDialogButton';
@@ -16,6 +16,17 @@ import { useCreateRisk, useRisks } from '../../api/hooks/RiskHooks';
 import { RiskStatus } from '../../Enums/RiskStatus';
 import { useProfile } from '../../api/hooks/UserHooks';
 import { useAppSnackbar } from '../../context/SnackbarContext';
+import ReportIcon from '@mui/icons-material/Report';
+import FlagIcon from '@mui/icons-material/Flag';
+import InfoIcon from '@mui/icons-material/Info';
+
+type MarkerType = 'riesgo' | 'interes' | 'aviso'
+
+const markerTypeConfig: Record<MarkerType, { label: string; status: RiskStatus; icon: string }> = {
+    riesgo: { label: 'Riesgo', status: RiskStatus.Environment, icon: 'ambiente' },
+    interes: { label: 'Interés', status: RiskStatus.Severe, icon: 'interes' },
+    aviso: { label: 'Aviso', status: RiskStatus.Warning, icon: 'atencion' },
+}
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
@@ -35,14 +46,15 @@ export interface DialogCreateRiskProps {
     stateLocationMethod : [ LocationMethod, React.Dispatch<React.SetStateAction<LocationMethod>> ]
     stateDescription : [ string, React.Dispatch<React.SetStateAction<string>> ]
     location : Position
+    resetSignal ?: number
 }
 
-export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, location, stateLocationMethod, stateDescription } : DialogCreateRiskProps) {
+export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, location, stateLocationMethod, stateDescription, resetSignal } : DialogCreateRiskProps) {
 
     const theme = useTheme();
     const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const [ open, setOpen ] = stateOpen
-    const [ , setOnSelectLocationMap ] = stateOnSelectLocationMap 
+    const [ onSelectLocationMap, setOnSelectLocationMap ] = stateOnSelectLocationMap 
 
     const authorID = useProfile().data?.id
 
@@ -52,6 +64,9 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
     const [ createButtonDisable, setCreateButtonDisable ] = useState(true)
     const [ locationMethod, setLocationMethod ] = stateLocationMethod
     const [ error, setError ] = useState<string | undefined>()
+    const [ markerType, setMarkerType ] = useState<MarkerType>('riesgo')
+    const selectingLocationRef = useRef(false)
+    const resetSignalMountedRef = useRef(false)
 
     const { mutate, data, isError, isSuccess, isPending, isIdle, reset } = useCreateRisk()
     const { refetch } = useRisks()
@@ -69,13 +84,30 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
     }
     
     const handleSelectLocationMap = () => {
+        selectingLocationRef.current = true
         setLocationMethod(LocationMethod.Map)
         setOnSelectLocationMap(true)
-        setOpen(false)
     }
 
     useEffect(() => {
+        if(resetSignal === undefined) return
+        if(!resetSignalMountedRef.current) {
+            resetSignalMountedRef.current = true
+            return
+        }
+        reset()
+        setRequired(false)
+        setDescription('')
+        setLocationMethod(LocationMethod.None)
+        setError(undefined)
+        setCreateButtonDisable(true)
+        setCoords([])
+        setMarkerType('riesgo')
+    }, [resetSignal])
+
+    useEffect(() => {
         if(location.latitude != 0) {
+            selectingLocationRef.current = false
             setLocationMethod(LocationMethod.Map)
             setCoords([location.latitude, location.longitude])
         }
@@ -107,13 +139,15 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
             description,
             coords,
             authorID: authorID,
-            status : RiskStatus.Environment
+            status: markerTypeConfig[markerType].status,
+            icon: markerTypeConfig[markerType].icon
         })
     }
 
     useEffect(() => {
         if(isSuccess) {
             refetch()
+            setMarkerType('riesgo')
             setTimeout(() => {
                 handleClose()
             }, 1000)   
@@ -125,13 +159,14 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
             fullScreen={fullScreen}
             fullWidth
             maxWidth="sm"
-            open={open} 
+            open={open && !onSelectLocationMap} 
             onClose={handleClose}
             aria-labelledby='risk-titulo'
             keepMounted
             slotProps={{
                 transition : {
                     onExited: () => {
+                        if(onSelectLocationMap || selectingLocationRef.current) return
                         reset()
                         setRequired(false)
                         setDescription('')
@@ -151,11 +186,11 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
                     variant="outlined"
                     sx={{ fontWeight: 600, fontSize: 11 }}
                 />
-                <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
                     { 
-                        isIdle ? 'Crear un riesgo' :
+                        isIdle ? 'Registrar punto de interés' :
                         isPending ? 'Cargando...' :
-                        isSuccess ? 'Riesgo Creado' :
+                        isSuccess ? 'Punto registrado' :
                         isError ? 'Ha ocurrido un error' :
                         'Error desconocido'
                     }
@@ -168,19 +203,42 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
                     <div className='flex flex-col gap-4 py-3'>
                         <Paper variant="outlined" sx={{ p: 2, bgcolor: '#f5f5f5', borderRadius: '8px' }}>
                             <Typography variant="body2" sx={{ lineHeight: 1.8, color: '#555' }}>
-                                {"\u2022"} Un riesgo señala una zona de <b>alerta</b> en el sector. <br/>
-                                {"\u2022"} Podrás detallar la causa del riesgo agregando una breve descripción. <br />
-                                {"\u2022"} Se podrá actualizar a lo largo del tiempo, reflejando el estado actual del riesgo.
+                                {"\u2022"} Puedes reportar un <b>riesgo</b> o registrar otro <b>punto de interés</b> de la ruta. <br/>
+                                {"\u2022"} Escoge un ícono para que el punto sea fácil de reconocer en el mapa. <br />
+                                {"\u2022"} Agrega una breve descripción para explicar el contexto del punto.
                             </Typography>
                         </Paper>
+                        <div className='flex flex-col gap-2'>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Ícono del marcador</Typography>
+                            <ToggleButtonGroup
+                                exclusive
+                                fullWidth
+                                size="small"
+                                value={markerType}
+                                onChange={(_, value: MarkerType | null) => { if(value) setMarkerType(value); }}
+                            >
+                                <ToggleButton value="riesgo" sx={{ textTransform: 'none', gap: 0.75 }}>
+                                    <ReportIcon fontSize="small" /> Riesgo
+                                </ToggleButton>
+                                <ToggleButton value="interes" sx={{ textTransform: 'none', gap: 0.75 }}>
+                                    <FlagIcon fontSize="small" /> Interés
+                                </ToggleButton>
+                                <ToggleButton value="aviso" sx={{ textTransform: 'none', gap: 0.75 }}>
+                                    <InfoIcon fontSize="small" /> Aviso
+                                </ToggleButton>
+                            </ToggleButtonGroup>
+                            <Typography variant="caption" sx={{ color: '#64748b' }}>
+                                Seleccionado: {markerTypeConfig[markerType].label}
+                            </Typography>
+                        </div>
                         <InputDescription 
                             maxLength={100}
                             maxRows={6}
                             required
                             error={required}
                             variant='outlined'
-                            label='Descripción del riesgo'
-                            placeholder='Ingresa la descripción del riesgo'
+                            label='Descripción'
+                            placeholder='Describe el riesgo o punto de interés'
                             value={description}       
                             onChange={(e) => {setDescription(e.target.value); setRequired(false)}}    
                             onBlur={(_) => {if(!description) setRequired(true)}}            
@@ -235,7 +293,7 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
                     </div>    
                     :
                     <Alert sx={{ mt: 2, borderRadius: '8px' }} variant='outlined' severity={ isSuccess ? 'success' : isError ? 'error' : 'info'}>
-                            {isSuccess ? 'Se creó el riesgo exitosamente' : isError ? 'Hubo un error al intentar crear el riesgo' : 'Error desconocido'}
+                            {isSuccess ? 'Se registró el punto exitosamente' : isError ? 'Hubo un error al intentar registrar el punto' : 'Error desconocido'}
                     </Alert>
                 }
             </DialogContent>
@@ -245,7 +303,7 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
                     :
                     <>
                         <Button variant='contained' disabled={createButtonDisable} onClick={handleSubmit} sx={{ borderRadius: '8px', textTransform: 'none' }}>
-                            Crear Riesgo
+                            Registrar punto
                         </Button>
                         <Button variant='outlined' color='error' onClick={handleClose} sx={{ borderRadius: '8px', textTransform: 'none' }}>
                             Cancelar

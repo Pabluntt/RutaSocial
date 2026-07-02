@@ -9,6 +9,7 @@ export interface TRiskBackend {
     Status : RiskStatus
     date_register : string 
     description : string
+    icon ?: string
 }
 
 
@@ -27,6 +28,7 @@ export function MapRiskFromBackend( data : Partial<TRiskBackend> ) : Risk {
         coords : data.coords,
         description : data.description,
         status : data.Status,
+        icon : data.icon || 'ambiente',
         createdAt : data.date_register === undefined ? undefined : new Date(data.date_register)
     }
     Object.entries(risk).forEach(( entry ) => {
@@ -48,7 +50,8 @@ export function MapRiskToCreateRequest( data :
             description : data.description,
             author_id : data.authorID,
             Status : data.status,
-            coords : data.coords
+            coords : data.coords,
+            icon: data.icon || 'ambiente'
     }
 }
 

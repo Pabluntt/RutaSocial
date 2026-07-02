@@ -46,14 +46,15 @@ export default function MapEvents({setLocation, stateOnSelectLocationMap, stateD
     
     useMapEvents( {
         click(e: { latlng: { lat: number; lng: number } }) {
+            if(!onSelectLocationMap && !selectingAlojamiento) {
+                return
+            }
+
             setLocation({latitude: e.latlng.lat, longitude: e.latlng.lng})
             setOnSelectLocationMap(false)
             
             if(flag == 'risk') {
-                setOpenDialogRisk(false)
-                setTimeout(() => {
-                    setOpenDialogRisk(true)
-                }, 50)
+                setOpenDialogRisk(true)
             } else if(flag == 'attended') {
                 setOpenDialogAttended(false)
                 setTimeout(() => {

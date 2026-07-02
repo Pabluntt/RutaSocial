@@ -1,12 +1,12 @@
 import { SpeedDial, SpeedDialAction } from "@mui/material";
 import PersonPinCircleIcon from '@mui/icons-material/PersonPinCircle';
-import ReportIcon from '@mui/icons-material/Report';
+import AddLocationAltIcon from '@mui/icons-material/AddLocationAlt';
 import NavigationIcon from '@mui/icons-material/Navigation';
 import SpeedDialIcon from '@mui/material/SpeedDialIcon';
 
 const icons = [
     {icon : <PersonPinCircleIcon /> , name : 'Registrar Persona'},
-    {icon : <ReportIcon />, name: 'Reportar Riesgo'},
+    {icon : <AddLocationAltIcon />, name: 'Registrar punto de interés'},
     {icon : <NavigationIcon />, name: 'Resumen Ruta'} 
 ]
 
@@ -15,7 +15,7 @@ export interface SpeedDialogRouteProps {
     stateOpenDialogAttended : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateOpenDialogRisk : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateOpenDialogRoute : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
-    children : React.ReactNode
+    children ?: React.ReactNode
 } 
 
 export default function SpeedDialRoute({ stateOpen, stateOpenDialogAttended, stateOpenDialogRisk, stateOpenDialogRoute, children } : SpeedDialogRouteProps ) {

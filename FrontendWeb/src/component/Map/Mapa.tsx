@@ -12,6 +12,7 @@ import { Risk } from "../../api/models/Risk";
 import { es } from "date-fns/locale";
 import { RiskStatus } from "../../Enums/RiskStatus";
 import { getPeopleCount } from "../../utils/heatmapUtils";
+import { useDeleteRisk, useRisks } from "../../api/hooks/RiskHooks";
 import 'leaflet.heat'
 
 const redIcon = new L.Icon({
@@ -23,13 +24,54 @@ const redIcon = new L.Icon({
     shadowSize: [41, 41]
   });
 
+const createFlagIcon = () => L.divIcon({
+    className: '',
+    html: `<svg width="34" height="42" viewBox="0 0 34 42" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 3px 6px rgba(15,23,42,.45));">
+        <path d="M11 38V5" stroke="#1e3a8a" stroke-width="3" stroke-linecap="round"/>
+        <path d="M12 6h17l-4 7 4 7H12z" fill="#2563eb" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="11" cy="5" r="3" fill="#1e3a8a" stroke="white" stroke-width="1.5"/>
+    </svg>`,
+    iconSize: [34, 42],
+    iconAnchor: [11, 38],
+    popupAnchor: [5, -36],
+})
 
-const iconsMap = {
-    [RiskStatus.Severe]: new L.Icon({ iconUrl : 'warning-alert-severe.svg', iconSize: [30, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowAnchor: [41, 41]}),
-    [RiskStatus.Warning]: new L.Icon({ iconUrl : 'warning-alert-warning.svg', iconSize: [30, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowAnchor: [41, 41]}),
-    [RiskStatus.Completed]: new L.Icon({ iconUrl : 'warning-alert-completed.svg', iconSize: [41,61], iconAnchor: [12, 41], popupAnchor: [8, -34], shadowAnchor: [41, 41]}),
-    [RiskStatus.Environment]: new L.Icon({ iconUrl : 'warning-alert-enviroment.svg', iconSize: [30, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowAnchor: [41, 41]}),
-} satisfies Record<RiskStatus, L.Icon>;
+const createInfoIcon = () => L.divIcon({
+    className: '',
+    html: `<svg width="34" height="34" viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 3px 8px rgba(15,23,42,.35));">
+        <circle cx="17" cy="17" r="14" fill="#f97316" stroke="white" stroke-width="3"/>
+        <circle cx="17" cy="10" r="2" fill="white"/>
+        <path d="M17 15v9" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    </svg>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 30],
+    popupAnchor: [0, -30],
+})
+
+
+const environmentIcon = new L.Icon({ iconUrl : 'warning-alert-enviroment.svg', iconSize: [30, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowAnchor: [41, 41]})
+const flagIcon = createFlagIcon()
+const infoIcon = createInfoIcon()
+
+const statusMap: Record<RiskStatus, { icon: L.Icon | L.DivIcon; label: string; chipColor: 'error' | 'info' | 'warning' | 'success' }> = {
+    [RiskStatus.Environment]: { icon: environmentIcon, label: 'Riesgo', chipColor: 'error' },
+    [RiskStatus.Severe]: { icon: flagIcon, label: 'Punto de interés', chipColor: 'info' },
+    [RiskStatus.Warning]: { icon: infoIcon, label: 'Punto de aviso', chipColor: 'warning' },
+    [RiskStatus.Completed]: { icon: new L.Icon({ iconUrl : 'warning-alert-completed.svg', iconSize: [41,61], iconAnchor: [12, 41], popupAnchor: [8, -34], shadowAnchor: [41, 41]}), label: 'Completado', chipColor: 'success' },
+}
+
+const iconMap: Record<string, { icon: L.Icon | L.DivIcon; label: string; chipColor: 'error' | 'info' | 'warning' | 'success' }> = {
+    ambiente: statusMap[RiskStatus.Environment],
+    interes: { icon: flagIcon, label: 'Punto de interés', chipColor: 'info' },
+    atencion: { icon: infoIcon, label: 'Punto de aviso', chipColor: 'warning' },
+}
+
+const getRiskIconData = (risk: Risk) => {
+    if (risk.status === RiskStatus.Environment && risk.icon && risk.icon !== 'ambiente') {
+        return iconMap[risk.icon] || statusMap[RiskStatus.Environment]
+    }
+    return statusMap[risk.status] || iconMap[risk.icon] || statusMap[RiskStatus.Environment]
+}
 
 function HeatmapLayer({ helpPoints, showHeatmap }: { helpPoints: HelpPoint[], showHeatmap: boolean }) {
     const map = useMap();
@@ -111,6 +153,8 @@ export default function Mapa({ stateCurrentLocation, risks, helpPoints, children
 
     const [ currentLocation,  ] = stateCurrentLocation
     const [ mapTracedLineRoute, setMapTracedLineRoute ] = useState<Map<string, LatLngExpression[]>>(new Map<string, LatLngExpression[]>())
+    const deleteRisk = useDeleteRisk()
+    const { refetch: refetchRisks } = useRisks()
 
 
     useEffect(() => {
@@ -131,6 +175,14 @@ export default function Mapa({ stateCurrentLocation, risks, helpPoints, children
 
 
     const [ _, setRiskUpdate] = useRiskUpdateDialog()
+
+    const handleDeleteRisk = (riskId: string) => {
+        deleteRisk.mutate(riskId, {
+            onSuccess: () => {
+                refetchRisks()
+            },
+        })
+    }
     
     return (
         <>
@@ -219,19 +271,15 @@ export default function Mapa({ stateCurrentLocation, risks, helpPoints, children
                 ))}
 
                 {risks.map((risk, index) => (
-                    <Marker key={risk.id ?? index} icon={iconsMap[risk.status]} position={(risk.coords as L.LatLngExpression)}>
+                    <Marker key={risk.id ?? index} icon={getRiskIconData(risk).icon} position={(risk.coords as L.LatLngExpression)}>
                         <Popup>
                             <Paper elevation={0} sx={{ minWidth: 200, p: 1 }}>
                                 <div className="flex flex-col gap-2">
                                     <div className="flex items-center gap-2">
                                         <Chip 
-                                            label={risk.status} 
+                                            label={getRiskIconData(risk).label}
                                             size="small" 
-                                            color={
-                                                risk.status === RiskStatus.Severe ? 'error' :
-                                                risk.status === RiskStatus.Warning ? 'warning' :
-                                                risk.status === RiskStatus.Completed ? 'success' : 'info'
-                                            }
+                                            color={getRiskIconData(risk).chipColor}
                                             variant="outlined"
                                             sx={{ fontWeight: 600, fontSize: 11 }}
                                         />
@@ -241,14 +289,26 @@ export default function Mapa({ stateCurrentLocation, risks, helpPoints, children
                                     <div className="flex flex-col gap-1 text-xs text-gray-500">
                                         <span>Última modificación: {format(new Date(risk.createdAt), 'dd-MM-yyyy')}</span>
                                     </div>
-                                    <Button 
-                                        variant="contained" 
-                                        size="small"
-                                        sx={{ alignSelf: 'flex-start', textTransform: 'none' }}
-                                        onClick={() => { setRiskUpdate(risk); }}
-                                    >
-                                        Editar
-                                    </Button>
+                                    <div className="flex flex-wrap gap-2">
+                                        <Button 
+                                            variant="contained" 
+                                            size="small"
+                                            sx={{ textTransform: 'none' }}
+                                            onClick={() => { setRiskUpdate(risk); }}
+                                        >
+                                            Editar
+                                        </Button>
+                                        <Button
+                                            variant="outlined"
+                                            color="error"
+                                            size="small"
+                                            disabled={deleteRisk.isPending}
+                                            sx={{ textTransform: 'none' }}
+                                            onClick={() => { handleDeleteRisk(risk.id); }}
+                                        >
+                                            Eliminar
+                                        </Button>
+                                    </div>
                                 </div>
                             </Paper>
                         </Popup>

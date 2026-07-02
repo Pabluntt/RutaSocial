@@ -4,11 +4,9 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import ComboBox from '../Button/ComboBox';
 import CloseDialogButton from '../Button/CloseDialogButton';
 import { useRiskUpdateDialog } from '../../context/RiskUpdateContext';
 import InputDescription from '../Input/InputDescription';
-import { RiskStatus } from '../../Enums/RiskStatus';
 import { useRisks, useUpdateRisk } from '../../api/hooks/RiskHooks';
 import { useEffect } from 'react';
 import { Alert, CircularProgress, useTheme, useMediaQuery } from '@mui/material';
@@ -23,7 +21,6 @@ const BootstrapDialog = styled(Dialog)(({ theme }) => ({
     padding: theme.spacing(1),
   },
 }));
-
 
 export default function DialogUpdateRisk() {
 
@@ -72,9 +69,9 @@ export default function DialogUpdateRisk() {
         >
             <DialogTitle className='m-0 p-2' id="risk-update-titulo">
                 {
-                    isIdle ? 'Modificar Riesgo' :
+                    isIdle ? 'Modificar punto' :
                     isPending ? 'Cargando...' :
-                    isSuccess ? 'Riesgo modificado' :
+                    isSuccess ? 'Punto modificado' :
                     isError ? `Ha ocurrido un error` :
                     'Error desconocido'
                 }
@@ -92,7 +89,6 @@ export default function DialogUpdateRisk() {
                             variant='standard'      
                             label='Descripción'      
                         />
-                        <ComboBox label={'Estado'} value={risk.status} options={Object.values(RiskStatus)} onChange={(e, v) => {setRisk({...risk, status : v as RiskStatus})}}/>
                     </div>
                     :
                     isPending ? 
@@ -101,7 +97,7 @@ export default function DialogUpdateRisk() {
                     </div>           
                     :
                     <Alert sx={{ mt: 2, width: '100%', minHeight: '80px', display: 'flex', alignItems: 'center', fontSize: '1rem' }} variant='standard' severity={ isSuccess ? 'success' : isError ? 'error' : 'info'}>
-                            {isSuccess ? 'Se modifico el riesgo exitosamente' : isError ? `Hubo un error al intentar modificar el riesgo: ${(error as any).error}` : 'Error desconocido'}
+                            {isSuccess ? 'Se modificó el punto exitosamente' : isError ? `Hubo un error al intentar modificar el punto: ${(error as any).error}` : 'Error desconocido'}
                     </Alert>        
                 }
             </DialogContent>

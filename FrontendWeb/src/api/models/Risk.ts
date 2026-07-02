@@ -8,5 +8,6 @@ export interface Risk {
     coords : number[]
     createdAt : Date
     status : RiskStatus
+    icon : string
 }
 
