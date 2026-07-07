@@ -98,21 +98,24 @@ func (u *userRepository) GetUsersByIDs(ctx context.Context, ids []string) ([]dom
 
 // GetPublicInfoByID obtiene información pública de un usuario por su ID.
 // Recibe el ID como string, lo convierte a ObjectID y busca en la colección.
+// Si el usuario no existe o el ID es inválido, retorna "Usuario Eliminado" en lugar de error
+// para que las rutas y eventos que referencian a usuarios eliminados sigan funcionando.
 func (u *userRepository) GetPublicInfoByID(ctx context.Context, id string) (map[string]string, error) {
 	var user domain.Usuario
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	objID, err := bson.ObjectIDFromHex(id)
 	if err != nil {
-		return map[string]string{"name": ""}, err
+		return map[string]string{"name": "Usuario Eliminado", "institutionID": "", "phone": ""}, nil
 	}
 
 	err = u.UserCollection.FindOne(ctx, bson.M{"_id": objID}).Decode(&user)
 	if err != nil {
-		if err != mongo.ErrNoDocuments {
-			logRepositoryError(ctx, "user", "get_public_info.find_one", err, "collection", "usuarios", "user_id", id)
+		if err == mongo.ErrNoDocuments {
+			return map[string]string{"name": "Usuario Eliminado", "institutionID": "", "phone": ""}, nil
 		}
-		return map[string]string{"name": ""}, err
+		logRepositoryError(ctx, "user", "get_public_info.find_one", err, "collection", "usuarios", "user_id", id)
+		return map[string]string{"name": "Usuario Eliminado", "institutionID": "", "phone": ""}, nil
 	}
 	return map[string]string{"name": user.Name, "institutionID": user.InstitutionID.Hex(), "phone": user.Phone}, nil
 }

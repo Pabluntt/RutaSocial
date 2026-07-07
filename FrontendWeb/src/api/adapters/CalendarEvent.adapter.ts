@@ -47,13 +47,16 @@ export async function MapCalendarEventFromBackend(
             user = await userPromise
         }
 
-        let institutionPromise = cache?.institutions?.get(user.institutionID)
-        if (!institutionPromise) {
-            institutionPromise = InstitutionService.FindByID(user.institutionID)
-            cache?.institutions?.set(user.institutionID, institutionPromise)
-        }
-        colorInstitution = (await institutionPromise).color
         authorName = user.name
+
+        if (user.institutionID) {
+            let institutionPromise = cache?.institutions?.get(user.institutionID)
+            if (!institutionPromise) {
+                institutionPromise = InstitutionService.FindByID(user.institutionID)
+                cache?.institutions?.set(user.institutionID, institutionPromise)
+            }
+            colorInstitution = (await institutionPromise).color
+        }
     } catch(error) {
         console.error('No se pudo obtener autor o institución del evento', error)
     }

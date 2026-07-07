@@ -135,6 +135,8 @@ func (r routeUseCase) CreateRoute(c *gin.Context) {
 	user, err := r.userRepository.GetUserByID(c.Request.Context(), userID)
 	if err == nil {
 		route.InstitutionID = user.InstitutionID
+	} else {
+		logUseCaseWarn(c, "route.create.get_user", http.StatusInternalServerError, err, "user_id", userID)
 	}
 
 	err = r.routeRepository.CreateRoute(c.Request.Context(), &route)

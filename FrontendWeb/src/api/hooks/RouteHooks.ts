@@ -24,7 +24,7 @@ export function useRoute( routeId : string, enabled ?: boolean ) {
     return useQuery({
         queryKey : ['route', routeId],
         queryFn : () => (RouteService.FindRouteByID(routeId)),
-        enabled
+        enabled: !!routeId && enabled !== false,
     })
 }
 
@@ -38,7 +38,7 @@ export function useRoutesByUser(userId ?: string, enabled ?: boolean) {
     return useQuery({
         queryKey : ['routeByUserID', userId],
         queryFn : () => (RouteService.GetRoutesByUserId(userId!)),
-        enabled  
+        enabled: !!userId && enabled !== false,
     })
 }
 
@@ -46,7 +46,7 @@ export function useRoutesByInstitution(institutionId?: string, enabled?: boolean
     return useQuery({
         queryKey: ['routesByInstitution', institutionId],
         queryFn: () => RouteService.FindByInstitutionId(institutionId!),
-        enabled: !!institutionId && enabled !== false,
+        enabled: !!institutionId && !!enabled,
     })
 }
 

@@ -26,7 +26,7 @@ export default function DialogFinishRoute({ open, setOpen } : { open : boolean, 
     const theme = useTheme();
     const fullScreen = !useMediaQuery(theme.breakpoints.up('sm'));
     const { setRouteStatus, routeId, setRouteId, accessToken } = useSessionStore()
-    const dataRoute = useRoute( routeId!).data
+    const dataRoute = useRoute( routeId ?? '', !!routeId).data
     const { mutate, isSuccess, isError, isIdle, isPending } = useFinishRoute()
 
     useEffect(() => {

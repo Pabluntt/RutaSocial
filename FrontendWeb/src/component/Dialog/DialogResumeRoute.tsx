@@ -39,7 +39,7 @@ export default function DialogResumeRoute({ stateOpen } : DialogResumeRiskProps)
     const [ copySuccess, setCopySuccess ] = useState<undefined | boolean>()
     const { showSnackbar } = useAppSnackbar()
 
-    const { isSuccess, isError, isPending, data } = useRoute( routeId!, true)
+    const { isSuccess, isError, isPending, data } = useRoute( routeId ?? '', !!routeId)
 
     const handleClose = () => {
         setCopySuccess(false)

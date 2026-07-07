@@ -46,9 +46,11 @@ export default function RouteHistory() {
     const [ onlyInstitution, setOnlyInstitution ] = useState(false)
     const [ routes, setRoutes ] = useState<Route[]>([])
 
-    const userID = useProfile().data?.id
-    const institutionID = useProfile().data?.institutionID
-    const useQueryRouteAll = useRoutes()
+    const { accessToken } = useSessionStore()
+    const profileQuery = useProfile(!!accessToken)
+    const userID = profileQuery.data?.id
+    const institutionID = profileQuery.data?.institutionID
+    const useQueryRouteAll = useRoutes(!!accessToken)
     const useQueryRouteByUserID = useRoutesByUser(userID)
     const useQueryRouteByInstitution = useRoutesByInstitution(institutionID, onlyInstitution)
     const useQueryHP= useHelpPoints()
@@ -99,9 +101,7 @@ export default function RouteHistory() {
         } else {
             data = useQueryRouteAll.data
         }
-        if(data) {
-            setRoutes(data.sort(compareSort))
-        }
+        setRoutes((data ?? []).sort(compareSort))
     }, [onlyUser, onlyInstitution, useQueryRouteAll.data, useQueryRouteByUserID.data, useQueryRouteByInstitution.data])
 
 

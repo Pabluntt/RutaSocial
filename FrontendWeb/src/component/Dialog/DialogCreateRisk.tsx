@@ -186,7 +186,7 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
                     variant="outlined"
                     sx={{ fontWeight: 600, fontSize: 11 }}
                 />
-                    <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
+                    <Typography variant="body1" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
                     { 
                         isIdle ? 'Registrar punto de interés' :
                         isPending ? 'Cargando...' :

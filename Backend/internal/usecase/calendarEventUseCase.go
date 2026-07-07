@@ -36,14 +36,16 @@ type CalendarEventUseCase interface {
 type calendarEventUseCase struct {
 	calendarRepository repository.CalendarEventRepository
 	routeRepository    repository.RouteRepository
+	userRepository     repository.UserRepository
 }
 
 // NewCalendarEventUseCase crea una nueva instancia de calendarEventUseCase.
 // Recibe un repositorio de eventos de calendario y retorna una instancia de CalendarEventUseCase.
-func NewCalendarEventUseCase(calendarRepository repository.CalendarEventRepository, routeRepository repository.RouteRepository) CalendarEventUseCase {
+func NewCalendarEventUseCase(calendarRepository repository.CalendarEventRepository, routeRepository repository.RouteRepository, userRepository repository.UserRepository) CalendarEventUseCase {
 	return &calendarEventUseCase{
 		calendarRepository: calendarRepository,
 		routeRepository:    routeRepository,
+		userRepository:     userRepository,
 	}
 }
 
@@ -145,6 +147,11 @@ func (ce calendarEventUseCase) CreateCalendarEvent(c *gin.Context) {
 			Description: event.Description,
 			RouteLeader: userObjID,
 			Team:        []bson.ObjectID{userObjID},
+		}
+		if u, err := ce.userRepository.GetUserByID(c.Request.Context(), userID); err == nil {
+			route.InstitutionID = u.InstitutionID
+		} else {
+			logUseCaseWarn(c, "calendar_event.create_route.get_user", http.StatusInternalServerError, err, "user_id", userID)
 		}
 		if err := ce.routeRepository.CreateScheduledRoute(c.Request.Context(), &route); err != nil {
 			if errors.Is(err, repository.ErrRouteTitleAlreadyExists) {

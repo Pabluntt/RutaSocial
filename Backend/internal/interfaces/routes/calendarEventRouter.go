@@ -15,7 +15,8 @@ import (
 func SetupCalendarEventRouter(r *gin.Engine) {
 	calendarEventRepo := repository.NewCalendarEventRepository(database.Client.Database(config.DBName).Collection("calendar_events"))
 	routeRepo := repository.NewRouteRepository(database.Client.Database(config.DBName).Collection("route"), database.Client.Database(config.DBName).Collection("helping_points"), database.Client.Database(config.DBName).Collection("personas"))
-	calendarEventUseCase := usecase.NewCalendarEventUseCase(calendarEventRepo, routeRepo)
+	userRepo := repository.NewUserRepository(database.Client.Database(config.DBName).Collection("usuarios"))
+	calendarEventUseCase := usecase.NewCalendarEventUseCase(calendarEventRepo, routeRepo, userRepo)
 	calendarEventController := controller.NewCalendarEventController(calendarEventUseCase)
 
 	protected := r.Group("/calendar-event")
