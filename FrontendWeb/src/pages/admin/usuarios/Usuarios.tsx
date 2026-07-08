@@ -91,7 +91,7 @@ export default function Usuarios() {
                     <div className="flex flex-wrap items-start gap-3 sm:gap-5">
                         <Paper
                             component="form"
-                            className="px-0.5 py-1 flex min-w-[min(100%,280px)] flex-1 items-center"
+                            className="px-0.5 py-1 flex w-full min-w-[min(100%,280px)] max-w-3xl flex-1 items-center lg:flex-none lg:basis-[720px]"
                         >
                             <InputBase
                                 fullWidth
@@ -104,14 +104,14 @@ export default function Usuarios() {
                                 <SearchIcon />
                             </IconButton>
                         </Paper>
-                        <div className="flex flex-shrink-0 flex-wrap gap-2">
+                        <div className="flex flex-shrink-0 flex-wrap gap-2 sm:gap-3">
                             {role === Role.admin && (
-                            <Button size="small" variant="contained" onClick={()=>{setOpen(true)}} sx={{ whiteSpace: 'nowrap' }}>
+                            <Button size="medium" variant="contained" onClick={()=>{setOpen(true)}} sx={{ minHeight: 44, whiteSpace: 'nowrap' }}>
                                 Agregar Usuario
                             </Button>
                         )}
                             {role === Role.admin && (
-                                <Button size="small" variant="contained" onClick={() => {setOpenManageInstitutions(true)}} sx={{ whiteSpace: 'nowrap' }}>
+                                <Button size="medium" variant="contained" onClick={() => {setOpenManageInstitutions(true)}} sx={{ minHeight: 44, whiteSpace: 'nowrap' }}>
                                     Editar instituciones
                                 </Button>
                             )}

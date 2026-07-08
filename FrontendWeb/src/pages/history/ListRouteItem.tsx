@@ -7,7 +7,6 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import { useHelpPointUpdateDialog } from "../../context/HelpPointUpdateContext";
 import { HelpPoint } from "../../api/models/HelpPoint";
 import { Route } from "../../api/models/Route";
-import { useHelpPoints } from "../../api/hooks/HelpPointHooks";
 import { useProfile } from "../../api/hooks/UserHooks";
 import { useAuth } from "../../context/AuthContext";
 import { Role } from "../../Enums/Role";
@@ -32,7 +31,6 @@ export default function ListRouteItem({ route, stateHelpPoints, stateShowLocatio
     const [ helpPoints, setHelpPoints ] = stateHelpPoints
     const [ hpRoutes, setHPRoutes ] = useState<HelpPoint[]>([])
     const [ _, setHelpPointUpdate ] = useHelpPointUpdateDialog()
-    const hpQ = useHelpPoints()
 
 
     const [ , setLocation ] = stateLocation
@@ -53,30 +51,32 @@ export default function ListRouteItem({ route, stateHelpPoints, stateShowLocatio
     }
 
     useEffect(() => {
-        setHPRoutes(helpPoints.reduce<HelpPoint[]>((acc: HelpPoint[], hp) => {
-            if(hp.routeID == route.id) {
-                acc.push(hp)
-            }
-            return acc
-        }, []))
-    }, [])
+        setHPRoutes(helpPoints.filter((hp) => hp.routeID === route.id))
+    }, [helpPoints, route.id])
 
     useEffect(() => {
-        setHelpPoints(prev => prev.map((hp) => {
-            if( route.id === hp.routeID) {
-                hp.disabled = !open || !openRoot
-            }
-            return hp
-        }))
+        const disabled = !open || !openRoot
+        setHelpPoints(prev => {
+            let changed = false
+            const next = prev.map((hp) => {
+                if(route.id !== hp.routeID || hp.disabled === disabled) return hp
+                changed = true
+                return { ...hp, disabled }
+            })
+            return changed ? next : prev
+        })
         return () => {
-            setHelpPoints(prev => prev.map((hp) => {
-                if(route.id === hp.routeID) {
-                    hp.disabled = true
-                }
-                return hp
-            }))
+            setHelpPoints(prev => {
+                let changed = false
+                const next = prev.map((hp) => {
+                    if(route.id !== hp.routeID || hp.disabled) return hp
+                    changed = true
+                    return { ...hp, disabled: true }
+                })
+                return changed ? next : prev
+            })
         }
-    }, [open, openRoot])
+    }, [helpPoints.length, open, openRoot, route.id, setHelpPoints])
 
 
     const handleDownload = async (e: React.MouseEvent) => {

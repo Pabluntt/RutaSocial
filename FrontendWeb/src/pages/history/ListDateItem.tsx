@@ -45,7 +45,7 @@ const formatCompactDate = (date: string) => {
 export default function ListDateItem({ date, defaultOpen = false, routes, stateHelpPoints, stateLocation, stateShowLocation, onlyUser, compact = false, onClick, ...props } : ListRouteItemProps) {
     
     const [ open, setOpen ] = useState(defaultOpen)
-    const [ helpPoints , setHelpPoints ] = stateHelpPoints
+    const [ , setHelpPoints ] = stateHelpPoints
 
     const [ selectedIndex, setSelectedIndex ] = useState(0)
     const handleClickSelected = (_ : React.MouseEvent<HTMLDivElement>, index : number) => {
@@ -60,13 +60,9 @@ export default function ListDateItem({ date, defaultOpen = false, routes, stateH
     }
 
     useEffect(() => {
-        setHelpPoints(prev => prev.map((hp) => {
-            if(routes.findIndex((r) => r.id === hp.routeID) !== -1) {
-                hp.disabled = !open
-            }
-            return hp
-        }))
-    }, [])
+        const routeIds = new Set(routes.map((route) => route.id))
+        setHelpPoints(prev => prev.map((hp) => routeIds.has(hp.routeID) ? { ...hp, disabled: !open } : hp))
+    }, [open, routes, setHelpPoints])
 
     return ( 
         <>

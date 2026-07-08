@@ -4,7 +4,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
-import { Alert, CircularProgress, TextField, Typography, Autocomplete, useTheme, useMediaQuery } from '@mui/material';
+import { Alert, CircularProgress, TextField, Typography, useTheme, useMediaQuery } from '@mui/material';
 import InputDescription from '../Input/InputDescription';
 import CloseDialogButton from '../Button/CloseDialogButton';
 import useSessionStore from '../../stores/useSessionStore';
@@ -15,7 +15,6 @@ import { timeSlots } from '../../utils/calendar';
 import { CalendarEvent } from '../../api/models/Calendar';
 import { useCalendarEvents, useCreateCalendarEvent } from '../../api/hooks/CalendarEventHooks';
 import { useProfile } from '../../api/hooks/UserHooks';
-import { useRoutesByUser } from '../../api/hooks/RouteHooks';
 import { useAppSnackbar } from '../../context/SnackbarContext';
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
@@ -44,7 +43,6 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
     const [ startTime, setStartTime] = useState<string>();
     const [ endTime, setEndTime] = useState<string>();
     const [ listEndTime, setListEndTime] = useState<string[]>([]);
-    const [ selectedRouteId, setSelectedRouteId ] = useState<string | undefined>();
     const [ formCalendarEvent, setFormCalendarEvent ] = useState<Omit<CalendarEvent, 'id' | 'authorName' | 'colorInstitution'>>({
         title : '',
         description : '',
@@ -66,9 +64,6 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
     const isValidCalendarText = (value: string) => /^[a-zA-Z0-9 \-_.,@:áéíóúÁÉÍÓÚñÑ()!?¿¡]+$/.test(value.trim())
     const normalizeCalendarText = (value: string) => value.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim()
 
-    // Obtener rutas del usuario actual
-    const { data: userRoutes, isError: routesError, isLoading: routesLoading } = useRoutesByUser(authorID, open && !!authorID)
-
     const getEndTime = (indexStart : number) => (
         timeSlots.filter((_, index) => ( index > indexStart ))
     )
@@ -78,7 +73,6 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
         setStartTime(undefined)
         setEndTime(undefined)
         setListEndTime([])
-        setSelectedRouteId(undefined)
         setFormCalendarEvent({title : '', description : '', dateStart : new Date(), authorID : '', timeEnd : '' , timeStart : '', routeID: undefined})
         setFormErrors({errorDateStart : '', errorDescription : '', errorTitle : '', errorStartTime : '', errorEndTime : ''})
         reset()
@@ -164,7 +158,7 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
             authorID: authorID!,
             timeStart: startTime!,
             timeEnd: endTime!,
-            routeID: selectedRouteId
+            routeID: undefined
         }
         mutate(newEvent)
     }
@@ -295,34 +289,6 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
                                 {formErrors.errorStartTime ? formErrors.errorStartTime : formErrors.errorEndTime}
                             </Typography>
                         </div>
-                        <div className="flex flex-col gap-2">
-                            <label htmlFor="ruta" className="text-sm font-medium text-gray-700">
-                                Ruta (Opcional)
-                            </label>
-                            <Autocomplete
-                                size='small'
-                                disabled={routesLoading || routesError}
-                                options={userRoutes?.map(r => ({ id: r.id, title: r.title })) ?? []}
-                                getOptionLabel={(option) => typeof option === 'string' ? option : (option.title || '')}
-                                isOptionEqualToValue={(option, value) => value ? option.id === value.id : false}
-                                value={selectedRouteId ? userRoutes?.find(r => r.id === selectedRouteId) ? { id: selectedRouteId, title: userRoutes.find(r => r.id === selectedRouteId)?.title || '' } : null : null}
-                                onChange={(e, value) => {
-                                    if(value) {
-                                        setSelectedRouteId(value.id)
-                                        setFormCalendarEvent(prev => ({...prev, routeID: value.id}))
-                                    } else {
-                                        setSelectedRouteId(undefined)
-                                        setFormCalendarEvent(prev => ({...prev, routeID: undefined}))
-                                    }
-                                }}
-                                renderInput={(params) => 
-                                    <TextField {...params} variant='standard' label='Selecciona una ruta' />
-                                }
-                            />
-                            <Typography variant='caption' sx={{ color: 'text.secondary' }}>
-                                {routesError ? 'No se pudieron cargar tus rutas. Puedes crear el evento sin vincular una ruta.' : routesLoading ? 'Cargando rutas...' : 'Selecciona una ruta para poder iniciarla desde el calendario'}
-                            </Typography>
-                        </div>
                     </div>
                     :
                     isPending ? 
@@ -331,7 +297,7 @@ export default function DialogCreateEventCalendar({ stateOpen, stateSelectInfo }
                     </div>    
                     :
                     <Alert sx={{ mt: 2, width: '100%', minHeight: '80px', display: 'flex', alignItems: 'center', fontSize: '1rem' }} severity={ isSuccess ? 'success' : isError ? 'error' : 'info'}>
-                            {isSuccess ? 'Evento creado correctamente' : isError ? 'No se pudo crear el evento. Revisa título, descripción, horario y ruta seleccionada.' : 'Error desconocido'}
+                            {isSuccess ? 'Evento creado correctamente' : isError ? 'No se pudo crear el evento. Revisa título, descripción y horario.' : 'Error desconocido'}
                     </Alert>
                 }
             </DialogContent>
