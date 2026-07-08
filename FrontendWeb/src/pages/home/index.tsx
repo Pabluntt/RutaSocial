@@ -1,9 +1,8 @@
 import { useEffect, useState, useMemo, type Dispatch, type SetStateAction } from "react";
-import { format } from 'date-fns';
 import L from "leaflet";
 import DrawerList from "../../component/DrawerList";
 import CustomDrawer from "../../component/CustomDrawer";
-import { Backdrop, Paper, Typography, useMediaQuery, useTheme, Fab, Tooltip, Switch, FormControlLabel, ToggleButton, ToggleButtonGroup, Divider } from "@mui/material";
+import { Backdrop, Paper, Typography, useMediaQuery, useTheme, Fab, Tooltip } from "@mui/material";
 import MensajesFijados from "../../component/MensajesFijados";
 import useSessionStore from "../../stores/useSessionStore";
 import ButtonFinalizarRuta from "../../component/Button/ButtonFinalizarRuta";
@@ -34,7 +33,6 @@ import { useHelpPoints } from "../../api/hooks/HelpPointHooks";
 import { useAlojamientos, useCreateAlojamiento, useUpdateAlojamiento } from "../../api/hooks/AlojamientoHooks";
 import { useProfile } from "../../api/hooks/UserHooks";
 import type { AlojamientoData } from "../../component/Dialog/DialogCreateAlojamiento";
-import { filterHelpPointsByTimeRange, HeatmapTimeRange } from "../../utils/heatmapUtils";
 
 const houseIcon = L.divIcon({
     className: '',
@@ -146,16 +144,6 @@ export default function Home() {
     const updateAlojamientoMut = useUpdateAlojamiento()
     const profileQuery = useProfile()
 
-    const [ showHeatmap, setShowHeatmap ] = useState(false)
-    const [ heatmapTimeRange, setHeatmapTimeRange ] = useState<HeatmapTimeRange>('none')
-    const [ heatmapCustomStart, setHeatmapCustomStart ] = useState<Date | null>(null)
-    const [ heatmapCustomEnd, setHeatmapCustomEnd ] = useState<Date | null>(null)
-
-    const [ showSavedPoints, setShowSavedPoints ] = useState(false)
-    const [ savedPointsTimeRange, setSavedPointsTimeRange ] = useState<HeatmapTimeRange>('none')
-    const [ savedPointsCustomStart, setSavedPointsCustomStart ] = useState<Date | null>(null)
-    const [ savedPointsCustomEnd, setSavedPointsCustomEnd ] = useState<Date | null>(null)
-
     const resetLocationSelection = () => {
         setLocation({latitude : 0, longitude : 0})
         setLocationMethod(LocationMethod.None)
@@ -184,28 +172,12 @@ export default function Home() {
         setOpenDialogRisk(nextOpen)
     }
 
-    const heatmapFilteredPoints = useMemo(() =>
-        filterHelpPointsByTimeRange(helpPoints, heatmapTimeRange, heatmapCustomStart, heatmapCustomEnd),
-        [helpPoints, heatmapTimeRange, heatmapCustomStart, heatmapCustomEnd]
-    )
-
-    const savedPointsFiltered = useMemo(() =>
-        filterHelpPointsByTimeRange(helpPoints, savedPointsTimeRange, savedPointsCustomStart, savedPointsCustomEnd),
-        [helpPoints, savedPointsTimeRange, savedPointsCustomStart, savedPointsCustomEnd]
-    )
-
     const markerHelpPoints = useMemo(() => {
         if (routeStatus && routeId) {
             return helpPoints.filter(hp => hp.routeID === routeId)
         }
         return []
     }, [helpPoints, routeStatus, routeId])
-
-    const displayHelpPoints = useMemo(() => {
-        if (showHeatmap) return heatmapFilteredPoints
-        if (showSavedPoints) return savedPointsFiltered
-        return markerHelpPoints
-    }, [showHeatmap, heatmapFilteredPoints, showSavedPoints, savedPointsFiltered, markerHelpPoints])
 
     const alojamientos: AlojamientoData[] = alojamientosQuery.data
         ? alojamientosQuery.data.map((a: { _id: string; coords: number[]; name: string; cupos: number }) => ({
@@ -260,9 +232,8 @@ export default function Home() {
             <div className={`relative flex grow flex-col justify-between overflow-y-auto`}>
                 <Mapa
                     stateCurrentLocation={[currentLocation, setCurrentLocation]}
-                    helpPoints={displayHelpPoints}
+                    helpPoints={markerHelpPoints}
                     risks={risks}
-                    showHeatmap={showHeatmap}
                 >
                     {alojamientos.map((a, i) => (
                         <Marker key={a.id ?? i} icon={i % 3 === 0 ? churchIcon : houseIcon} position={[a.coords[0], a.coords[1]]}>
@@ -298,114 +269,6 @@ export default function Home() {
                     />
                 </Mapa>
                 <ButtonCurrentLocation stateShowLocation={[ showLocation, setShowLocation ]} stateCurrentLocation={[ currentLocation, setCurrentLocation ]} stateErrorGeolocation={[errorGeolocation, setErrorGeolocation]}/>
-
-                <Paper
-                    elevation={4}
-                    sx={{
-                        position: 'absolute',
-                        top: computerDevice ? (routeStatus ? 124 : 92) : (routeStatus ? 92 : 84),
-                        right: computerDevice ? 16 : 8,
-                        zIndex: 1000,
-                        p: computerDevice ? 1.5 : 1,
-                        borderRadius: 2,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: computerDevice ? 1 : 0.5,
-                        bgcolor: 'rgba(255,255,255,0.95)',
-                        maxWidth: computerDevice ? 'none' : 'calc(100vw - 16px)',
-                    }}
-                >
-                    <FormControlLabel
-                        control={<Switch size="small" checked={showHeatmap} onChange={(e) => {
-                            setShowHeatmap(e.target.checked)
-                            if (!e.target.checked) setHeatmapTimeRange('none')
-                        }} />}
-                        label={<Typography variant="body2" sx={{ fontSize: 13, fontWeight: 500 }}>Mapa de calor</Typography>}
-                        labelPlacement="start"
-                        sx={{ m: 0 }}
-                    />
-                    {showHeatmap && (
-                        <div className="flex flex-col gap-1.5">
-                            <ToggleButtonGroup
-                                value={heatmapTimeRange}
-                                exclusive
-                                onChange={(_, value) => {
-                                    if (value !== null) setHeatmapTimeRange(value)
-                                }}
-                                size="small"
-                                fullWidth
-                            >
-                                <ToggleButton value="1w" sx={{ textTransform: 'none', fontSize: computerDevice ? 11 : 10, py: 0.3, px: computerDevice ? 1 : 0.5 }}>Semana</ToggleButton>
-                                <ToggleButton value="1m" sx={{ textTransform: 'none', fontSize: computerDevice ? 11 : 10, py: 0.3, px: computerDevice ? 1 : 0.5 }}>Mes</ToggleButton>
-                                <ToggleButton value="1y" sx={{ textTransform: 'none', fontSize: computerDevice ? 11 : 10, py: 0.3, px: computerDevice ? 1 : 0.5 }}>Año</ToggleButton>
-                                <ToggleButton value="custom" sx={{ textTransform: 'none', fontSize: computerDevice ? 11 : 10, py: 0.3, px: computerDevice ? 1 : 0.5 }}>Personalizado</ToggleButton>
-                            </ToggleButtonGroup>
-                            {heatmapTimeRange === 'custom' && (
-                                <div className="flex gap-1 items-center">
-                                    <input
-                                        type="date"
-                                        className="w-full rounded border border-gray-300 px-1.5 py-1 text-xs"
-                                        value={heatmapCustomStart ? format(heatmapCustomStart, 'yyyy-MM-dd') : ''}
-                                        onChange={(e) => { setHeatmapCustomStart(e.target.value ? new Date(e.target.value + 'T00:00:00') : null); }}
-                                    />
-                                    <Typography variant="caption" sx={{ fontSize: 10 }}>a</Typography>
-                                    <input
-                                        type="date"
-                                        className="w-full rounded border border-gray-300 px-1.5 py-1 text-xs"
-                                        value={heatmapCustomEnd ? format(heatmapCustomEnd, 'yyyy-MM-dd') : ''}
-                                        onChange={(e) => { setHeatmapCustomEnd(e.target.value ? new Date(e.target.value + 'T00:00:00') : null); }}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    )}
-                    <Divider sx={{ my: 0.5 }} />
-                    <FormControlLabel
-                        control={<Switch size="small" checked={showSavedPoints} onChange={(e) => {
-                            setShowSavedPoints(e.target.checked)
-                            if (!e.target.checked) setSavedPointsTimeRange('none')
-                            if (e.target.checked) setShowHeatmap(false)
-                        }} />}
-                        label={<Typography variant="body2" sx={{ fontSize: 13, fontWeight: 500 }}>Puntos guardados</Typography>}
-                        labelPlacement="start"
-                        sx={{ m: 0 }}
-                    />
-                    {showSavedPoints && (
-                        <div className="flex flex-col gap-1.5">
-                            <ToggleButtonGroup
-                                value={savedPointsTimeRange}
-                                exclusive
-                                onChange={(_, value) => {
-                                    if (value !== null) setSavedPointsTimeRange(value)
-                                }}
-                                size="small"
-                                fullWidth
-                            >
-                                <ToggleButton value="1w" sx={{ textTransform: 'none', fontSize: computerDevice ? 11 : 10, py: 0.3, px: computerDevice ? 1 : 0.5 }}>Semana</ToggleButton>
-                                <ToggleButton value="1m" sx={{ textTransform: 'none', fontSize: computerDevice ? 11 : 10, py: 0.3, px: computerDevice ? 1 : 0.5 }}>Mes</ToggleButton>
-                                <ToggleButton value="1y" sx={{ textTransform: 'none', fontSize: computerDevice ? 11 : 10, py: 0.3, px: computerDevice ? 1 : 0.5 }}>Año</ToggleButton>
-                                <ToggleButton value="custom" sx={{ textTransform: 'none', fontSize: computerDevice ? 11 : 10, py: 0.3, px: computerDevice ? 1 : 0.5 }}>Personalizado</ToggleButton>
-                            </ToggleButtonGroup>
-                            {savedPointsTimeRange === 'custom' && (
-                                <div className="flex gap-1 items-center">
-                                    <input
-                                        type="date"
-                                        className="w-full rounded border border-gray-300 px-1.5 py-1 text-xs"
-                                        value={savedPointsCustomStart ? format(savedPointsCustomStart, 'yyyy-MM-dd') : ''}
-                                        onChange={(e) => { setSavedPointsCustomStart(e.target.value ? new Date(e.target.value + 'T00:00:00') : null); }}
-                                    />
-                                    <Typography variant="caption" sx={{ fontSize: 10 }}>a</Typography>
-                                    <input
-                                        type="date"
-                                        className="w-full rounded border border-gray-300 px-1.5 py-1 text-xs"
-                                        value={savedPointsCustomEnd ? format(savedPointsCustomEnd, 'yyyy-MM-dd') : ''}
-                                        onChange={(e) => { setSavedPointsCustomEnd(e.target.value ? new Date(e.target.value + 'T00:00:00') : null); }}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </Paper>
 
                 { !onSelectLocationMap ?
                     <>
