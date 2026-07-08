@@ -3,8 +3,8 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import { useEffect, useMemo, useState } from 'react'
-import { DateSelectArg, EventClickArg } from '@fullcalendar/core'
-import { IconButton, Popover, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material'
+import { DateSelectArg, EventClickArg, MoreLinkArg } from '@fullcalendar/core'
+import { Box, IconButton, Popover, Tooltip, Typography, useMediaQuery, useTheme } from '@mui/material'
 import esLocale from '@fullcalendar/core/locales/es';
 import { isSingleDaySelection } from '../utils/calendar'
 import DialogCreateEventCalendar from './Dialog/DialogCreateEventCalendar'
@@ -61,10 +61,14 @@ export default function Calendar() {
     const [routeInviteCode, setRouteInviteCode] = useState<string | undefined>(undefined)
     const [routeInviteCodeLoading, setRouteInviteCodeLoading] = useState(false)
     const [confirmDeleteEvent, setConfirmDeleteEvent] = useState<string | undefined>(undefined)
+    const [moreAnchorEl, setMoreAnchorEl] = useState<HTMLElement | null>(null)
+    const [moreDateTitle, setMoreDateTitle] = useState('')
+    const [moreEvents, setMoreEvents] = useState<{ id: string; title: string; color: string }[]>([])
     const theme = useTheme()
     const computerDevice = useMediaQuery(theme.breakpoints.up('sm'))
     const openPopover = Boolean(anchorEl)
     const id =  openPopover ? 'view-event-popover' : undefined
+    const openMorePopover = Boolean(moreAnchorEl)
     const { showSnackbar } = useAppSnackbar()
 
     const routesById = useMemo(() => new Map((routesQuery.data ?? []).map((route) => [route.id, route])), [routesQuery.data])
@@ -91,6 +95,12 @@ export default function Calendar() {
         setTimeout(() => {
             setEventClicked(undefined)
         }, 300)
+    }
+
+    const handleCloseMorePopover = () => {
+        setMoreAnchorEl(null)
+        setMoreEvents([])
+        setMoreDateTitle('')
     }
 
     useEffect(() => {
@@ -129,6 +139,7 @@ export default function Calendar() {
     }, [eventClicked?.routeID])
 
     const handleEventClick = (clickInfo : EventClickArg) => {
+        handleCloseMorePopover()
         setAnchorEl(clickInfo.el)
         if(isSuccess) {
             const index_event = data.findIndex((ev) => ( ev.id === clickInfo.event.id ))
@@ -136,6 +147,16 @@ export default function Calendar() {
                 setEventClicked(data[index_event])
             }
         }
+    }
+
+    const handleMoreEventClick = (eventId: string) => {
+        const event = data?.find((ev) => ev.id === eventId)
+        if(!event || !moreAnchorEl) return
+
+        const anchor = moreAnchorEl
+        handleCloseMorePopover()
+        setEventClicked(event)
+        setAnchorEl(anchor)
     }
 
     const handleCopyInviteCode = async () => {
@@ -258,7 +279,22 @@ export default function Calendar() {
                     height="auto" 
                     contentHeight="auto"
                     selectMirror={true}
-                    dayMaxEvents={(computerDevice ? true : 3)}
+                    dayMaxEvents={4}
+                    moreLinkClick={(arg: MoreLinkArg) => {
+                        const linkElement = arg.jsEvent.currentTarget as HTMLElement
+                        const dayDate = linkElement.closest('.fc-daygrid-day')?.getAttribute('data-date')
+                        const titleDate = dayDate ? new Date(`${dayDate}T00:00:00`) : arg.date
+
+                        setMoreAnchorEl(linkElement)
+                        setMoreDateTitle(format(titleDate, "d 'de' MMMM 'de' yyyy", { locale: es }))
+                        setMoreEvents(arg.hiddenSegs.map((seg) => ({
+                            id: seg.event.id,
+                            title: seg.event.title,
+                            color: seg.event.backgroundColor || '#3b82f6',
+                        })))
+
+                        return arg.view.type
+                    }}
                     unselectAuto
                     locale={esLocale}
                     events={data.map((event) => ({
@@ -418,6 +454,60 @@ export default function Calendar() {
                         </div>
                     }
                 </div>
+            </Popover>
+            <Popover
+                open={openMorePopover}
+                anchorEl={moreAnchorEl}
+                onClose={handleCloseMorePopover}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                marginThreshold={16}
+                slotProps={{
+                    paper: {
+                        elevation: 6,
+                        sx: {
+                            borderRadius: 2,
+                            mt: 0.5,
+                            width: 320,
+                            maxWidth: 'calc(100vw - 32px)',
+                            maxHeight: 300,
+                            overflowY: 'auto',
+                            p: 1.5,
+                        },
+                    },
+                }}
+            >
+                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1 }}>
+                    Más rutas del {moreDateTitle}
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                    {moreEvents.length > 0 ? moreEvents.map((event) => (
+                        <Box
+                            key={`${event.id}-${event.title}`}
+                            onClick={() => handleMoreEventClick(event.id)}
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                gap: 1,
+                                minWidth: 0,
+                                borderRadius: 1,
+                                cursor: 'pointer',
+                                px: 0.75,
+                                py: 0.5,
+                                '&:hover': { bgcolor: '#f3f4f6' },
+                            }}
+                        >
+                            <Box sx={{ width: 10, height: 10, mt: 0.55, borderRadius: '50%', bgcolor: isHexColor(event.color) ? event.color : '#3b82f6', flexShrink: 0 }} />
+                            <Typography variant="body2" sx={{ lineHeight: 1.25, overflowWrap: 'anywhere' }}>
+                                {event.title}
+                            </Typography>
+                        </Box>
+                    )) : (
+                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                            No hay más rutas para mostrar.
+                        </Typography>
+                    )}
+                </Box>
             </Popover>
             <ConfirmDialog
                 open={Boolean(confirmDeleteEvent)}

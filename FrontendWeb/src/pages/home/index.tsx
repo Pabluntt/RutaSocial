@@ -5,7 +5,6 @@ import DrawerList from "../../component/DrawerList";
 import CustomDrawer from "../../component/CustomDrawer";
 import { Backdrop, Paper, Typography, useMediaQuery, useTheme, Fab, Tooltip, Switch, FormControlLabel, ToggleButton, ToggleButtonGroup, Divider } from "@mui/material";
 import MensajesFijados from "../../component/MensajesFijados";
-import DialogCreateRoute from "../../component/Dialog/DialogCreateRoute";
 import useSessionStore from "../../stores/useSessionStore";
 import ButtonFinalizarRuta from "../../component/Button/ButtonFinalizarRuta";
 import SpeedDialRoute from "../../component/Button/SpeedDialRoute";
@@ -139,7 +138,6 @@ export default function Home() {
 
 
     const [ openSpeedCreateRoute, setOpenSpeedCreateRoute ] = useState(false)
-    const stateOpenCreateRoute = useState(false)
     const stateOpenJoinRoute = useState(false)
     const [ openDialogAlojamiento, setOpenDialogAlojamiento ] = useState(false)
     const [ selectingAlojamiento, setSelectingAlojamiento ] = useState(false)
@@ -424,10 +422,8 @@ export default function Home() {
                                 <>
                                     <SpeedDialCreateRoute
                                         stateOpen={[openSpeedCreateRoute, setOpenSpeedCreateRoute]}
-                                        stateOpenCreateRoute={stateOpenCreateRoute}
                                         stateOpenJoinRoute={stateOpenJoinRoute}
                                     >
-                                        <DialogCreateRoute stateOpen={stateOpenCreateRoute} />
                                         <DialogJoinRoute stateOpen={stateOpenJoinRoute} />
                                     </SpeedDialCreateRoute>
                                     { role === Role.admin && (

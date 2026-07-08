@@ -1,37 +1,28 @@
 import { SpeedDial, SpeedDialAction } from "@mui/material";
-import NearMeIcon from '@mui/icons-material/NearMe';
 import GroupsIcon from '@mui/icons-material/Groups';
 import NavigationIcon from '@mui/icons-material/Navigation';
 import CloseIcon from '@mui/icons-material/Close';
 
 const icons = [
-    {icon : <NearMeIcon /> , name : 'Crear una ruta'},
     {icon : <GroupsIcon /> , name : 'Unirse a una ruta'},
 ]
 
 export interface SpeedDialogRouteProps {
     stateOpen : [ boolean, React.Dispatch<React.SetStateAction<boolean>>]
-    stateOpenCreateRoute : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     stateOpenJoinRoute : [ boolean, React.Dispatch<React.SetStateAction<boolean>> ]
     children : React.ReactNode
 } 
 
-export default function SpeedDialCreateRoute({ stateOpen, stateOpenCreateRoute, stateOpenJoinRoute, children } : SpeedDialogRouteProps ) {
+export default function SpeedDialCreateRoute({ stateOpen, stateOpenJoinRoute, children } : SpeedDialogRouteProps ) {
 
     const [ open, setOpen ] = stateOpen
 
-    const [ openCreateRoute, setOpenCreateRoute ] = stateOpenCreateRoute
     const [ openJoinRoute, setOpenJoinRoute ] = stateOpenJoinRoute
     
     const handleOpen = () =>  { setOpen(true); } 
     const handleClose = () => { setOpen(false); } 
 
-    const list = [{ 
-        open : openCreateRoute, 
-        setOpen : setOpenCreateRoute}, {
-        open : openJoinRoute, 
-        setOpen : setOpenJoinRoute,}
-    ]
+    const list = [{ open : openJoinRoute, setOpen : setOpenJoinRoute }]
 
     return (
         <div>

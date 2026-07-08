@@ -45,7 +45,7 @@ const defaultSteps: TourStep[] = [
   {
     id: 'map',
     title: 'Mapa',
-    description: 'Crea o únete a rutas directamente en el mapa. También puedes registrar alojamientos (solo administradores).',
+    description: 'Únete a una ruta con código y registra información cuando una ruta esté activa. Las rutas se programan e inician desde el calendario.',
     selector: '[data-tour-id="map"]',
     mascotPose: 'idea',
   },

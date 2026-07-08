@@ -23,6 +23,7 @@ export default function EventScreen({ navigation }: Props) {
   const [markedDates, setMarkedDates] = useState({});
   const [eventsForSelectedDate, setEventsForSelectedDate] = useState([]);
   const [showEventModal, setShowEventModal] = useState(false);
+  const [showAllDayEvents, setShowAllDayEvents] = useState(false);
 
   const [institutions, setInstitutions] = useState<{ [id: string]: { name: string, color: string } }>({});
   const [userCache, setUserCache] = useState<{ [id: string]: any }>({}); // cache de usuarios por id
@@ -135,6 +136,7 @@ export default function EventScreen({ navigation }: Props) {
   const handleDatePress = async (day: any) => {
     const date = day.dateString;
     setSelectedDate(date);
+    setShowAllDayEvents(false);
 
     try {
       const events = await CalendarService.all();
@@ -250,13 +252,20 @@ export default function EventScreen({ navigation }: Props) {
             <Text style={styles.modalTitle}>📅 Eventos del {selectedDate}</Text>
 
             {eventsForSelectedDate.length > 0 ? (
-              eventsForSelectedDate.map((event: any, index: number) => (
-                <View key={index} style={styles.modalEventCard}>
-                  <Text style={styles.eventTitle}>🎉 {event.title}</Text>
-                  <Text style={styles.eventDetail}>🕒 <Text style={styles.bold}>{event.time_start}</Text></Text>
-                  <Text style={styles.eventDetail}>📝 <Text style={styles.bold}>{event.description}</Text></Text>
-                </View>
-              ))
+              <>
+                {(showAllDayEvents ? eventsForSelectedDate : eventsForSelectedDate.slice(0, 4)).map((event: any, index: number) => (
+                  <View key={index} style={styles.modalEventCard}>
+                    <Text style={styles.eventTitle}>🎉 {event.title}</Text>
+                    <Text style={styles.eventDetail}>🕒 <Text style={styles.bold}>{event.time_start}</Text></Text>
+                    <Text style={styles.eventDetail}>📝 <Text style={styles.bold}>{event.description}</Text></Text>
+                  </View>
+                ))}
+                {eventsForSelectedDate.length > 4 && !showAllDayEvents ? (
+                  <TouchableOpacity onPress={() => setShowAllDayEvents(true)} style={styles.showMoreButton}>
+                    <Text style={styles.showMoreText}>+{eventsForSelectedDate.length - 4} más</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </>
             ) : (
               <Text style={{ textAlign: 'center', color: '#777' }}>No hay eventos.</Text>
             )}
@@ -431,5 +440,19 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  showMoreButton: {
+    alignItems: 'center',
+    backgroundColor: '#E6F7F8',
+    borderColor: '#0F9997',
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 8,
+    padding: 10,
+  },
+  showMoreText: {
+    color: '#0F9997',
+    fontSize: 15,
+    fontWeight: 'bold',
   },
 });

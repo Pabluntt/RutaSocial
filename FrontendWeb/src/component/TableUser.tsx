@@ -22,6 +22,7 @@ interface HeadCell {
   id: SortableUserKeys
   label: string;
   align: "center" | "left" | "right" | "justify" | "inherit";
+  minWidth?: number;
 }
 
 
@@ -31,28 +32,33 @@ const headCells: readonly HeadCell[] = [
     align: 'left',
     disablePadding: true,
     label: 'Nombre',
+    minWidth: 120,
   },
   {
     id: 'email',
     align: 'left',
     disablePadding: false,
     label: 'Email',
+    minWidth: 150,
   }, {
     id: 'institutionID',
     align : 'left',
     disablePadding : false,
-    label: 'Institución'
+    label: 'Institución',
+    minWidth: 190,
   },
   {
     id: 'role',
     align: 'center',
     disablePadding: false,
     label: 'Rol',
+    minWidth: 120,
   }, {
     id : 'phone',
     align : 'center',
     disablePadding : false,
-    label: 'Teléfono'
+    label: 'Teléfono',
+    minWidth: 120,
   }
 ];
 
@@ -96,6 +102,7 @@ function EnhancedTableHead(props: EnhancedTableProps) {
             align={headCell.align == 'right' ? (computerDevice ? 'right' : 'left') : headCell.align}
             padding={headCell.disablePadding ? 'none' : 'normal'}
             sortDirection={orderBy === headCell.id ? order : false}
+            sx={{ minWidth: headCell.minWidth, whiteSpace: 'nowrap' }}
           >
             <TableSortLabel
               active={orderBy === headCell.id}
@@ -380,7 +387,7 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
         <EnhancedTableToolbar numSelected={selected.length} onDeleteUsers={onDeleteUsers} isAdmin={isAdmin}/>
         <TableContainer sx={{ overflowX: 'auto' }}>
           <Table
-            sx={{ minWidth: computerDevice ? 600 : 'auto', tableLayout: computerDevice ? 'fixed' : 'auto', width: '100%' }}
+            sx={{ minWidth: isAdmin ? 940 : 800, tableLayout: 'auto', width: '100%' }}
             aria-labelledby="tableTitle"
             size={computerDevice ? 'medium' : 'small'}
             stickyHeader
@@ -425,18 +432,20 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
                       id={labelId}
                       scope="row"
                       padding="none"
+                      sx={{ minWidth: 120, maxWidth: 170, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                     >
                       {row.name}
                     </TableCell>
                     <TableCell align="left" sx={{ 
-                      maxWidth: 200,         
+                      minWidth: 150,
+                      maxWidth: 210,
                       whiteSpace: 'nowrap',   
                       overflow: 'hidden',     
                       textOverflow: 'ellipsis'                     
                       }}>
                       {row.email}
                     </TableCell>
-                    <TableCell align={'justify'} onClick={(e) => {
+                    <TableCell align={'left'} sx={{ minWidth: 190, maxWidth: 220 }} onClick={(e) => {
                       e.stopPropagation()
                     }}>
                       {isAdmin ? (
@@ -445,13 +454,13 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
                           value={row.institutionID || NIL_INSTITUTION_ID}
                           onChange={(event: SelectChangeEvent) => { handleInstitutionChange(row, event.target.value); }}
                           onClick={(e) => { e.stopPropagation(); }}
-                          sx={{ minWidth: 180, maxWidth: 240 }}
+                          sx={{ width: '100%', maxWidth: 200 }}
                           renderValue={(selected) => {
                             const selectedInstitution = institutions.find((inst) => inst.id === selected) ?? { name: 'N/A', color: '#9ca3af' }
                             return (
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Box sx={{ width: 18, height: 18, bgcolor: selectedInstitution.color, border: '1px solid #ddd', borderRadius: '6px' }} />
-                                <Typography variant="body2" noWrap>{selectedInstitution.name}</Typography>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+                                <Box sx={{ width: 18, height: 18, bgcolor: selectedInstitution.color, border: '1px solid #ddd', borderRadius: '6px', flexShrink: 0 }} />
+                                <Typography variant="body2" noWrap sx={{ minWidth: 0 }}>{selectedInstitution.name}</Typography>
                               </Box>
                             )
                           }}
@@ -472,7 +481,7 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
                           ))}
                         </Select>
                       ) : (
-                        <div className="flex flex-row items-center gap-2">
+                        <div className="flex min-w-0 flex-row items-center gap-2">
                           <Box
                             sx={{
                             width: 24,
@@ -480,17 +489,18 @@ export default function TableUser({ users, setUsers, prefixSearch, institutions,
                             bgcolor: institution.color || '#ccc',
                             border: '1px solid #ddd',
                             borderRadius: '8px',
+                              flexShrink: 0,
                             }}
                           />
-                          {institution.name}
+                          <Typography variant="body2" noWrap sx={{ minWidth: 0 }}>{institution.name}</Typography>
                         </div>
                       )}
                     </TableCell>
-                    <TableCell align={'center'}>{row.role === 'admin' ? 'Administrador' : 'Voluntario'}</TableCell>
-                    <TableCell align={("center")}>{row.phone}</TableCell>
-                    <TableCell align={("center")}>{row.isActive ? 'Activo' : 'Pendiente'}</TableCell>
+                    <TableCell align={'center'} sx={{ minWidth: 120, whiteSpace: 'nowrap' }}>{row.role === 'admin' ? 'Administrador' : 'Voluntario'}</TableCell>
+                    <TableCell align={("center")} sx={{ minWidth: 120, whiteSpace: 'nowrap' }}>{row.phone}</TableCell>
+                    <TableCell align={("center")} sx={{ minWidth: 90, whiteSpace: 'nowrap' }}>{row.isActive ? 'Activo' : 'Pendiente'}</TableCell>
                     {isAdmin && (
-                      <TableCell align="center" onClick={(e) => { e.stopPropagation(); }}>
+                      <TableCell align="center" sx={{ minWidth: 90, whiteSpace: 'nowrap' }} onClick={(e) => { e.stopPropagation(); }}>
                         {selected.length === 0 ? (
                           <>
                             {row.isActive ? (
