@@ -13,7 +13,7 @@ import (
 // Contiene métodos para obtener, crear, eliminar y actualizar riesgos.
 type RiskRepository interface {
 	GetRisks(ctx context.Context) ([]domain.Riesgo, error)
-	CreateRisk(ctx context.Context, risk domain.Riesgo) error
+	CreateRisk(ctx context.Context, risk domain.Riesgo) (domain.Riesgo, error)
 	DeleteRisk(ctx context.Context, id string) error
 	UpdateRisk(ctx context.Context, updateData map[string]interface{}) (domain.Riesgo, error)
 }
@@ -62,7 +62,7 @@ func (r *riskRepository) GetRisks(ctx context.Context) ([]domain.Riesgo, error) 
 
 // CreateRisk crea un nuevo riesgo en la base de datos.
 // Asigna un ID y una fecha de registro al riesgo.
-func (r *riskRepository) CreateRisk(ctx context.Context, risk domain.Riesgo) error {
+func (r *riskRepository) CreateRisk(ctx context.Context, risk domain.Riesgo) (domain.Riesgo, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	risk.ID = bson.NewObjectID()
@@ -71,7 +71,7 @@ func (r *riskRepository) CreateRisk(ctx context.Context, risk domain.Riesgo) err
 	if err != nil {
 		logRepositoryError(ctx, "risk", "create.insert_one", err, "collection", "risks", "risk_id", risk.ID.Hex())
 	}
-	return err
+	return risk, err
 }
 
 // DeleteRisk elimina un riesgo de la base de datos por su ID.

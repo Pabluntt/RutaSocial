@@ -67,19 +67,19 @@ func (r riskUseCase) CreateRisk(c *gin.Context) {
 		return
 	}
 
-	if !utils.IsValidString(risk.Description) {
+	if !utils.IsValidComment(risk.Description) {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Descripción con caracteres inválidos"})
 		return
 	}
 	risk.AuthorID = userObjID
 
-	err = r.riskRepository.CreateRisk(c.Request.Context(), risk)
+	createdRisk, err := r.riskRepository.CreateRisk(c.Request.Context(), risk)
 	if err != nil {
 		logUseCaseError(c, "risk.create", http.StatusBadRequest, err)
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "Error al crear el riesgo"})
 		return
 	}
-	c.IndentedJSON(http.StatusOK, gin.H{"message": risk})
+	c.IndentedJSON(http.StatusOK, gin.H{"message": createdRisk})
 }
 
 // DeleteRisk maneja la solicitud para eliminar un riesgo por su ID.

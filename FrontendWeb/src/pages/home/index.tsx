@@ -81,8 +81,6 @@ const churchIcon = L.divIcon({
     </svg>`,
 });
 
-
-
 export interface TUserRegister {
     name : string
     age : number 
@@ -236,7 +234,7 @@ export default function Home() {
                     risks={risks}
                 >
                     {alojamientos.map((a, i) => (
-                        <Marker key={a.id ?? i} icon={i % 3 === 0 ? churchIcon : houseIcon} position={[a.coords[0], a.coords[1]]}>
+                        <Marker key={a.id ?? i} icon={churchIcon} position={[a.coords[0], a.coords[1]]}>
                             <Popup>
                                 <div className="flex min-w-44 flex-col items-start gap-2">
                                     <b>{a.name}</b>

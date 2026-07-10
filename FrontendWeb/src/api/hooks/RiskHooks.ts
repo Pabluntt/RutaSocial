@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { RiskService } from "../services/RiskService";
 import { Risk } from "../models/Risk";
 import { MapRiskToCreateRequest, MapRiskToUpdateRequest } from "../adapters/Risk.adapter";
@@ -6,8 +6,12 @@ import { MapRiskToCreateRequest, MapRiskToUpdateRequest } from "../adapters/Risk
 
 
 export function useCreateRisk() {
+    const qc = useQueryClient()
     return useMutation({
         mutationFn: (risk : Omit<Risk, 'id' | 'createdAt'>) => (RiskService.CreateRisk(MapRiskToCreateRequest(risk))),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['risks'] })
+        },
     })
 }
 

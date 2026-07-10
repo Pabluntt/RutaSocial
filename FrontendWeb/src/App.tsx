@@ -38,6 +38,11 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   return children
 }
 
+function RootRedirect() {
+  const accessToken = useSessionStore((state) => state.accessToken)
+  return <Navigate to={`${import.meta.env.VITE_BASE_URL}/${accessToken ? 'calendario' : 'login'}`} replace />
+}
+
 function AdminRoute({ children }: { children: ReactNode }) {
   const accessToken = useSessionStore((state) => state.accessToken)
   const { role } = useAuth()
@@ -106,13 +111,7 @@ function App() {
               <SnackbarProvider>
                 <ErrorBoundary>
                   <Routes>
-                    <Route path={`${import.meta.env.VITE_BASE_URL}/`} element={
-                      <ProtectedRoute>
-                        <EventCalendarUpdateProvider>
-                          <Schedule />
-                        </EventCalendarUpdateProvider>
-                      </ProtectedRoute>
-                    } />
+                    <Route path={`${import.meta.env.VITE_BASE_URL}/`} element={<RootRedirect />} />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/login`} element={<Login />} />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/mapa`} element={<ProtectedRoute><Home/></ProtectedRoute>} />
                     <Route path={`${import.meta.env.VITE_BASE_URL}/perfil`} element={<ProtectedRoute><Profile /></ProtectedRoute>} />

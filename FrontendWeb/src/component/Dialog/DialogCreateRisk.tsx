@@ -28,6 +28,15 @@ const markerTypeConfig: Record<MarkerType, { label: string; status: RiskStatus; 
     aviso: { label: 'Aviso', status: RiskStatus.Warning, icon: 'atencion' },
 }
 
+const getCreateRiskErrorMessage = (error: unknown) => {
+    if (typeof error === 'string') return error
+    if (error && typeof error === 'object') {
+        const riskError = error as { error?: string; message?: string }
+        return riskError.error || riskError.message || 'Hubo un error al intentar registrar el punto'
+    }
+    return 'Hubo un error al intentar registrar el punto'
+}
+
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': {
     padding: theme.spacing(0, 3),
@@ -68,7 +77,7 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
     const selectingLocationRef = useRef(false)
     const resetSignalMountedRef = useRef(false)
 
-    const { mutate, data, isError, isSuccess, isPending, isIdle, reset } = useCreateRisk()
+    const { mutate, isError, isSuccess, isPending, isIdle, reset, error: createRiskError } = useCreateRisk()
     const { refetch } = useRisks()
     const { showSnackbar } = useAppSnackbar()
 
@@ -132,6 +141,7 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
             return 
         }
         if(!authorID) {
+            showSnackbar('No se pudo obtener tu usuario. Inicia sesión nuevamente.', 'error')
             return
         }
 
@@ -147,12 +157,18 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
     useEffect(() => {
         if(isSuccess) {
             refetch()
+            showSnackbar('Punto registrado correctamente', 'success')
             setMarkerType('riesgo')
             setTimeout(() => {
                 handleClose()
             }, 1000)   
         }
     }, [isSuccess])
+
+    useEffect(() => {
+        if(!isError) return
+        showSnackbar(getCreateRiskErrorMessage(createRiskError), 'error')
+    }, [isError, createRiskError, showSnackbar])
 
     return (
         <BootstrapDialog 
@@ -293,7 +309,7 @@ export default function DialogCreateRisk({ stateOpen, stateOnSelectLocationMap, 
                     </div>    
                     :
                     <Alert sx={{ mt: 2, borderRadius: '8px' }} variant='outlined' severity={ isSuccess ? 'success' : isError ? 'error' : 'info'}>
-                            {isSuccess ? 'Se registró el punto exitosamente' : isError ? 'Hubo un error al intentar registrar el punto' : 'Error desconocido'}
+                            {isSuccess ? 'Se registró el punto exitosamente' : isError ? getCreateRiskErrorMessage(createRiskError) : 'Error desconocido'}
                     </Alert>
                 }
             </DialogContent>
